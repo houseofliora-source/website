@@ -199,20 +199,4 @@ export function updateDocumentFavicon(urlOrSvg?: string) {
   }
 }
 
-/**
- * Persist uploaded favicon directly into Firestore settings/store and update browser
- */
-export async function updateStoreFaviconInFirestore(faviconDataOrUrl: string): Promise<boolean> {
-  if (!db) return false;
-  try {
-    const settingsDocRef = doc(db, 'settings', 'store');
-    await setDoc(settingsDocRef, { faviconUrl: faviconDataOrUrl }, { merge: true });
-    updateDocumentFavicon(faviconDataOrUrl);
-    return true;
-  } catch (error) {
-    console.error('[Firebase] Failed to persist favicon to Firestore:', error);
-    return false;
-  }
-}
-
 

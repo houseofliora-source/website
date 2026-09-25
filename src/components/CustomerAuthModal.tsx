@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, CheckCircle, Package, LogOut, ArrowRight, ShieldCheck, Upload, Sparkles } from 'lucide-react';
+import { X, User, Mail, Lock, Phone, MapPin, CheckCircle, Package, LogOut, ArrowRight, ShieldCheck } from 'lucide-react';
 import { OrderRecord } from '../types';
-import { updateStoreFaviconInFirestore } from '../services/firebase';
 
 export interface CustomerUser {
   name: string;
@@ -38,44 +37,6 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState<'Inside Dhaka' | 'Outside Dhaka'>('Inside Dhaka');
-  const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [faviconSuccessMsg, setFaviconSuccessMsg] = useState('');
-  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
-
-  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingFavicon(true);
-    setFaviconSuccessMsg('');
-
-    try {
-      if (file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg')) {
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const content = event.target?.result as string;
-          setFaviconPreview(content);
-          await updateStoreFaviconInFirestore(content);
-          setUploadingFavicon(false);
-          setFaviconSuccessMsg('Favicon updated & saved to Cloud successfully!');
-        };
-        reader.readAsText(file);
-      } else {
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const dataUrl = event.target?.result as string;
-          setFaviconPreview(dataUrl);
-          await updateStoreFaviconInFirestore(dataUrl);
-          setUploadingFavicon(false);
-          setFaviconSuccessMsg('Favicon updated & saved to Cloud successfully!');
-        };
-        reader.readAsDataURL(file);
-      }
-    } catch (err) {
-      console.error('Failed to upload favicon:', err);
-      setUploadingFavicon(false);
-    }
-  };
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,56 +135,6 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Atelier Branding - Direct SVG / Photo Favicon Uploader for Owner */}
-              {(currentUser.email.toLowerCase().includes('houseofliora') || 
-                currentUser.email.toLowerCase().includes('admin') ||
-                currentUser.email.toLowerCase() === 'info.houseofliora@gmail.com') && (
-                <div className="p-4 bg-[#F5F1EB] rounded-md border border-[#EAE0D5] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-[#8C5E35]" />
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D]">
-                        Atelier Branding & Favicon
-                      </h4>
-                    </div>
-                    <span className="text-[10px] bg-[#8C5E35]/15 text-[#8C5E35] font-semibold px-2 py-0.5 rounded">
-                      Owner Controls
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-[#5A5248] leading-relaxed">
-                    Upload your SVG icon or high-res brand photo directly from your device. It will automatically update the browser tab icon across the entire website.
-                  </p>
-
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-white hover:bg-[#FAF8F5] border border-dashed border-[#8C5E35] rounded-md cursor-pointer transition-colors text-xs font-medium text-[#24211D]">
-                      <Upload className="w-4 h-4 text-[#8C5E35]" />
-                      <span>{uploadingFavicon ? 'Updating Favicon...' : 'Choose SVG / Photo'}</span>
-                      <input 
-                        type="file" 
-                        accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" 
-                        className="hidden" 
-                        onChange={handleFaviconUpload}
-                        disabled={uploadingFavicon}
-                      />
-                    </label>
-
-                    {faviconPreview && (
-                      <div className="w-10 h-10 rounded-md bg-white border border-[#EAE0D5] p-1 flex items-center justify-center shrink-0 shadow-xs">
-                        <img src={faviconPreview} alt="Favicon preview" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-                  </div>
-
-                  {faviconSuccessMsg && (
-                    <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>{faviconSuccessMsg}</span>
-                    </p>
-                  )}
-                </div>
-              )}
 
               {/* Order History */}
               <div className="space-y-3">
