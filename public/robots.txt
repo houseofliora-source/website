@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://houseofliora.vercel.app/sitemap.xml

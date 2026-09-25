@@ -16,7 +16,9 @@ import { Sparkles, SlidersHorizontal, Flame } from 'lucide-react';
 import { 
   fetchLiveProducts, 
   submitOrderToFirestore, 
-  syncCustomerProfileToFirestore 
+  syncCustomerProfileToFirestore,
+  fetchStoreSettings,
+  updateDocumentFavicon
 } from './services/firebase';
 
 const STORAGE_KEYS = {
@@ -29,12 +31,22 @@ const STORAGE_KEYS = {
 export default function App() {
   // Store products and orders
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
-  // Load real-time catalog from Firestore if available
+  // Load real-time catalog and store settings (dynamic favicon, fees, banner) from Firestore
   useEffect(() => {
     fetchLiveProducts().then(liveCatalog => {
       if (liveCatalog && liveCatalog.length > 0) {
         setProducts(liveCatalog);
+      }
+    });
+
+    fetchStoreSettings().then(settings => {
+      if (settings) {
+        setStoreSettings(settings);
+        if (settings.faviconUrl) {
+          updateDocumentFavicon(settings.faviconUrl);
+        }
       }
     });
   }, []);
@@ -47,8 +59,6 @@ export default function App() {
       return INITIAL_SAMPLE_ORDERS;
     }
   });
-
-  const [storeSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
   // Customer Authentication state
   const [currentUser, setCurrentUser] = useState<CustomerUser | null>(() => {

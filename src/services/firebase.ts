@@ -3,6 +3,7 @@ import {
   getFirestore, 
   collection, 
   getDocs, 
+  getDoc,
   doc, 
   setDoc, 
   addDoc, 
@@ -10,8 +11,8 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import { Product, OrderRecord } from '../types';
-import { INITIAL_PRODUCTS } from '../data/products';
+import { Product, OrderRecord, StoreSettings } from '../types';
+import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../data/products';
 import { CustomerUser } from '../components/CustomerAuthModal';
 
 // Firebase configuration from environment variables with House of Líora project defaults
@@ -136,3 +137,47 @@ export async function seedProductsToFirestore(): Promise<void> {
     await setDoc(productRef, product, { merge: true });
   }
 }
+
+/**
+ * Fetch store settings (including dynamic favicon) from Firestore collection 'settings', doc 'store'
+ */
+export async function fetchStoreSettings(): Promise<StoreSettings> {
+  if (!db) return DEFAULT_STORE_SETTINGS;
+
+  try {
+    const settingsDocRef = doc(db, 'settings', 'store');
+    const snap = await getDoc(settingsDocRef);
+    if (snap.exists()) {
+      return { ...DEFAULT_STORE_SETTINGS, ...snap.data() } as StoreSettings;
+    } else {
+      // Auto-seed store settings on first run so owner can edit in console
+      const initialSettingsWithFavicon: StoreSettings = {
+        faviconUrl: '/favicon.svg',
+        ...DEFAULT_STORE_SETTINGS
+      };
+      await setDoc(settingsDocRef, initialSettingsWithFavicon, { merge: true });
+      return initialSettingsWithFavicon;
+    }
+  } catch (error) {
+    console.warn('[Firebase] Could not fetch store settings, using defaults:', error);
+    return DEFAULT_STORE_SETTINGS;
+  }
+}
+
+/**
+ * Dynamically change the website favicon in the browser tab
+ */
+export function updateDocumentFavicon(url?: string) {
+  if (!url) return;
+  const link = document.getElementById('site-favicon') as HTMLLinkElement | null;
+  if (link) {
+    link.href = url;
+  } else {
+    const newLink = document.createElement('link');
+    newLink.id = 'site-favicon';
+    newLink.rel = 'icon';
+    newLink.href = url;
+    document.head.appendChild(newLink);
+  }
+}
+

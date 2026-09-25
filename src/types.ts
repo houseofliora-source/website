@@ -57,6 +57,7 @@ export interface OrderRecord {
 }
 
 export interface StoreSettings {
+  faviconUrl?: string;
   announcementText: string;
   minimumOrder: number;
   deliveryFeeDhaka: number;

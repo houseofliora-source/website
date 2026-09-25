@@ -101,6 +101,7 @@ export const INITIAL_PRODUCTS: Product[] = [
 export const PRODUCTS = INITIAL_PRODUCTS;
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
+  faviconUrl: '/favicon.svg',
   announcementText: '✨ Handcrafted 100% Botanical Soy Wax Candles · Nationwide Delivery · Min Order ৳200',
   minimumOrder: 200,
   deliveryFeeDhaka: 70,
