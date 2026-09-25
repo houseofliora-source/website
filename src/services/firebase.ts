@@ -165,18 +165,36 @@ export async function fetchStoreSettings(): Promise<StoreSettings> {
 }
 
 /**
- * Dynamically change the website favicon in the browser tab
+ * Dynamically change the website favicon in the browser tab.
+ * Supports:
+ * 1. Image or SVG URLs (e.g. '/favicon.svg', 'https://.../logo.png')
+ * 2. Raw SVG code directly pasted by the owner (e.g. '<svg xmlns=...>...</svg>')
+ * 3. Base64 or Data URIs ('data:image/svg+xml;...')
  */
-export function updateDocumentFavicon(url?: string) {
-  if (!url) return;
+export function updateDocumentFavicon(urlOrSvg?: string) {
+  if (!urlOrSvg) return;
+  let finalHref = urlOrSvg.trim();
+
+  // If the owner pasted raw SVG code directly, convert it to a valid SVG Data URI
+  if (finalHref.startsWith('<svg') || finalHref.includes('</svg>')) {
+    const encodedSvg = encodeURIComponent(finalHref)
+      .replace(/'/g, '%27')
+      .replace(/"/g, '%22');
+    finalHref = `data:image/svg+xml;charset=utf-8,${encodedSvg}`;
+  }
+
   const link = document.getElementById('site-favicon') as HTMLLinkElement | null;
+  const isSvg = finalHref.includes('svg');
+
   if (link) {
-    link.href = url;
+    link.href = finalHref;
+    link.type = isSvg ? 'image/svg+xml' : 'image/x-icon';
   } else {
     const newLink = document.createElement('link');
     newLink.id = 'site-favicon';
     newLink.rel = 'icon';
-    newLink.href = url;
+    newLink.type = isSvg ? 'image/svg+xml' : 'image/x-icon';
+    newLink.href = finalHref;
     document.head.appendChild(newLink);
   }
 }
