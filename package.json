@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^6.1.1",
     "firebase": "^11.4.0",
     "lucide-react": "^0.546.0",
