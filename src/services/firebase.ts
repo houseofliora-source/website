@@ -85,12 +85,15 @@ export async function submitOrderToFirestore(order: OrderRecord): Promise<boolea
   }
 
   try {
+    // Sanitize order object: remove undefined fields as Firestore rejects undefined
+    const cleanOrder = JSON.parse(JSON.stringify(order));
     const orderDocRef = doc(db, 'orders', order.id);
     await setDoc(orderDocRef, {
-      ...order,
+      ...cleanOrder,
       timestamp: serverTimestamp(),
       platform: 'web-storefront'
     });
+    console.log('[Firebase] Successfully written order to Firestore:', order.id);
     return true;
   } catch (error) {
     console.error('[Firebase] Failed to write order to Firestore:', error);
@@ -108,8 +111,9 @@ export async function syncCustomerProfileToFirestore(customer: CustomerUser): Pr
     // Phone or email as document ID
     const customerId = (customer.phone || customer.email).replace(/[^a-zA-Z0-9]/g, '_');
     const customerRef = doc(db, 'customers', customerId);
+    const cleanCustomer = JSON.parse(JSON.stringify(customer));
     await setDoc(customerRef, {
-      ...customer,
+      ...cleanCustomer,
       lastActive: serverTimestamp(),
     }, { merge: true });
     return true;
