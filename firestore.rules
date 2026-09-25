@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Products: Publicly readable for all storefront visitors
+    // Write access enabled for initial seeding and catalog updates
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 2. Orders: Customers can submit new orders from the checkout drawer
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if false;
+    }
+
+    // 3. Customers: Profile sync for account management
+    match /customers/{customerId} {
+      allow read, write: if true;
+    }
+  }
+}

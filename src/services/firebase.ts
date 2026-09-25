@@ -51,6 +51,12 @@ export async function fetchLiveProducts(): Promise<Product[]> {
     const productsRef = collection(db, 'products');
     const snapshot = await getDocs(productsRef);
     if (snapshot.empty) {
+      console.info('[Firebase] Firestore products collection is empty. Auto-seeding initial catalog...');
+      try {
+        await seedProductsToFirestore();
+      } catch (seedErr) {
+        console.warn('[Firebase] Auto-seed failed:', seedErr);
+      }
       return INITIAL_PRODUCTS;
     }
 
