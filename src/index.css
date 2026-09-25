@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-bengali: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #24211D;
+    background-color: #FAF8F5;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F3EFEA;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8CEBE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BAAC99;
+}
+
+/* Flame flicker animation */
+@keyframes flame-subtle {
+  0%, 100% { opacity: 0.95; transform: scale(1) translateY(0); }
+  50% { opacity: 0.8; transform: scale(0.98) translateY(1px); }
+}
+
+.animate-flame {
+  animation: flame-subtle 3s ease-in-out infinite;
+}

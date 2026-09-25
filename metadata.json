@@ -1,0 +1,6 @@
+{
+  "name": "House of Líora - Artisanal Soy Candles & Home Fragrance",
+  "description": "Digital boutique storefront for House of Líora (@houseofliorabd) - 100% botanical soy wax candles, floating floral blooms, and bespoke wedding favors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
