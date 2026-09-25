@@ -14,14 +14,14 @@ import { Product, OrderRecord } from '../types';
 import { INITIAL_PRODUCTS } from '../data/products';
 import { CustomerUser } from '../components/CustomerAuthModal';
 
-// Firebase configuration from environment variables
+// Firebase configuration from environment variables with House of Líora project defaults
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDgn2EovOCx9nqHzYUP27-FKN1YO9A1DP4',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'house-of-liora.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'house-of-liora',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'house-of-liora.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '955051533475',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:955051533475:web:6afba66d6deefcc790cb16',
 };
 
 // Check if valid Firebase credentials are provided
