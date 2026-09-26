@@ -6,7 +6,8 @@ import {
   getDoc,
   doc, 
   setDoc, 
-  addDoc, 
+  deleteDoc,
+  onSnapshot,
   serverTimestamp,
   query,
   orderBy
@@ -198,5 +199,154 @@ export function updateDocumentFavicon(urlOrSvg?: string) {
     document.head.appendChild(newLink);
   }
 }
+
+/**
+ * Save or update a product in Firestore
+ */
+export async function saveProductToFirestore(product: Product): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const cleanProduct = JSON.parse(JSON.stringify(product));
+    const ref = doc(db, 'products', product.id);
+    await setDoc(ref, cleanProduct, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to save product to Firestore:', error);
+    return false;
+  }
+}
+
+/**
+ * Delete a product from Firestore
+ */
+export async function deleteProductFromFirestore(productId: string): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const ref = doc(db, 'products', productId);
+    await deleteDoc(ref);
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to delete product from Firestore:', error);
+    return false;
+  }
+}
+
+/**
+ * Fetch all orders from Firestore (for Admin dashboard)
+ */
+export async function fetchAllOrdersFromFirestore(): Promise<OrderRecord[]> {
+  if (!db) return [];
+  try {
+    const ordersRef = collection(db, 'orders');
+    const snapshot = await getDocs(ordersRef);
+    const list: OrderRecord[] = [];
+    snapshot.forEach(docSnap => {
+      list.push(docSnap.data() as OrderRecord);
+    });
+    // Sort newest first
+    return list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  } catch (error) {
+    console.error('[Firebase] Failed to fetch orders:', error);
+    return [];
+  }
+}
+
+/**
+ * Update an order's status in Firestore
+ */
+export async function updateOrderStatusInFirestore(orderId: string, status: OrderRecord['status']): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const ref = doc(db, 'orders', orderId);
+    await setDoc(ref, { status }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to update order status:', error);
+    return false;
+  }
+}
+
+/**
+ * Fetch all registered patrons/customers
+ */
+export async function fetchAllCustomersFromFirestore(): Promise<CustomerUser[]> {
+  if (!db) return [];
+  try {
+    const ref = collection(db, 'customers');
+    const snapshot = await getDocs(ref);
+    const list: CustomerUser[] = [];
+    snapshot.forEach(docSnap => {
+      list.push(docSnap.data() as CustomerUser);
+    });
+    return list;
+  } catch (error) {
+    console.error('[Firebase] Failed to fetch customers:', error);
+    return [];
+  }
+}
+
+/**
+ * Update global store settings in Firestore
+ */
+export async function updateStoreSettingsInFirestore(settings: StoreSettings): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const clean = JSON.parse(JSON.stringify(settings));
+    const ref = doc(db, 'settings', 'store');
+    await setDoc(ref, clean, { merge: true });
+    if (settings.faviconUrl) {
+      updateDocumentFavicon(settings.faviconUrl);
+    }
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to update store settings:', error);
+    return false;
+  }
+}
+
+/**
+ * Real-time listener for Orders
+ */
+export function subscribeToOrders(callback: (orders: OrderRecord[]) => void) {
+  if (!db) return () => {};
+  try {
+    const ordersRef = collection(db, 'orders');
+    return onSnapshot(ordersRef, (snapshot) => {
+      const list: OrderRecord[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data() as OrderRecord);
+      });
+      callback(list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
+    }, (error) => {
+      console.warn('[Firebase] Order subscription warning:', error);
+    });
+  } catch (err) {
+    console.error('[Firebase] subscribeToOrders error:', err);
+    return () => {};
+  }
+}
+
+/**
+ * Real-time listener for Products
+ */
+export function subscribeToProducts(callback: (products: Product[]) => void) {
+  if (!db) return () => {};
+  try {
+    const prodsRef = collection(db, 'products');
+    return onSnapshot(prodsRef, (snapshot) => {
+      const list: Product[] = [];
+      snapshot.forEach(docSnap => {
+        list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Product, 'id'>) });
+      });
+      callback(list.length > 0 ? list : INITIAL_PRODUCTS);
+    }, (error) => {
+      console.warn('[Firebase] Product subscription warning:', error);
+    });
+  } catch (err) {
+    console.error('[Firebase] subscribeToProducts error:', err);
+    return () => {};
+  }
+}
+
 
 

@@ -18,8 +18,10 @@ import {
   submitOrderToFirestore, 
   syncCustomerProfileToFirestore,
   fetchStoreSettings,
-  updateDocumentFavicon
+  updateDocumentFavicon,
+  subscribeToProducts
 } from './services/firebase';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 
 const STORAGE_KEYS = {
   PRODUCTS: 'liora_store_products',
@@ -29,13 +31,33 @@ const STORAGE_KEYS = {
 };
 
 export default function App() {
+  // Check if current route is /admin or #admin
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname.startsWith('/admin') || window.location.hash === '#admin';
+  });
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const isNowAdmin = window.location.pathname.startsWith('/admin') || window.location.hash === '#admin';
+      setIsAdminRoute(isNowAdmin);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
+
   // Store products and orders
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
   // Load real-time catalog and store settings (dynamic favicon, fees, banner) from Firestore
   useEffect(() => {
-    fetchLiveProducts().then(liveCatalog => {
+    const unsubscribeProds = subscribeToProducts((liveCatalog) => {
       if (liveCatalog && liveCatalog.length > 0) {
         setProducts(liveCatalog);
       }
@@ -49,6 +71,10 @@ export default function App() {
         }
       }
     });
+
+    return () => {
+      if (unsubscribeProds) unsubscribeProds();
+    };
   }, []);
 
   const [orders, setOrders] = useState<OrderRecord[]>(() => {
@@ -177,6 +203,17 @@ export default function App() {
   }, [products, selectedCategory, selectedScentFamily]);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0) + customFavors.length;
+
+  if (isAdminRoute) {
+    return (
+      <AdminDashboard
+        onBackToStore={() => {
+          window.history.pushState({}, '', '/');
+          setIsAdminRoute(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#24211D]">
