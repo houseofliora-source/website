@@ -254,29 +254,6 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                       className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
                     />
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="font-semibold text-[#24211D] block">Default Delivery City</label>
-                    <select
-                      value={city}
-                      onChange={(e) => setCity(e.target.value as any)}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
-                    >
-                      <option value="Inside Dhaka">Inside Dhaka</option>
-                      <option value="Outside Dhaka">Outside Dhaka</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-semibold text-[#24211D] block">Delivery Address (Optional)</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="House, Road, Area"
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
-                    />
-                  </div>
                 </>
               )}
 

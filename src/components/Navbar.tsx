@@ -63,12 +63,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onOpenAuth}
             aria-label="Customer Account"
-            className="px-2.5 py-1.5 text-xs font-medium text-[#4A443C] hover:text-[#24211D] hover:bg-[#EAE0D5] rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer border border-[#D8CEBE]"
+            title={currentUser ? `Signed in as ${currentUser.name}` : "Customer Account"}
+            className="px-2.5 py-2 text-[#4A443C] hover:text-[#24211D] hover:bg-[#EAE0D5] rounded transition-colors inline-flex items-center justify-center cursor-pointer border border-[#D8CEBE]"
           >
-            <User className="w-3.5 h-3.5 text-[#8C5E35]" />
-            <span className="hidden sm:inline">
-              {currentUser ? currentUser.name.split(' ')[0] : 'Sign In'}
-            </span>
+            <User className="w-4 h-4 text-[#8C5E35]" />
           </button>
 
           <button

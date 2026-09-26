@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CartItem, CustomFavorItem, OrderRecord, StoreSettings } from '../types';
 import { CustomerUser } from './CustomerAuthModal';
-import { X, Trash2, ArrowRight, ShieldCheck, CheckCircle2, Truck } from 'lucide-react';
+import { X, Trash2, ArrowRight, CheckCircle2, Truck } from 'lucide-react';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -536,11 +536,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
-
-            <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#7A6F62]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#8C5E35]" />
-              <span>COD Available Nationwide · Verified bKash & Nagad</span>
-            </div>
           </div>
         )}
       </div>
