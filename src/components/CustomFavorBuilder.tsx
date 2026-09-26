@@ -8,7 +8,7 @@ interface CustomFavorBuilderProps {
   facebookUrl?: string;
   content?: SiteContent['favors'];
   isEditMode?: boolean;
-  onEdit?: () => void;
+  onEdit?: (tab?: string) => void;
 }
 
 export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
@@ -18,29 +18,62 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   isEditMode = false,
   onEdit,
 }) => {
-  const [candleStyle, setCandleStyle] = useState('bubble');
+  const moldItems = content?.moldItems && content.moldItems.length > 0
+    ? content.moldItems
+    : [
+        { id: 'bubble', label: 'Bubble Cube', basePrice: 280 },
+        { id: 'floating', label: 'Floating Peony', basePrice: 190 },
+        { id: 'sculpted', label: 'Sculpted Torso', basePrice: 390 },
+        { id: 'tablet', label: 'Aroma Tablet', basePrice: 220 },
+      ];
+
+  const aromaItems = content?.aromaItems && content.aromaItems.length > 0
+    ? content.aromaItems
+    : [
+        'French Vanilla & Almond (Sweet)',
+        'Wild Peony & Rose Petals (Floral)',
+        'Amber Sandalwood & Cedar (Warm)',
+        'White Tea & Bergamot (Fresh)',
+      ];
+
+  const ribbonItems = content?.ribbonItems && content.ribbonItems.length > 0
+    ? content.ribbonItems
+    : [
+        'Champagne Gold Chiffon',
+        'Oat Rustic Linen (Minimalist)',
+        'Blush Dusty Rose (Bridal)',
+        'Eucalyptus Sage Green',
+        'Espresso Velvet',
+      ];
+
+  const packagingItems = content?.packagingItems && content.packagingItems.length > 0
+    ? content.packagingItems
+    : [
+        { id: 'luxe_window', title: 'Clear View Box', price: '+৳45/pc', addonPrice: 45, desc: 'See-through top with satin ribbon' },
+        { id: 'kraft_ribbon', title: 'Rigid Kraft Box', price: '+৳35/pc', addonPrice: 35, desc: 'Debossed gold foil crest' },
+        { id: 'standard', title: 'Minimalist Wrap', price: '+৳25/pc', addonPrice: 25, desc: 'Eco tissue & wax seal' },
+      ];
+
+  const minQty = content?.minQuantity || 20;
+  const maxQty = content?.maxQuantity || 500;
+  const stepQty = content?.quantityStep || 10;
+
+  const [candleStyle, setCandleStyle] = useState(moldItems[0]?.id || 'bubble');
   const [quantity, setQuantity] = useState(50);
-  const [scent, setScent] = useState('French Vanilla & Almond');
-  const [ribbonColor, setRibbonColor] = useState('Champagne Gold Chiffon');
+  const [scent, setScent] = useState(aromaItems[0] || 'French Vanilla & Almond (Sweet)');
+  const [ribbonColor, setRibbonColor] = useState(ribbonItems[0] || 'Champagne Gold Chiffon');
   const [tagMessage, setTagMessage] = useState('Tanvir & Raisa · 2026');
-  const [packagingType, setPackagingType] = useState('luxe_window');
+  const [packagingType, setPackagingType] = useState(packagingItems[0]?.id || 'luxe_window');
   const [added, setAdded] = useState(false);
 
   // Pricing calculations
-  const basePrices: Record<string, number> = {
-    bubble: 280,
-    floating: 190,
-    sculpted: 390,
-    tablet: 220,
-  };
+  const selectedMold = moldItems.find(m => m.id === candleStyle) || moldItems[0];
+  const moldPrice = selectedMold ? selectedMold.basePrice : 280;
 
-  const packagingAddon: Record<string, number> = {
-    standard: 25,
-    luxe_window: 45,
-    kraft_ribbon: 35,
-  };
+  const selectedPkg = packagingItems.find(p => p.id === packagingType) || packagingItems[0];
+  const pkgAddon = selectedPkg ? selectedPkg.addonPrice : 35;
 
-  const baseUnit = (basePrices[candleStyle] || 250) + (packagingAddon[packagingType] || 35);
+  const baseUnit = moldPrice + pkgAddon;
   // Volume tiers
   const discountMultiplier = quantity >= 200 ? 0.85 : quantity >= 100 ? 0.90 : quantity >= 50 ? 0.95 : 1.0;
   const unitPrice = Math.round(baseUnit * discountMultiplier);
@@ -48,9 +81,11 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   const advanceRequired = Math.round(subtotal * 0.5); // 50% advance for custom favor batch
 
   const handleBook = () => {
-    const details = `Style: ${candleStyle.toUpperCase()}, Packaging: ${packagingType}, Scent: ${scent}, Ribbon: ${ribbonColor}, Inscription: "${tagMessage}"`;
+    const moldLabel = selectedMold?.label || candleStyle.toUpperCase();
+    const pkgLabel = selectedPkg?.title || packagingType;
+    const details = `Style: ${moldLabel}, Packaging: ${pkgLabel}, Scent: ${scent}, Ribbon: ${ribbonColor}, Inscription: "${tagMessage}"`;
     onAddCustomToCart({
-      productTitle: `Bespoke Event Favors (${quantity} pcs - ${candleStyle.toUpperCase()})`,
+      productTitle: `Bespoke Event Favors (${quantity} pcs - ${moldLabel})`,
       quantity: 1,
       unitPrice: subtotal,
       total: subtotal,
@@ -64,11 +99,11 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   return (
     <section id="custom-favors" className="py-16 md:py-20 bg-[#F5F1EB] border-b border-[#EAE0D5] relative group">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto text-center space-y-3 mb-12 relative">
+        <div className="max-w-3xl mx-auto text-center space-y-3 mb-12 relative border-2 border-transparent hover:border-amber-600/30 p-4 rounded-xl transition-all">
           {isEditMode && (
             <button
-              onClick={onEdit}
-              className="absolute -top-3 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+              onClick={() => onEdit?.('general')}
+              className="absolute -top-3 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40"
               title="Edit Custom Favors Headline & Description"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -93,17 +128,23 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
           {/* Controls: Left 7 Columns */}
           <div className="lg:col-span-7 bg-[#FAF8F5] p-6 sm:p-8 rounded-lg border border-[#EAE0D5] shadow-xs space-y-6">
             {/* 1. Style Selection */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                1. Select Candle Mold Form:
-              </label>
+            <div className="space-y-2 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
+                  {content.moldTitle || '1. Select Candle Mold Form:'}
+                </label>
+                {isEditMode && (
+                  <button
+                    onClick={() => onEdit?.('molds')}
+                    className="p-1 px-2 text-[10px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Edit Molds / Forms</span>
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {[
-                  { id: 'bubble', label: 'Bubble Cube' },
-                  { id: 'floating', label: 'Floating Peony' },
-                  { id: 'sculpted', label: 'Sculpted Torso' },
-                  { id: 'tablet', label: 'Aroma Tablet' },
-                ].map((item) => (
+                {moldItems.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -115,17 +156,29 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     }`}
                   >
                     <p className="text-xs font-semibold">{item.label}</p>
+                    <p className={`text-[10px] mt-0.5 ${candleStyle === item.id ? 'text-[#D4AF37]' : 'text-[#8C5E35]'}`}>৳{item.basePrice}/pc</p>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* 2. Quantity Slider */}
-            <div className="space-y-2">
+            <div className="space-y-2 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider">
-                  2. Order Quantity (Pieces):
-                </label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider">
+                    {content.quantityTitle || '2. Order Quantity (Pieces):'}
+                  </label>
+                  {isEditMode && (
+                    <button
+                      onClick={() => onEdit?.('quantity')}
+                      className="p-1 px-2 text-[10px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Edit Quantity Range</span>
+                    </button>
+                  )}
+                </div>
                 <span className="font-mono text-base font-semibold text-[#8C5E35] tabular-nums">
                   {quantity} pcs
                   {quantity >= 100 && (
@@ -137,68 +190,99 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
               </div>
               <input
                 type="range"
-                min="20"
-                max="500"
-                step="10"
+                min={minQty}
+                max={maxQty}
+                step={stepQty}
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
                 className="w-full h-2 bg-[#EAE0D5] rounded-lg appearance-none cursor-pointer accent-[#24211D]"
               />
               <div className="flex justify-between text-[11px] text-[#7A6F62] font-mono">
-                <span>20 pcs</span>
-                <span>100 pcs</span>
-                <span>250 pcs</span>
-                <span>500+ pcs</span>
+                <span>{minQty} pcs</span>
+                <span>{Math.round((minQty + maxQty) / 4)} pcs</span>
+                <span>{Math.round((minQty + maxQty) / 2)} pcs</span>
+                <span>{maxQty}+ pcs</span>
               </div>
+              {content.tierDiscountText && (
+                <p className="text-[10px] text-[#8C5E35] italic text-center pt-1 font-medium">
+                  {content.tierDiscountText}
+                </p>
+              )}
             </div>
 
             {/* 3. Scent & Ribbon */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                  3. Signature Aroma:
-                </label>
+              <div className="space-y-1.5 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
+                    {content.aromaTitle || '3. Signature Aroma:'}
+                  </label>
+                  {isEditMode && (
+                    <button
+                      onClick={() => onEdit?.('aromas')}
+                      className="p-0.5 px-1.5 text-[9px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" />
+                      <span>Edit Aromas</span>
+                    </button>
+                  )}
+                </div>
                 <select
                   value={scent}
                   onChange={(e) => setScent(e.target.value)}
                   className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
                 >
-                  <option value="French Vanilla & Almond">French Vanilla & Almond (Sweet)</option>
-                  <option value="Wild Peony & Rose Petals">Wild Peony & Rose Petals (Floral)</option>
-                  <option value="Amber Sandalwood & Cedar">Amber Sandalwood & Cedar (Warm)</option>
-                  <option value="White Tea & Bergamot">White Tea & Bergamot (Fresh)</option>
+                  {aromaItems.map((a, idx) => (
+                    <option key={idx} value={a}>{a}</option>
+                  ))}
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                  4. Ribbon Material & Tone:
-                </label>
+              <div className="space-y-1.5 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
+                    {content.ribbonTitle || '4. Ribbon Material & Tone:'}
+                  </label>
+                  {isEditMode && (
+                    <button
+                      onClick={() => onEdit?.('ribbons')}
+                      className="p-0.5 px-1.5 text-[9px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" />
+                      <span>Edit Ribbons</span>
+                    </button>
+                  )}
+                </div>
                 <select
                   value={ribbonColor}
                   onChange={(e) => setRibbonColor(e.target.value)}
                   className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
                 >
-                  <option value="Champagne Gold Chiffon">Champagne Gold Chiffon</option>
-                  <option value="Oat Rustic Linen">Oat Rustic Linen (Minimalist)</option>
-                  <option value="Blush Dusty Rose">Blush Dusty Rose (Bridal)</option>
-                  <option value="Eucalyptus Sage Green">Eucalyptus Sage Green</option>
-                  <option value="Espresso Velvet">Espresso Luxury Velvet</option>
+                  {ribbonItems.map((r, idx) => (
+                    <option key={idx} value={r}>{r}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* 4. Packaging Box */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                5. Packaging Style:
-              </label>
+            <div className="space-y-2 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
+                  {content.packagingTitle || '5. Packaging Style:'}
+                </label>
+                {isEditMode && (
+                  <button
+                    onClick={() => onEdit?.('packaging')}
+                    className="p-1 px-2 text-[10px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Edit Card View Boxes</span>
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {[
-                  { id: 'luxe_window', title: 'Clear View Box', price: '+৳45/pc', desc: 'See-through top with satin ribbon' },
-                  { id: 'kraft_ribbon', title: 'Rigid Kraft Box', price: '+৳35/pc', desc: 'Debossed gold foil crest' },
-                  { id: 'standard', title: 'Minimalist Wrap', price: '+৳25/pc', desc: 'Eco tissue & wax seal' },
-                ].map((b) => (
+                {packagingItems.map((b) => (
                   <button
                     key={b.id}
                     type="button"
@@ -211,7 +295,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                   >
                     <div className="flex justify-between items-center">
                       <p className="text-xs font-semibold text-[#24211D]">{b.title}</p>
-                      <span className="text-[10px] text-[#8C5E35] font-mono">{b.price}</span>
+                      <span className="text-[10px] text-[#8C5E35] font-mono font-medium">{b.price}</span>
                     </div>
                     <p className="text-[11px] text-[#7A6F62] mt-1">{b.desc}</p>
                   </button>
@@ -222,7 +306,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
             {/* 5. Custom Tag Inscription */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                6. Personalized Inscription:
+                {content.inscriptionTitle || '6. Personalized Inscription:'}
               </label>
               <input
                 type="text"
@@ -232,19 +316,30 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
               />
               <p className="text-[11px] text-[#7A6F62]">
-                Includes personalized foil-accented card and botanical sprig.
+                {content.inscriptionNote || 'Includes personalized foil-accented card and botanical sprig.'}
               </p>
             </div>
           </div>
 
           {/* Quotation Summary Card: Right 5 Columns */}
-          <div className="lg:col-span-5 bg-[#FAF8F5] p-6 sm:p-7 rounded-lg border border-[#EAE0D5] space-y-6 shadow-xs">
+          <div className="lg:col-span-5 bg-[#FAF8F5] p-6 sm:p-7 rounded-lg border border-[#EAE0D5] space-y-6 shadow-xs relative border-2 border-transparent hover:border-amber-600/40 transition-all">
+            {isEditMode && (
+              <button
+                onClick={() => onEdit?.('quotation')}
+                className="absolute top-4 right-4 z-20 px-2.5 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-[11px] rounded-full flex items-center gap-1 cursor-pointer border border-white/40 shadow-sm"
+                title="Edit Quotation Card Box"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Edit Card Box</span>
+              </button>
+            )}
+
             <div className="border-b border-[#EAE0D5] pb-4">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#8C5E35]">
-                Live Estimate & Terms
+                {content.cardBoxBadge || 'Live Estimate & Terms'}
               </span>
               <h3 className="font-serif text-2xl text-[#24211D] mt-1">
-                Order Quotation
+                {content.cardBoxTitle || 'Order Quotation'}
               </h3>
             </div>
 
@@ -252,7 +347,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
             <div className="space-y-2.5 text-xs text-[#5A5248]">
               <div className="flex justify-between">
                 <span>Selected Silhouette:</span>
-                <span className="font-medium text-[#24211D] capitalize">{candleStyle}</span>
+                <span className="font-medium text-[#24211D] capitalize">{selectedMold?.label || candleStyle}</span>
               </div>
               <div className="flex justify-between">
                 <span>Quantity:</span>
@@ -268,7 +363,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
               </div>
               <div className="flex justify-between">
                 <span>Production Lead Time:</span>
-                <span className="font-medium text-[#24211D]">4–7 Business Days</span>
+                <span className="font-medium text-[#24211D]">{content.leadTimeText || '4–7 Business Days'}</span>
               </div>
 
               {/* Total & 50% Advance Notice */}
@@ -288,7 +383,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                   <span>Custom Order Terms: 50% Advance</span>
                 </div>
                 <p className="text-[11px] text-[#5A5248] leading-relaxed">
-                  For customized favor orders, a 50% advance deposit (৳{advanceRequired.toLocaleString()}) is required via bKash or Nagad. The remaining 50% is payable upon doorstep delivery.
+                  {content.advanceNoticeText || `For customized favor orders, a 50% advance deposit (৳${advanceRequired.toLocaleString()}) is required via bKash or Nagad. The remaining 50% is payable upon doorstep delivery.`}
                 </p>
               </div>
             </div>

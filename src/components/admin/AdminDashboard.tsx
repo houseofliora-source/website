@@ -29,7 +29,7 @@ import {
   RefreshCw,
   Flame,
   Sparkles,
-  Palette
+  ChevronDown
 } from 'lucide-react';
 import { Product, OrderRecord, StoreSettings, SiteContent } from '../../types';
 import { CustomerUser } from '../CustomerAuthModal';
@@ -134,8 +134,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Active Tab
-  const [activeTab, setActiveTab] = useState<'editor' | 'products' | 'orders' | 'customers' | 'settings'>('editor');
+  // Ops accordion — which section is open
+  const [openSection, setOpenSection] = useState<'orders' | 'customers' | 'settings' | null>(null);
   const [siteContent, setSiteContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
 
   // Data States
@@ -606,44 +606,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
   }
 
   // ---------------------------------------------------------------------------
-  // MAIN ADMIN DASHBOARD UI
+  // MAIN ADMIN DASHBOARD UI — Single Unified Page
   // ---------------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#24211D] flex flex-col font-sans">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EAE0D5] px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
+
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EAE0D5] px-4 sm:px-6 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#24211D] text-white flex items-center justify-center font-serif text-base font-bold shadow-xs">
+          <div className="w-9 h-9 rounded-full bg-[#24211D] text-white flex items-center justify-center font-serif text-base font-bold shadow-xs shrink-0">
             HL
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-serif text-lg font-medium text-[#24211D]">
-                House of Líora
-              </h1>
-              <span className="text-[10px] font-mono uppercase bg-[#FAF8F5] text-[#8C5E35] border border-[#EAE0D5] px-2 py-0.5 rounded">
-                Studio Admin (/studioadmin)
+              <h1 className="font-serif text-base sm:text-lg font-medium text-[#24211D]">House of Líora</h1>
+              <span className="text-[10px] font-mono uppercase bg-[#FAF8F5] text-[#8C5E35] border border-[#EAE0D5] px-2 py-0.5 rounded hidden sm:inline">
+                /studioadmin
               </span>
             </div>
-            <p className="text-[11px] text-[#7A6F62] hidden sm:block">
-              Zero-Budget Cloud Storefront Controller · Spark Plan
-            </p>
+            <p className="text-[11px] text-[#7A6F62] hidden sm:block">Studio Owner Portal · Zero-Budget Cloud Storefront</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setActiveTab(activeTab === 'editor' ? 'products' : 'editor')}
-            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs ${
-              activeTab === 'editor'
-                ? 'bg-[#24211D] text-white'
-                : 'bg-[#8C5E35] hover:bg-[#A36E3F] text-white'
-            }`}
-          >
-            <Palette className="w-3.5 h-3.5" />
-            <span>{activeTab === 'editor' ? 'Standard Dashboard' : '🎨 Live Website Editor'}</span>
-          </button>
-
+        <div className="flex items-center gap-2">
           <button
             onClick={onBackToStore}
             className="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer"
@@ -651,7 +636,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
             <ExternalLink className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">View Store</span>
           </button>
-
           <button
             onClick={handleLogout}
             title="Log Out"
@@ -662,11 +646,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
         </div>
       </header>
 
-      {/* Floating Status Notification */}
+      {/* Flash Notification */}
       {statusMessage && (
         <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg border text-xs font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom duration-300 ${
-          statusMessage.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+          statusMessage.type === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
             : 'bg-red-50 border-red-200 text-red-800'
         }`}>
           {statusMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -674,36 +658,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
         </div>
       )}
 
-      {/* Main Container / Visual Live Editor */}
-      {activeTab === 'editor' ? (
-        <VisualSiteEditor
-          initialContent={siteContent}
-          storeSettings={settings}
-          products={products}
-          onSave={async (newContent) => {
-            const ok = await updateSiteContentInFirestore(newContent);
-            if (ok) {
-              setSiteContent(newContent);
-              flash('Website texts and font style published successfully!', 'success');
-            } else {
-              flash('Failed to publish website changes to Firestore', 'error');
-            }
-            return ok;
-          }}
-          onBackToAdmin={() => setActiveTab('products')}
-        />
-      ) : (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Metric Cards Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="flex-1 w-full max-w-screen-2xl mx-auto p-3 sm:p-5 space-y-5">
+
+        {/* ── Metric Cards ─────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="p-4 bg-white rounded-lg border border-[#EAE0D5] shadow-xs space-y-1">
             <span className="text-[11px] font-medium text-[#7A6F62] uppercase tracking-wider flex items-center gap-1.5">
               <DollarSign className="w-3.5 h-3.5 text-[#8C5E35]" />
               Gross Revenue
             </span>
-            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">
-              ৳{totalRevenue.toLocaleString()}
-            </p>
+            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">৳{totalRevenue.toLocaleString()}</p>
             <p className="text-[10px] text-emerald-700">From verified orders</p>
           </div>
 
@@ -713,9 +677,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
               Total Orders
             </span>
             <div className="flex items-baseline gap-2">
-              <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">
-                {orders.length}
-              </p>
+              <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">{orders.length}</p>
               {pendingOrdersCount > 0 && (
                 <span className="text-[10px] font-mono bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-medium">
                   {pendingOrdersCount} Pending
@@ -730,9 +692,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
               <Flame className="w-3.5 h-3.5 text-[#8C5E35]" />
               Active Creations
             </span>
-            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">
-              {products.length}
-            </p>
+            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">{products.length}</p>
             <p className="text-[10px] text-[#7A6F62]">Candles in public catalog</p>
           </div>
 
@@ -741,575 +701,346 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
               <Users className="w-3.5 h-3.5 text-[#8C5E35]" />
               Patron Circle
             </span>
-            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">
-              {customers.length}
-            </p>
+            <p className="text-xl sm:text-2xl font-serif font-semibold text-[#24211D]">{customers.length}</p>
             <p className="text-[10px] text-[#7A6F62]">Registered customer profiles</p>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#EAE0D5] overflow-x-auto pb-px">
-          <button
-            onClick={() => setActiveTab('editor')}
-            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'editor'
-                ? 'border-[#8C5E35] text-[#8C5E35] bg-[#8C5E35]/10'
-                : 'border-transparent text-[#8C5E35] hover:text-[#24211D] bg-[#8C5E35]/5'
-            }`}
-          >
-            <Palette className="w-4 h-4 text-[#8C5E35]" />
-            <span>🎨 Visual Site Editor (লাইভ এডিটর)</span>
-            <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-mono font-medium">Pencil Mode</span>
-          </button>
+        {/* ── Operations Accordion ─────────────────────────────────────── */}
+        <div className="bg-white border border-[#EAE0D5] rounded-xl overflow-hidden shadow-xs">
+          <div className="px-4 py-2.5 bg-[#F5F1EB] border-b border-[#EAE0D5] flex items-center gap-2">
+            <Settings className="w-3.5 h-3.5 text-[#8C5E35]" />
+            <span className="text-xs font-semibold text-[#24211D] uppercase tracking-wide">Store Operations</span>
+            <span className="text-[10px] text-[#7A6F62] ml-1">(Orders · Customers · Settings)</span>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'products'
-                ? 'border-[#24211D] text-[#24211D]'
-                : 'border-transparent text-[#7A6F62] hover:text-[#24211D]'
-            }`}
-          >
-            <Package className="w-4 h-4 text-[#8C5E35]" />
-            <span>Candle Products ({products.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'orders'
-                ? 'border-[#24211D] text-[#24211D]'
-                : 'border-transparent text-[#7A6F62] hover:text-[#24211D]'
-            }`}
-          >
-            <ShoppingBag className="w-4 h-4 text-[#8C5E35]" />
-            <span>Customer Orders ({orders.length})</span>
-            {pendingOrdersCount > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('customers')}
-            className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'customers'
-                ? 'border-[#24211D] text-[#24211D]'
-                : 'border-transparent text-[#7A6F62] hover:text-[#24211D]'
-            }`}
-          >
-            <Users className="w-4 h-4 text-[#8C5E35]" />
-            <span>Patron Customers ({customers.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'settings'
-                ? 'border-[#24211D] text-[#24211D]'
-                : 'border-transparent text-[#7A6F62] hover:text-[#24211D]'
-            }`}
-          >
-            <Settings className="w-4 h-4 text-[#8C5E35]" />
-            <span>Storefront Settings</span>
-          </button>
-        </div>
-
-        {/* ----------------------------------------------------------------- */}
-        {/* TAB 1: PRODUCTS CATALOG MANAGEMENT */}
-        {/* ----------------------------------------------------------------- */}
-        {activeTab === 'products' && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-[#EAE0D5]">
-              <div>
-                <h3 className="font-serif text-lg text-[#24211D]">Product Catalog</h3>
-                <p className="text-xs text-[#7A6F62]">
-                  Add new candles, change prices, toggle stock, or upload high-res photos.
-                </p>
+          {/* ── Orders accordion item ── */}
+          <div className="border-b border-[#EAE0D5]">
+            <button
+              onClick={() => setOpenSection(openSection === 'orders' ? null : 'orders')}
+              className="w-full px-4 py-3 flex items-center justify-between text-xs font-medium text-[#24211D] hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-[#8C5E35]" />
+                Customer Orders
+                <span className="text-[#7A6F62]">({orders.length})</span>
+                {pendingOrdersCount > 0 && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-[#8C5E35] transition-transform ${openSection === 'orders' ? 'rotate-180' : ''}`} />
+            </button>
+            {openSection === 'orders' && (
+              <div className="px-4 pb-4 space-y-3 border-t border-[#EAE0D5] pt-3">
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                    {['all', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => setOrderFilter(status)}
+                        className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                          orderFilter === status ? 'bg-[#24211D] text-white' : 'bg-[#FAF8F5] text-[#5A5248] hover:bg-[#EAE0D5]'
+                        }`}
+                      >
+                        {status === 'all' ? 'All Orders' : status}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#7A6F62] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search by ID, Name, Phone..."
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      className="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35]"
+                    />
+                  </div>
+                </div>
+                {filteredOrders.length === 0 ? (
+                  <div className="p-10 text-center bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] space-y-2">
+                    <ShoppingBag className="w-8 h-8 text-[#8C5E35] mx-auto opacity-40" />
+                    <p className="text-xs text-[#7A6F62]">No orders found. Orders submitted through the storefront will appear here in real-time.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredOrders.map(order => (
+                      <div key={order.id} className="p-4 sm:p-5 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] space-y-4 hover:border-[#D8CEBE] transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE0D5] pb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-xs font-semibold text-[#8C5E35] bg-white px-2.5 py-1 rounded border border-[#EAE0D5]">#{order.id}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-[#7A6F62]">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{order.createdAt}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[#7A6F62]">Status:</span>
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as OrderRecord['status'])}
+                              className={`text-xs font-medium px-2.5 py-1 rounded border focus:outline-none cursor-pointer ${
+                                order.status === 'Pending' ? 'bg-amber-50 text-amber-900 border-amber-200' :
+                                order.status === 'Confirmed' ? 'bg-blue-50 text-blue-900 border-blue-200' :
+                                order.status === 'Shipped' ? 'bg-purple-50 text-purple-900 border-purple-200' :
+                                order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
+                                'bg-gray-50 text-gray-800 border-gray-200'
+                              }`}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Processing">Processing</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                          <div className="space-y-1.5 p-3 bg-white rounded border border-[#EAE0D5]">
+                            <p className="font-medium text-[#24211D] flex items-center justify-between">
+                              <span>{order.customerName}</span>
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#FAF8F5] text-[#8C5E35]">
+                                {order.deliveryArea === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}
+                              </span>
+                            </p>
+                            <p className="text-[#5A5248] flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-[#8C5E35]" />{order.customerPhone}</p>
+                            <p className="text-[#7A6F62] leading-relaxed">{order.customerAddress}</p>
+                          </div>
+                          <div className="space-y-1.5 p-3 bg-white rounded border border-[#EAE0D5]">
+                            <p className="font-medium text-[#24211D]">Items ({order.items.length})</p>
+                            <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+                              {order.items.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-[#5A5248]">
+                                  <span className="truncate max-w-[140px]">• {item.title}</span>
+                                  <span className="font-mono">x{item.quantity} (৳{item.price * item.quantity})</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-1.5 p-3 bg-white rounded border border-[#EAE0D5] flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between text-[#7A6F62]"><span>Payment:</span><span className="font-medium uppercase text-[#24211D]">{order.paymentMethod}</span></div>
+                              {order.transactionId && (
+                                <div className="flex justify-between text-[#7A6F62] pt-0.5"><span>TrxID:</span><span className="font-mono text-emerald-800 font-semibold">{order.transactionId}</span></div>
+                              )}
+                            </div>
+                            <div className="pt-2 border-t border-[#EAE0D5] flex justify-between items-baseline">
+                              <span className="font-medium text-[#24211D]">Grand Total:</span>
+                              <span className="font-mono text-base font-bold text-[#24211D]">৳{order.grandTotal}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 pt-1">
+                          <a href={`tel:${order.customerPhone}`} className="px-3 py-1.5 bg-white hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
+                            <span>Call Customer</span>
+                          </a>
+                          <button onClick={() => handleSendWhatsAppConfirmation(order)} className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>Send WhatsApp Receipt</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            )}
+          </div>
 
-              <button
-                onClick={openCreateProductModal}
-                className="px-3.5 py-2 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-medium inline-flex items-center gap-2 transition-colors cursor-pointer self-start sm:self-auto"
-              >
-                <Plus className="w-4 h-4 text-[#D4AF37]" />
-                <span>Add New Creation</span>
-              </button>
-            </div>
+          {/* ── Customers accordion item ── */}
+          <div className="border-b border-[#EAE0D5]">
+            <button
+              onClick={() => setOpenSection(openSection === 'customers' ? null : 'customers')}
+              className="w-full px-4 py-3 flex items-center justify-between text-xs font-medium text-[#24211D] hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#8C5E35]" />
+                Patron Customers <span className="text-[#7A6F62]">({customers.length})</span>
+              </span>
+              <ChevronDown className={`w-4 h-4 text-[#8C5E35] transition-transform ${openSection === 'customers' ? 'rotate-180' : ''}`} />
+            </button>
+            {openSection === 'customers' && (
+              <div className="border-t border-[#EAE0D5] overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FAF8F5] border-b border-[#EAE0D5] text-[#7A6F62] uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-3.5 font-medium">Name</th>
+                      <th className="p-3.5 font-medium">Phone</th>
+                      <th className="p-3.5 font-medium">Email</th>
+                      <th className="p-3.5 font-medium">City</th>
+                      <th className="p-3.5 font-medium">Address</th>
+                      <th className="p-3.5 font-medium">Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EAE0D5]">
+                    {customers.map((c, idx) => (
+                      <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                        <td className="p-3.5 font-medium text-[#24211D]">{c.name}</td>
+                        <td className="p-3.5 font-mono text-[#8C5E35]">{c.phone}</td>
+                        <td className="p-3.5 text-[#5A5248]">{c.email}</td>
+                        <td className="p-3.5"><span className="px-2 py-0.5 rounded text-[10px] bg-[#FAF8F5] border border-[#EAE0D5] text-[#7A6F62]">{c.city}</span></td>
+                        <td className="p-3.5 text-[#7A6F62] max-w-xs truncate">{c.address}</td>
+                        <td className="p-3.5 text-[#7A6F62] font-mono">{c.joinedAt}</td>
+                      </tr>
+                    ))}
+                    {customers.length === 0 && (
+                      <tr><td colSpan={6} className="p-8 text-center text-xs text-[#7A6F62]">No registered patrons in Firestore yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map(product => (
-                <div 
-                  key={product.id}
-                  className="bg-white border border-[#EAE0D5] rounded-lg p-4 flex flex-col justify-between gap-3 shadow-xs hover:border-[#D8CEBE] transition-all"
-                >
-                  <div className="flex gap-3">
-                    <div className="w-20 h-20 rounded-md overflow-hidden bg-[#FAF8F5] border border-[#EAE0D5] shrink-0">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLElement;
-                          target.style.display = 'none';
-                        }}
+          {/* ── Settings accordion item ── */}
+          <div>
+            <button
+              onClick={() => setOpenSection(openSection === 'settings' ? null : 'settings')}
+              className="w-full px-4 py-3 flex items-center justify-between text-xs font-medium text-[#24211D] hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-[#8C5E35]" />
+                Storefront Settings & Security
+              </span>
+              <ChevronDown className={`w-4 h-4 text-[#8C5E35] transition-transform ${openSection === 'settings' ? 'rotate-180' : ''}`} />
+            </button>
+            {openSection === 'settings' && (
+              <div className="border-t border-[#EAE0D5] p-4">
+                <form onSubmit={handleSaveSettings} className="space-y-5 max-w-3xl">
+                  {/* Favicon */}
+                  <div className="p-4 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
+                          Website Favicon / Tab Icon
+                        </h4>
+                        <p className="text-[11px] text-[#7A6F62]">Upload any SVG icon or high-res brand photo directly from your device.</p>
+                      </div>
+                      {faviconPreview && (
+                        <div className="w-10 h-10 rounded-md bg-white border border-[#EAE0D5] p-1 flex items-center justify-center shrink-0 shadow-xs">
+                          <img src={faviconPreview} alt="Favicon" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+                    </div>
+                    <label className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white hover:bg-[#FAF8F5] border border-dashed border-[#8C5E35] rounded-md cursor-pointer transition-colors text-xs font-medium text-[#24211D]">
+                      <Upload className="w-4 h-4 text-[#8C5E35]" />
+                      <span>Choose SVG or Photo from Device</span>
+                      <input type="file" accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" className="hidden" onChange={handleFaviconUpload} />
+                    </label>
+                  </div>
+
+                  {/* Announcement */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[#24211D]">Top Announcement Banner Text</label>
+                    <input
+                      type="text"
+                      value={settingsForm.announcementText}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
+                      placeholder="e.g. ✨ 10% Off Eid Pre-orders · Min Order ৳200"
+                      className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35]"
+                    />
+                  </div>
+
+                  {/* Fees */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Delivery Fee (Dhaka)</label>
+                      <input type="number" value={settingsForm.deliveryFeeDhaka} onChange={(e) => setSettingsForm({ ...settingsForm, deliveryFeeDhaka: Number(e.target.value) })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Delivery Fee (Outside)</label>
+                      <input type="number" value={settingsForm.deliveryFeeOutside} onChange={(e) => setSettingsForm({ ...settingsForm, deliveryFeeOutside: Number(e.target.value) })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Minimum Order (৳)</label>
+                      <input type="number" value={settingsForm.minimumOrder} onChange={(e) => setSettingsForm({ ...settingsForm, minimumOrder: Number(e.target.value) })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                  </div>
+
+                  {/* Payment Numbers */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">bKash Merchant / Personal No.</label>
+                      <input type="text" value={settingsForm.bkashNumber} onChange={(e) => setSettingsForm({ ...settingsForm, bkashNumber: e.target.value })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Nagad Merchant / Personal No.</label>
+                      <input type="text" value={settingsForm.nagadNumber} onChange={(e) => setSettingsForm({ ...settingsForm, nagadNumber: e.target.value })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Support Email</label>
+                      <input type="email" value={settingsForm.supportEmail} onChange={(e) => setSettingsForm({ ...settingsForm, supportEmail: e.target.value })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[#24211D]">Support Phone</label>
+                      <input type="text" value={settingsForm.supportPhone} onChange={(e) => setSettingsForm({ ...settingsForm, supportPhone: e.target.value })} className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono" />
+                    </div>
+                  </div>
+
+                  {/* Master Passcode */}
+                  <div className="p-4 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] space-y-2">
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-[#8C5E35]" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D]">Studio Admin Master Passcode</h4>
+                    </div>
+                    <p className="text-[11px] text-[#7A6F62]">/studioadmin পোর্টালে প্রবেশের গোপন পাসওয়ার্ড। ডিফল্ট: <code>liora2026</code>।</p>
+                    <div className="max-w-xs space-y-1">
+                      <label className="text-xs font-medium text-[#24211D]">Custom Admin Passcode</label>
+                      <input
+                        type="text"
+                        value={settingsForm.adminPasscode || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, adminPasscode: e.target.value })}
+                        placeholder="e.g. liora2026 or your private pin"
+                        className="w-full px-3.5 py-2 text-xs bg-white border border-[#EAE0D5] rounded-md font-mono font-medium text-[#24211D] focus:outline-none focus:border-[#8C5E35]"
                       />
                     </div>
-
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#8C5E35] font-medium">
-                        <span className="capitalize">{product.category}</span>
-                        <span>·</span>
-                        <span>{product.scentFamily}</span>
-                      </div>
-                      <h4 className="font-serif text-base text-[#24211D] font-medium truncate">
-                        {product.name}
-                      </h4>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-mono text-sm font-semibold text-[#24211D]">
-                          ৳{product.price}
-                        </span>
-                        {product.originalPrice && (
-                          <span className="font-mono text-xs text-[#9E9282] line-through">
-                            ৳{product.originalPrice}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
-                  <p className="text-xs text-[#7A6F62] line-clamp-2 leading-relaxed">
-                    {product.description}
-                  </p>
-
-                  <div className="pt-2 border-t border-[#EAE0D5] flex items-center justify-between text-xs">
+                  <div className="pt-2 flex justify-end">
                     <button
-                      onClick={() => handleToggleStock(product)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer transition-colors ${
-                        product.inStock 
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                          : 'bg-red-50 text-red-800 border border-red-200'
-                      }`}
+                      type="submit"
+                      disabled={loading}
+                      className="px-5 py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-medium tracking-wide uppercase transition-colors cursor-pointer"
                     >
-                      {product.inStock ? '✓ In Stock' : '✕ Out of Stock'}
+                      {loading ? 'Saving to Cloud...' : 'Save Settings'}
                     </button>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openEditProductModal(product)}
-                        className="p-1.5 text-[#5A5248] hover:text-[#24211D] hover:bg-[#FAF8F5] rounded transition-colors cursor-pointer"
-                        title="Edit Product"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product)}
-                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors cursor-pointer"
-                        title="Delete Product"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ----------------------------------------------------------------- */}
-        {/* TAB 2: LIVE ORDERS MANAGEMENT */}
-        {/* ----------------------------------------------------------------- */}
-        {activeTab === 'orders' && (
-          <div className="space-y-4">
-            {/* Filters Bar */}
-            <div className="bg-white p-4 rounded-lg border border-[#EAE0D5] flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                {['all', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'].map(status => (
-                  <button
-                    key={status}
-                    onClick={() => setOrderFilter(status)}
-                    className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors whitespace-nowrap cursor-pointer ${
-                      orderFilter === status
-                        ? 'bg-[#24211D] text-white'
-                        : 'bg-[#FAF8F5] text-[#5A5248] hover:bg-[#EAE0D5]'
-                    }`}
-                  >
-                    {status === 'all' ? 'All Orders' : status}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#7A6F62] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search by ID, Name, Phone..."
-                  value={orderSearch}
-                  onChange={(e) => setOrderSearch(e.target.value)}
-                  className="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35]"
-                />
-              </div>
-            </div>
-
-            {/* Orders Feed */}
-            {filteredOrders.length === 0 ? (
-              <div className="p-12 text-center bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                <ShoppingBag className="w-8 h-8 text-[#8C5E35] mx-auto opacity-50" />
-                <h4 className="font-serif text-lg text-[#24211D]">No Orders Found</h4>
-                <p className="text-xs text-[#7A6F62]">
-                  Orders submitted through the storefront shopping bag will appear here in real-time.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredOrders.map(order => (
-                  <div
-                    key={order.id}
-                    className="p-4 sm:p-5 bg-white rounded-lg border border-[#EAE0D5] shadow-xs space-y-4 hover:border-[#D8CEBE] transition-all"
-                  >
-                    {/* Header info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE0D5] pb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs font-semibold text-[#8C5E35] bg-[#FAF8F5] px-2.5 py-1 rounded border border-[#EAE0D5]">
-                          #{order.id}
-                        </span>
-                        <div className="flex items-center gap-1.5 text-xs text-[#7A6F62]">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>{order.createdAt}</span>
-                        </div>
-                      </div>
-
-                      {/* Status Selector */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#7A6F62]">Status:</span>
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as OrderRecord['status'])}
-                          className={`text-xs font-medium px-2.5 py-1 rounded border focus:outline-none cursor-pointer ${
-                            order.status === 'Pending' ? 'bg-amber-50 text-amber-900 border-amber-200' :
-                            order.status === 'Confirmed' ? 'bg-blue-50 text-blue-900 border-blue-200' :
-                            order.status === 'Shipped' ? 'bg-purple-50 text-purple-900 border-purple-200' :
-                            order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
-                            'bg-gray-50 text-gray-800 border-gray-200'
-                          }`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Processing">Processing</option>
-                          <option value="Shipped">Shipped</option>
-                          <option value="Delivered">Delivered</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Order Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                      {/* Customer Info */}
-                      <div className="space-y-1.5 p-3 bg-[#FAF8F5] rounded border border-[#EAE0D5]">
-                        <p className="font-medium text-[#24211D] flex items-center justify-between">
-                          <span>{order.customerName}</span>
-                          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white text-[#8C5E35]">
-                            {order.deliveryArea === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'}
-                          </span>
-                        </p>
-                        <p className="text-[#5A5248] flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
-                          <span>{order.customerPhone}</span>
-                        </p>
-                        <p className="text-[#7A6F62] leading-relaxed">
-                          {order.customerAddress}
-                        </p>
-                      </div>
-
-                      {/* Items Purchased */}
-                      <div className="space-y-1.5 p-3 bg-[#FAF8F5] rounded border border-[#EAE0D5]">
-                        <p className="font-medium text-[#24211D]">Items ({order.items.length})</p>
-                        <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="flex justify-between text-[#5A5248]">
-                              <span className="truncate max-w-[140px]">• {item.title}</span>
-                              <span className="font-mono">x{item.quantity} (৳{item.price * item.quantity})</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Financials & Payment */}
-                      <div className="space-y-1.5 p-3 bg-[#FAF8F5] rounded border border-[#EAE0D5] flex flex-col justify-between">
-                        <div>
-                          <div className="flex justify-between text-[#7A6F62]">
-                            <span>Payment:</span>
-                            <span className="font-medium uppercase text-[#24211D]">{order.paymentMethod}</span>
-                          </div>
-                          {order.transactionId && (
-                            <div className="flex justify-between text-[#7A6F62] pt-0.5">
-                              <span>TrxID:</span>
-                              <span className="font-mono text-emerald-800 font-semibold">{order.transactionId}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="pt-2 border-t border-[#EAE0D5] flex justify-between items-baseline">
-                          <span className="font-medium text-[#24211D]">Grand Total:</span>
-                          <span className="font-mono text-base font-bold text-[#24211D]">৳{order.grandTotal}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <a
-                        href={`tel:${order.customerPhone}`}
-                        className="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
-                        <span>Call Customer</span>
-                      </a>
-
-                      <button
-                        onClick={() => handleSendWhatsAppConfirmation(order)}
-                        className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Send WhatsApp Receipt</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                </form>
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* ----------------------------------------------------------------- */}
-        {/* TAB 3: CUSTOMERS DIRECTORY */}
-        {/* ----------------------------------------------------------------- */}
-        {activeTab === 'customers' && (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-lg border border-[#EAE0D5]">
-              <h3 className="font-serif text-lg text-[#24211D]">Patron Directory</h3>
-              <p className="text-xs text-[#7A6F62]">
-                Registered customer profiles stored in Firebase Firestore for VIP offers & loyalty outreach.
-              </p>
-            </div>
+        {/* ── Live Website Editor (Embedded) ───────────────────────────── */}
+        <VisualSiteEditor
+          embedded={true}
+          initialContent={siteContent}
+          storeSettings={settings}
+          products={products}
+          onCreateProduct={openCreateProductModal}
+          onEditProduct={openEditProductModal}
+          onDeleteProduct={handleDeleteProduct}
+          onToggleStock={handleToggleStock}
+          onSave={async (newContent) => {
+            const ok = await updateSiteContentInFirestore(newContent);
+            if (ok) {
+              setSiteContent(newContent);
+              flash('Website texts and font style published successfully!', 'success');
+            } else {
+              flash('Failed to publish website changes to Firestore', 'error');
+            }
+            return ok;
+          }}
+        />
 
-            <div className="bg-white rounded-lg border border-[#EAE0D5] overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF8F5] border-b border-[#EAE0D5] text-[#7A6F62] uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3.5 font-medium">Customer Name</th>
-                    <th className="p-3.5 font-medium">Phone Number</th>
-                    <th className="p-3.5 font-medium">Email Address</th>
-                    <th className="p-3.5 font-medium">Delivery City</th>
-                    <th className="p-3.5 font-medium">Address</th>
-                    <th className="p-3.5 font-medium">Member Since</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EAE0D5]">
-                  {customers.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition-colors">
-                      <td className="p-3.5 font-medium text-[#24211D]">{c.name}</td>
-                      <td className="p-3.5 font-mono text-[#8C5E35]">{c.phone}</td>
-                      <td className="p-3.5 text-[#5A5248]">{c.email}</td>
-                      <td className="p-3.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-[#FAF8F5] border border-[#EAE0D5] text-[#7A6F62]">
-                          {c.city}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-[#7A6F62] max-w-xs truncate">{c.address}</td>
-                      <td className="p-3.5 text-[#7A6F62] font-mono">{c.joinedAt}</td>
-                    </tr>
-                  ))}
-                  {customers.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-xs text-[#7A6F62]">
-                        No registered patrons in Firestore yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+      </div>
 
-        {/* ----------------------------------------------------------------- */}
-        {/* TAB 4: STORE SETTINGS & FAVICON CONTROLS */}
-        {/* ----------------------------------------------------------------- */}
-        {activeTab === 'settings' && (
-          <div className="space-y-4 max-w-3xl">
-            <div className="bg-white p-4 rounded-lg border border-[#EAE0D5]">
-              <h3 className="font-serif text-lg text-[#24211D]">Storefront Controls & Branding</h3>
-              <p className="text-xs text-[#7A6F62]">
-                Update top announcement banner, delivery charges, bKash numbers, and website favicon directly.
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveSettings} className="bg-white p-6 rounded-lg border border-[#EAE0D5] space-y-6 shadow-xs">
-              {/* Dynamic Favicon Uploader */}
-              <div className="p-4 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
-                      Website Favicon / Tab Icon
-                    </h4>
-                    <p className="text-[11px] text-[#7A6F62]">
-                      Upload any SVG icon or high-res brand photo directly from your device.
-                    </p>
-                  </div>
-                  {faviconPreview && (
-                    <div className="w-10 h-10 rounded-md bg-white border border-[#EAE0D5] p-1 flex items-center justify-center shrink-0 shadow-xs">
-                      <img src={faviconPreview} alt="Favicon preview" className="w-full h-full object-contain" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white hover:bg-[#FAF8F5] border border-dashed border-[#8C5E35] rounded-md cursor-pointer transition-colors text-xs font-medium text-[#24211D]">
-                    <Upload className="w-4 h-4 text-[#8C5E35]" />
-                    <span>Choose SVG or Photo from Device</span>
-                    <input 
-                      type="file" 
-                      accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" 
-                      className="hidden" 
-                      onChange={handleFaviconUpload}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {/* Announcement Bar */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#24211D]">Top Announcement Banner Text</label>
-                <input
-                  type="text"
-                  value={settingsForm.announcementText}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
-                  placeholder="e.g. ✨ 10% Off Eid Pre-orders · Min Order ৳200"
-                  className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35]"
-                />
-              </div>
-
-              {/* Fees & Thresholds */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Delivery Fee (Dhaka)</label>
-                  <input
-                    type="number"
-                    value={settingsForm.deliveryFeeDhaka}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, deliveryFeeDhaka: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Delivery Fee (Outside)</label>
-                  <input
-                    type="number"
-                    value={settingsForm.deliveryFeeOutside}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, deliveryFeeOutside: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Minimum Order (৳)</label>
-                  <input
-                    type="number"
-                    value={settingsForm.minimumOrder}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, minimumOrder: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Payment Numbers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">bKash Merchant / Personal No.</label>
-                  <input
-                    type="text"
-                    value={settingsForm.bkashNumber}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, bkashNumber: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Nagad Merchant / Personal No.</label>
-                  <input
-                    type="text"
-                    value={settingsForm.nagadNumber}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, nagadNumber: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Support Email</label>
-                  <input
-                    type="email"
-                    value={settingsForm.supportEmail}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, supportEmail: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#24211D]">Support Phone</label>
-                  <input
-                    type="text"
-                    value={settingsForm.supportPhone}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, supportPhone: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Studio Admin Security Passcode */}
-              <div className="p-4 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] space-y-2">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="w-4 h-4 text-[#8C5E35]" />
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D]">
-                    Studio Admin Master Passcode (মাস্টার পাসকোড)
-                  </h4>
-                </div>
-                <p className="text-[11px] text-[#7A6F62]">
-                  /studioadmin পোর্টালে প্রবেশের গোপন পাসওয়ার্ড। ডিফল্ট: <code>liora2026</code>। আপনি নিজের ইচ্ছেমতো যেকোনো সিকিউর পাসকোড লিখে "Save Settings"-এ ক্লিক করলেই এটি ক্লাউডে সেভ হবে।
-                </p>
-                <div className="max-w-xs space-y-1">
-                  <label className="text-xs font-medium text-[#24211D]">Custom Admin Passcode</label>
-                  <input
-                    type="text"
-                    value={settingsForm.adminPasscode || ''}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, adminPasscode: e.target.value })}
-                    placeholder="e.g. liora2026 or your private pin"
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#EAE0D5] rounded-md font-mono font-medium text-[#24211D] focus:outline-none focus:border-[#8C5E35]"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[#EAE0D5] flex justify-end">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-medium tracking-wide uppercase transition-colors cursor-pointer"
-                >
-                  {loading ? 'Saving to Cloud...' : 'Save Settings'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-      </main>
-      )}
 
       {/* ----------------------------------------------------------------- */}
       {/* PRODUCT CREATE / EDIT MODAL */}

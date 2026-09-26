@@ -92,6 +92,46 @@ export interface FaqItem {
   a: string;
 }
 
+export interface FavorMoldItem {
+  id: string;
+  label: string;
+  basePrice: number;
+}
+
+export interface FavorPackagingItem {
+  id: string;
+  title: string;
+  price: string;
+  addonPrice: number;
+  desc: string;
+}
+
+export interface FavorContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  consultationBtn: string;
+  moldTitle?: string;
+  moldItems?: FavorMoldItem[];
+  quantityTitle?: string;
+  minQuantity?: number;
+  maxQuantity?: number;
+  quantityStep?: number;
+  tierDiscountText?: string;
+  aromaTitle?: string;
+  aromaItems?: string[];
+  ribbonTitle?: string;
+  ribbonItems?: string[];
+  packagingTitle?: string;
+  packagingItems?: FavorPackagingItem[];
+  inscriptionTitle?: string;
+  inscriptionNote?: string;
+  cardBoxBadge?: string;
+  cardBoxTitle?: string;
+  leadTimeText?: string;
+  advanceNoticeText?: string;
+}
+
 export interface SiteContent {
   theme: SiteTheme;
   hero: {
@@ -118,12 +158,7 @@ export interface SiteContent {
     subtitle: string;
     quizBtnText: string;
   };
-  favors: {
-    badge: string;
-    title: string;
-    subtitle: string;
-    consultationBtn: string;
-  };
+  favors: FavorContent;
   care: {
     badge: string;
     title: string;
