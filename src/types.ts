@@ -132,6 +132,34 @@ export interface FavorContent {
   advanceNoticeText?: string;
 }
 
+export interface ScentQuizOption {
+  id: string;
+  title: string;
+  desc: string;
+  icon?: string;
+  targetProductId?: string;
+  targetCategory?: string;
+}
+
+export interface ScentQuizQuestion {
+  id: string;
+  prompt: string;
+  hint?: string;
+  options: ScentQuizOption[];
+}
+
+export interface ScentQuizContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  triggerBtnText: string;
+  resultBadge: string;
+  resultCtaText: string;
+  retakeBtnText: string;
+  defaultProductId?: string;
+  questions: ScentQuizQuestion[];
+}
+
 export interface SiteContent {
   theme: SiteTheme;
   hero: {
@@ -158,6 +186,7 @@ export interface SiteContent {
     subtitle: string;
     quizBtnText: string;
   };
+  scentQuiz?: ScentQuizContent;
   favors: FavorContent;
   care: {
     badge: string;

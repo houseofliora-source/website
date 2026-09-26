@@ -24,11 +24,18 @@ import {
   MessageSquareQuote,
   Star,
   Package,
-  Layers
+  Layers,
+  ArrowUp,
+  ArrowDown,
+  Play,
+  HelpCircle,
+  Tag,
+  CheckCircle2
 } from 'lucide-react';
-import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem } from '../../types';
+import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, ScentQuizContent, ScentQuizOption, ScentQuizQuestion } from '../../types';
 import { DEFAULT_SITE_CONTENT } from '../../data/defaultContent';
 import { CustomFavorBuilder } from '../CustomFavorBuilder';
+import { ScentQuiz } from '../ScentQuiz';
 
 interface VisualSiteEditorProps {
   initialContent: SiteContent;
@@ -56,7 +63,13 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   onDeleteProduct,
   onToggleStock,
 }) => {
-  const [content, setContent] = useState<SiteContent>(initialContent || DEFAULT_SITE_CONTENT);
+  const [content, setContent] = useState<SiteContent>(() => {
+    const base = initialContent || DEFAULT_SITE_CONTENT;
+    return {
+      ...base,
+      scentQuiz: base.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
+    };
+  });
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isEditMode, setIsEditMode] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -64,6 +77,141 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [favorEditTab, setFavorEditTab] = useState<'general' | 'molds' | 'quantity' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('general');
+
+  // Scent Finder Studio State
+  const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
+  const [selectedQuizQuestionIndex, setSelectedQuizQuestionIndex] = useState<number>(0);
+  const [isTestingQuizLive, setIsTestingQuizLive] = useState<boolean>(false);
+
+  // Safe accessor for scent quiz data
+  const quizData: ScentQuizContent = content.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz || {
+    badge: 'The Líora Olfactory Guide',
+    title: 'Find Your Signature Candle Profile',
+    subtitle: 'Answer brief questions to reveal your ideal artisanal fragrance and sculptural silhouette.',
+    triggerBtnText: 'Take Scent Profile Quiz',
+    resultBadge: 'Your Ideal Scent Match',
+    resultCtaText: 'View & Order Candle',
+    retakeBtnText: 'Retake Quiz',
+    defaultProductId: 'bubble-classic-ivory',
+    questions: [],
+  };
+
+  // Helper to update scent quiz
+  const updateScentQuiz = (updater: (prev: ScentQuizContent) => ScentQuizContent) => {
+    setContent(prev => {
+      const current = prev.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz || quizData;
+      const updated = updater(current);
+      return {
+        ...prev,
+        catalog: {
+          ...prev.catalog,
+          quizBtnText: updated.triggerBtnText || prev.catalog.quizBtnText,
+        },
+        scentQuiz: updated,
+      };
+    });
+  };
+
+  // Add Question
+  const handleAddQuizQuestion = () => {
+    updateScentQuiz(quiz => {
+      const newQ: ScentQuizQuestion = {
+        id: `q_${Date.now()}`,
+        prompt: `${quiz.questions.length + 1}. What mood or scent profile do you desire?`,
+        hint: 'Ambiance Selection',
+        options: [
+          {
+            id: `opt_${Date.now()}_1`,
+            title: 'Sweet & Comforting Vanilla',
+            desc: 'Warm vanilla, almond & golden caramel',
+            icon: '🕯️',
+            targetCategory: 'bubble',
+            targetProductId: products[0]?.id || '',
+          },
+          {
+            id: `opt_${Date.now()}_2`,
+            title: 'Delicate Floral Peony',
+            desc: 'Dewy peony petals & fresh jasmine',
+            icon: '🌸',
+            targetCategory: 'floating',
+            targetProductId: products[1]?.id || '',
+          },
+        ],
+      };
+      return {
+        ...quiz,
+        questions: [...quiz.questions, newQ],
+      };
+    });
+    setSelectedQuizQuestionIndex(quizData.questions.length);
+  };
+
+  // Delete Question
+  const handleDeleteQuizQuestion = (qIndex: number) => {
+    if (quizData.questions.length <= 1) {
+      alert('At least 1 quiz question is required.');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    updateScentQuiz(quiz => ({
+      ...quiz,
+      questions: quiz.questions.filter((_, idx) => idx !== qIndex),
+    }));
+    setSelectedQuizQuestionIndex(Math.max(0, qIndex - 1));
+  };
+
+  // Move Question
+  const handleMoveQuizQuestion = (qIndex: number, direction: 'up' | 'down') => {
+    updateScentQuiz(quiz => {
+      const list = [...quiz.questions];
+      const targetIdx = direction === 'up' ? qIndex - 1 : qIndex + 1;
+      if (targetIdx < 0 || targetIdx >= list.length) return quiz;
+      const temp = list[qIndex];
+      list[qIndex] = list[targetIdx];
+      list[targetIdx] = temp;
+      return { ...quiz, questions: list };
+    });
+    setSelectedQuizQuestionIndex(direction === 'up' ? Math.max(0, qIndex - 1) : Math.min(quizData.questions.length - 1, qIndex + 1));
+  };
+
+  // Add Option to active question
+  const handleAddQuizOption = (qIndex: number) => {
+    updateScentQuiz(quiz => {
+      const questions = [...quiz.questions];
+      const q = questions[qIndex];
+      if (!q) return quiz;
+      const newOpt: ScentQuizOption = {
+        id: `opt_${Date.now()}`,
+        title: 'New Aromatic Note',
+        desc: 'Distinct artisanal fragrance profile',
+        icon: '✨',
+        targetCategory: 'bubble',
+        targetProductId: products[0]?.id || '',
+      };
+      questions[qIndex] = {
+        ...q,
+        options: [...q.options, newOpt],
+      };
+      return { ...quiz, questions };
+    });
+  };
+
+  // Delete Option from active question
+  const handleDeleteQuizOption = (qIndex: number, optIndex: number) => {
+    const q = quizData.questions[qIndex];
+    if (!q || q.options.length <= 2) {
+      alert('Each question must have at least 2 options for customers to choose from.');
+      return;
+    }
+    updateScentQuiz(quiz => {
+      const questions = [...quiz.questions];
+      questions[qIndex] = {
+        ...q,
+        options: q.options.filter((_, idx) => idx !== optIndex),
+      };
+      return { ...quiz, questions };
+    });
+  };
 
   // Theme modal
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
@@ -558,9 +706,14 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     <span>Add New Candle Product</span>
                   </button>
                 )}
-                <button className="px-3.5 py-2 bg-white border border-[#D8CEBE] rounded text-xs text-[#24211D] flex items-center gap-1.5">
+                <button 
+                  onClick={() => setActiveModal('scentQuiz')}
+                  title="Configure Scent Quiz Questions & Products"
+                  className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] border border-[#D8CEBE] hover:border-[#8C5E35] rounded text-xs text-[#24211D] flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors group"
+                >
                   <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-                  <span>{content.catalog.quizBtnText}</span>
+                  <span>{quizData.triggerBtnText || content.catalog.quizBtnText}</span>
+                  {isEditMode && <Edit3 className="w-3 h-3 text-[#8C5E35] ml-1 group-hover:scale-110 transition-transform" />}
                 </button>
               </div>
             </div>
@@ -742,6 +895,100 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </div>
               );
             })()}
+          </section>
+
+          {/* 2.5 Scent Finder / Interactive Olfactory Guide Studio Section */}
+          <section className="p-6 sm:p-10 bg-[#FAF8F5] border-b border-[#EAE0D5] space-y-6">
+            <div className="relative group border-2 border-dashed border-amber-600/30 hover:border-amber-600 p-6 rounded-xl bg-white/70 transition-all max-w-4xl mx-auto shadow-xs">
+              {isEditMode && (
+                <div className="absolute -top-3 right-4 z-20 flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveModal('scentQuiz')}
+                    className="px-3.5 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-xs rounded-full flex items-center gap-1.5 shadow-md cursor-pointer border border-white/40 transition-all"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Edit Scent Finder ({quizData.questions.length} Questions)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Section Header */}
+              <div className="text-center space-y-2 mb-6">
+                <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
+                  {quizData.badge}
+                </span>
+                <h3 
+                  className="text-2xl sm:text-3xl text-[#24211D]"
+                  style={{ fontFamily: `'${content.theme.headingFont || 'Cormorant Garamond'}', serif` }}
+                >
+                  {quizData.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5A5248] max-w-xl mx-auto">
+                  {quizData.subtitle}
+                </p>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                  <button
+                    onClick={() => setActiveModal('scentQuiz')}
+                    className="px-4 py-2 bg-[#24211D] hover:bg-[#8C5E35] text-white rounded-md text-xs font-medium inline-flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>Configure Quiz Questions & Product Mappings</span>
+                  </button>
+                  <button
+                    onClick={() => setIsTestingQuizLive(true)}
+                    className="px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#24211D] border border-[#D8CEBE] rounded-md text-xs font-medium inline-flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Play className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
+                    <span>Test Scent Quiz (Live Customer View)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Configured Questions & Logic Overview */}
+              <div className="space-y-4 pt-4 border-t border-[#EAE0D5]">
+                <div className="flex items-center justify-between text-xs text-[#7A6F62]">
+                  <span className="font-semibold uppercase tracking-wider text-[#8C5E35]">
+                    Active Quiz Architecture ({quizData.questions.length} Steps)
+                  </span>
+                  <span className="text-[11px] hidden sm:inline">
+                    Click 'Edit' above to customize questions, answer choices, and candle pairings
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {quizData.questions.map((q, qIdx) => (
+                    <div key={q.id} className="p-3.5 bg-white rounded-lg border border-[#EAE0D5] space-y-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold bg-[#8C5E35]/10 text-[#8C5E35] px-2 py-0.5 rounded">
+                          Step {qIdx + 1}
+                        </span>
+                        <span className="text-[10px] text-[#7A6F62]">{q.options.length} Choices</span>
+                      </div>
+                      <p className="text-xs font-medium text-[#24211D] line-clamp-2">{q.prompt}</p>
+                      <div className="space-y-1.5 pt-1 border-t border-[#F3EFEA]">
+                        {q.options.map((opt) => {
+                          const targetProduct = opt.targetProductId ? products.find(p => p.id === opt.targetProductId) : null;
+                          return (
+                            <div key={opt.id} className="flex items-center justify-between text-[11px] p-1.5 bg-[#FAF8F5] rounded border border-[#EAE0D5]">
+                              <span className="truncate flex items-center gap-1 text-[#24211D]">
+                                <span>{opt.icon || '🕯️'}</span>
+                                <span className="font-medium truncate">{opt.title}</span>
+                              </span>
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 shrink-0 ml-1">
+                                {targetProduct ? targetProduct.name.split(' ')[0] : (opt.targetCategory ? `cat:${opt.targetCategory}` : 'Auto')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </section>
 
           {/* 3. Bespoke Favors Section with Full Live Matrix & Granular Pencils */}
@@ -1157,6 +1404,637 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               >
                 Apply to Preview
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2.5: Scent Finder Studio & Recommendation Engine */}
+      {activeModal === 'scentQuiz' && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-[#FAF8F5] text-[#24211D] rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-[#D8CEBE] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-[#EAE0D5] bg-[#F5F1EB] flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-[#8C5E35]" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg sm:text-xl font-semibold text-[#24211D] flex items-center gap-2">
+                    <span>Scent Finder & Quiz Recommendation Studio</span>
+                  </h3>
+                  <p className="text-xs text-[#7A6F62] mt-0.5">
+                    কুইজের প্রশ্ন, উত্তরের অপশন এবং কোন অপশনে কোন ক্যান্ডেল সাজেস্ট করবে তা সম্পূর্ণ নিজের মতো নির্ধারণ করুন।
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTestingQuizLive(true)}
+                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0"
+                  title="Test Quiz in Customer View"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span className="hidden sm:inline">Test Live Quiz</span>
+                </button>
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="p-1.5 hover:bg-[#EAE0D5] rounded-full cursor-pointer text-[#5A5248] transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-[#EAE0D5] bg-[#FAF8F5] px-4 pt-2 gap-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setScentQuizTab('questions')}
+                className={`px-4 py-2.5 text-xs font-medium rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  scentQuizTab === 'questions'
+                    ? 'bg-white text-[#8C5E35] border-[#EAE0D5] -mb-px font-semibold shadow-2xs'
+                    : 'text-[#7A6F62] border-transparent hover:text-[#24211D]'
+                }`}
+              >
+                <span>🎯 Questions & Options</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] text-[10px] font-mono">
+                  {quizData.questions.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setScentQuizTab('texts')}
+                className={`px-4 py-2.5 text-xs font-medium rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  scentQuizTab === 'texts'
+                    ? 'bg-white text-[#8C5E35] border-[#EAE0D5] -mb-px font-semibold shadow-2xs'
+                    : 'text-[#7A6F62] border-transparent hover:text-[#24211D]'
+                }`}
+              >
+                <span>📝 Titles & Buttons</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setScentQuizTab('logic')}
+                className={`px-4 py-2.5 text-xs font-medium rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  scentQuizTab === 'logic'
+                    ? 'bg-white text-[#8C5E35] border-[#EAE0D5] -mb-px font-semibold shadow-2xs'
+                    : 'text-[#7A6F62] border-transparent hover:text-[#24211D]'
+                }`}
+              >
+                <span>⚙️ Recommendation Logic & Fallback</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
+              {/* TAB 1: Questions & Options */}
+              {scentQuizTab === 'questions' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left Column: Question Selector List (4 cols) */}
+                  <div className="lg:col-span-4 space-y-3 border-b lg:border-b-0 lg:border-r border-[#EAE0D5] pb-4 lg:pb-0 lg:pr-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#7A6F62]">
+                        Questions ({quizData.questions.length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAddQuizQuestion}
+                        className="px-2.5 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white rounded text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>+ Add Question</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+                      {quizData.questions.map((q, qIdx) => {
+                        const isSelected = selectedQuizQuestionIndex === qIdx;
+                        return (
+                          <div
+                            key={q.id}
+                            onClick={() => setSelectedQuizQuestionIndex(qIdx)}
+                            className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-[#FAF8F5] border-[#8C5E35] shadow-xs ring-1 ring-[#8C5E35]'
+                                : 'bg-white border-[#EAE0D5] hover:border-[#D8CEBE]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#8C5E35]/10 text-[#8C5E35]">
+                                Question {qIdx + 1}
+                              </span>
+                              <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  disabled={qIdx === 0}
+                                  onClick={() => handleMoveQuizQuestion(qIdx, 'up')}
+                                  className="p-1 hover:bg-[#EAE0D5] rounded disabled:opacity-20 cursor-pointer text-[#7A6F62]"
+                                  title="Move Up"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={qIdx === quizData.questions.length - 1}
+                                  onClick={() => handleMoveQuizQuestion(qIdx, 'down')}
+                                  className="p-1 hover:bg-[#EAE0D5] rounded disabled:opacity-20 cursor-pointer text-[#7A6F62]"
+                                  title="Move Down"
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-xs font-medium text-[#24211D] line-clamp-2">
+                              {q.prompt}
+                            </p>
+                            <p className="text-[11px] text-[#7A6F62] mt-1 flex items-center justify-between">
+                              <span>{q.options.length} answer options</span>
+                              {q.hint && <span className="text-[10px] truncate max-w-[100px] text-[#8C5E35]">· {q.hint}</span>}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Active Question & Options Editor (8 cols) */}
+                  <div className="lg:col-span-8 space-y-5">
+                    {(() => {
+                      const currentQ = quizData.questions[selectedQuizQuestionIndex];
+                      if (!currentQ) {
+                        return (
+                          <div className="p-8 text-center bg-[#FAF8F5] rounded-xl border border-[#EAE0D5] space-y-2">
+                            <HelpCircle className="w-8 h-8 text-[#8C5E35] mx-auto opacity-50" />
+                            <p className="text-xs text-[#7A6F62]">Please select or add a question from the left.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-4">
+                          {/* Active Question Bar */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[#8C5E35] text-white">
+                                Q{selectedQuizQuestionIndex + 1}
+                              </span>
+                              <span className="text-xs font-semibold text-[#24211D]">
+                                Question Configuration
+                              </span>
+                            </div>
+
+                            {quizData.questions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteQuizQuestion(selectedQuizQuestionIndex)}
+                                className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1 cursor-pointer self-end sm:self-auto hover:bg-red-50 px-2 py-1 rounded"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete Question</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Prompt & Hint Inputs */}
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                                Question Prompt / Headline (প্রশ্ন):
+                              </label>
+                              <input
+                                type="text"
+                                value={currentQ.prompt}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  updateScentQuiz(quiz => {
+                                    const qs = [...quiz.questions];
+                                    qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], prompt: val };
+                                    return { ...quiz, questions: qs };
+                                  });
+                                }}
+                                placeholder="e.g. 1. What ambiance or atmosphere do you wish to cultivate?"
+                                className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs font-medium text-[#24211D] focus:ring-1 focus:ring-[#8C5E35]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-medium text-[#7A6F62] block mb-1">
+                                Step Category or Hint (হিন্ট / সাবটাইটেল - ঐচ্ছিক):
+                              </label>
+                              <input
+                                type="text"
+                                value={currentQ.hint || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  updateScentQuiz(quiz => {
+                                    const qs = [...quiz.questions];
+                                    qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], hint: val };
+                                    return { ...quiz, questions: qs };
+                                  });
+                                }}
+                                placeholder="e.g. Ambiance & Emotional Tone"
+                                className="w-full p-2 bg-white border border-[#D8CEBE] rounded-md text-xs text-[#5A5248] focus:ring-1 focus:ring-[#8C5E35]"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Options Section */}
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between border-b border-[#EAE0D5] pb-2">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-[#8C5E35] flex items-center gap-1.5">
+                                <span>Answer Choices & Product Pairing</span>
+                                <span className="text-[10px] font-normal text-[#7A6F62]">
+                                  (এই অপশনে ক্লিক করলে কোন ক্যান্ডেল রিকমেন্ড করবে)
+                                </span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleAddQuizOption(selectedQuizQuestionIndex)}
+                                className="px-2.5 py-1 bg-white hover:bg-[#FAF8F5] border border-[#D8CEBE] hover:border-[#8C5E35] text-[#24211D] rounded text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                              >
+                                <Plus className="w-3 h-3 text-[#8C5E35]" />
+                                <span>+ Add Choice</span>
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[48vh] overflow-y-auto pr-1">
+                              {currentQ.options.map((opt, optIdx) => {
+                                const matchedProduct = opt.targetProductId ? products.find(p => p.id === opt.targetProductId) : null;
+                                return (
+                                  <div
+                                    key={opt.id}
+                                    className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EAE0D5] space-y-3 hover:border-[#D8CEBE] transition-all shadow-2xs"
+                                  >
+                                    {/* Option Header: Icon + Title + Delete */}
+                                    <div className="flex items-center gap-2">
+                                      <div className="relative group/emoji">
+                                        <input
+                                          type="text"
+                                          value={opt.icon || '🕯️'}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            updateScentQuiz(quiz => {
+                                              const qs = [...quiz.questions];
+                                              const opts = [...qs[selectedQuizQuestionIndex].options];
+                                              opts[optIdx] = { ...opts[optIdx], icon: val };
+                                              qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], options: opts };
+                                              return { ...quiz, questions: qs };
+                                            });
+                                          }}
+                                          className="w-10 h-9 text-center bg-white border border-[#D8CEBE] rounded-md text-base focus:ring-1 focus:ring-[#8C5E35] cursor-pointer"
+                                          title="Emoji / Icon"
+                                        />
+                                      </div>
+
+                                      <div className="flex-1">
+                                        <input
+                                          type="text"
+                                          value={opt.title}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            updateScentQuiz(quiz => {
+                                              const qs = [...quiz.questions];
+                                              const opts = [...qs[selectedQuizQuestionIndex].options];
+                                              opts[optIdx] = { ...opts[optIdx], title: val };
+                                              qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], options: opts };
+                                              return { ...quiz, questions: qs };
+                                            });
+                                          }}
+                                          placeholder="Option Title (e.g. Deep Comfort & Relaxation)"
+                                          className="w-full p-2 bg-white border border-[#D8CEBE] rounded-md text-xs font-semibold text-[#24211D] focus:ring-1 focus:ring-[#8C5E35]"
+                                        />
+                                      </div>
+
+                                      {currentQ.options.length > 2 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteQuizOption(selectedQuizQuestionIndex, optIdx)}
+                                          className="p-1.5 text-[#7A6F62] hover:text-red-700 hover:bg-red-50 rounded-md cursor-pointer transition-colors"
+                                          title="Remove Option"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* Quick Emoji Helper Bar */}
+                                    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                                      <span className="text-[10px] text-[#7A6F62] shrink-0 mr-1">Quick Icons:</span>
+                                      {['🕯️', '🌸', '🌿', '✨', '🪔', '🛋️', '🛁', '🎁', '🧊', '🌺', '🏛️', '📚', '🍵', '☕', '🪵'].map(emo => (
+                                        <button
+                                          key={emo}
+                                          type="button"
+                                          onClick={() => {
+                                            updateScentQuiz(quiz => {
+                                              const qs = [...quiz.questions];
+                                              const opts = [...qs[selectedQuizQuestionIndex].options];
+                                              opts[optIdx] = { ...opts[optIdx], icon: emo };
+                                              qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], options: opts };
+                                              return { ...quiz, questions: qs };
+                                            });
+                                          }}
+                                          className="w-6 h-6 rounded bg-white hover:bg-[#EAE0D5] border border-[#EAE0D5] text-xs flex items-center justify-center shrink-0 cursor-pointer"
+                                        >
+                                          {emo}
+                                        </button>
+                                      ))}
+                                    </div>
+
+                                    {/* Option Description */}
+                                    <div>
+                                      <input
+                                        type="text"
+                                        value={opt.desc}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          updateScentQuiz(quiz => {
+                                            const qs = [...quiz.questions];
+                                            const opts = [...qs[selectedQuizQuestionIndex].options];
+                                            opts[optIdx] = { ...opts[optIdx], desc: val };
+                                            qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], options: opts };
+                                            return { ...quiz, questions: qs };
+                                          });
+                                        }}
+                                        placeholder="Description (e.g. Warm vanilla, almond & golden caramel)"
+                                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded-md text-xs text-[#5A5248] focus:ring-1 focus:ring-[#8C5E35]"
+                                      />
+                                    </div>
+
+                                    {/* Target Candle Product Dropdown & Preview */}
+                                    <div className="pt-2 border-t border-[#EAE0D5]/70 space-y-1.5">
+                                      <label className="text-[11px] font-semibold text-[#8C5E35] flex items-center gap-1.5">
+                                        <span>🎯 Recommended Product (এই অপশন সিলেক্ট করলে কোন ক্যান্ডেল রেজাল্ট হবে):</span>
+                                      </label>
+                                      <select
+                                        value={opt.targetProductId ? opt.targetProductId : (opt.targetCategory ? `cat:${opt.targetCategory}` : '')}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          updateScentQuiz(quiz => {
+                                            const qs = [...quiz.questions];
+                                            const opts = [...qs[selectedQuizQuestionIndex].options];
+                                            if (val.startsWith('cat:')) {
+                                              opts[optIdx] = {
+                                                ...opts[optIdx],
+                                                targetCategory: val.replace('cat:', ''),
+                                                targetProductId: undefined,
+                                              };
+                                            } else if (val) {
+                                              const p = products.find(prod => prod.id === val);
+                                              opts[optIdx] = {
+                                                ...opts[optIdx],
+                                                targetProductId: val,
+                                                targetCategory: p?.category || opts[optIdx].targetCategory,
+                                              };
+                                            } else {
+                                              opts[optIdx] = {
+                                                ...opts[optIdx],
+                                                targetProductId: undefined,
+                                                targetCategory: undefined,
+                                              };
+                                            }
+                                            qs[selectedQuizQuestionIndex] = { ...qs[selectedQuizQuestionIndex], options: opts };
+                                            return { ...quiz, questions: qs };
+                                          });
+                                        }}
+                                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded-md text-xs font-medium text-[#24211D] focus:ring-1 focus:ring-[#8C5E35] cursor-pointer"
+                                      >
+                                        <option value="">-- Automatic / Inherit other answers --</option>
+                                        <optgroup label="✨ Specific Candles in Catalog (সরাসরি ক্যান্ডেল সিলেক্ট করুন)">
+                                          {products.map(p => (
+                                            <option key={p.id} value={p.id}>
+                                              {p.name} (৳{p.price}) {p.inStock ? '' : '— [Sold Out]'}
+                                            </option>
+                                          ))}
+                                        </optgroup>
+                                        <optgroup label="📦 Match by Category (যেকোনো একটি ক্যাটাগরি)">
+                                          <option value="cat:bubble">Any Bubble Cube Candle</option>
+                                          <option value="cat:floating">Any Floating Bloom Candle</option>
+                                          <option value="cat:sculpted">Any Sculpted Pillar Candle</option>
+                                          <option value="cat:jar">Any Aroma Tablet / Jar</option>
+                                          <option value="cat:hampers">Any Luxury Gift Hamper</option>
+                                        </optgroup>
+                                      </select>
+
+                                      {/* Product Mini Preview Chip */}
+                                      {matchedProduct && (
+                                        <div className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-amber-200/80 shadow-2xs">
+                                          <img
+                                            src={matchedProduct.image}
+                                            alt={matchedProduct.name}
+                                            className="w-8 h-8 object-cover rounded border border-[#D8CEBE] shrink-0"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-[#24211D] truncate">
+                                              {matchedProduct.name}
+                                            </p>
+                                            <p className="text-[10px] text-[#7A6F62] truncate">
+                                              {matchedProduct.scentFamily} · {matchedProduct.waxType}
+                                            </p>
+                                          </div>
+                                          <span className="font-mono text-xs font-bold text-[#8C5E35] shrink-0">
+                                            ৳{matchedProduct.price}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: Titles & Buttons */}
+              {scentQuizTab === 'texts' && (
+                <div className="space-y-4 max-w-2xl mx-auto py-2">
+                  <div className="p-3 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] text-xs text-[#7A6F62]">
+                    এখানে কুইজের শীর্ষ শিরোনাম, বর্ণনা এবং বিভিন্ন বাটনের টেক্সট আপনার পছন্দমতো পরিবর্তন করুন।
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                      Header Badge Label (কুইজ ব্যাজ):
+                    </label>
+                    <input
+                      type="text"
+                      value={quizData.badge}
+                      onChange={e => updateScentQuiz(q => ({ ...q, badge: e.target.value }))}
+                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                      Main Quiz Headline (কুইজের মূল শিরোনাম):
+                    </label>
+                    <input
+                      type="text"
+                      value={quizData.title}
+                      onChange={e => updateScentQuiz(q => ({ ...q, title: e.target.value }))}
+                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                      Subheadline / Instructions (সাবটাইটেল বা সংক্ষিপ্ত নির্দেশিকা):
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={quizData.subtitle}
+                      onChange={e => updateScentQuiz(q => ({ ...q, subtitle: e.target.value }))}
+                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                        Catalog Scent Quiz Button (ওয়েবসাইটে কুইজ খোলার বাটন):
+                      </label>
+                      <input
+                        type="text"
+                        value={quizData.triggerBtnText}
+                        onChange={e => updateScentQuiz(q => ({ ...q, triggerBtnText: e.target.value }))}
+                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                        Result Card Badge (ফলাফলের কার্ডের ব্যাজ):
+                      </label>
+                      <input
+                        type="text"
+                        value={quizData.resultBadge}
+                        onChange={e => updateScentQuiz(q => ({ ...q, resultBadge: e.target.value }))}
+                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                        Order / View Candle CTA (ফলাফলের অর্ডার বাটন):
+                      </label>
+                      <input
+                        type="text"
+                        value={quizData.resultCtaText}
+                        onChange={e => updateScentQuiz(q => ({ ...q, resultCtaText: e.target.value }))}
+                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-[#24211D] block mb-1">
+                        Retake Quiz Button (পুনরায় কুইজ দেওয়ার বাটন):
+                      </label>
+                      <input
+                        type="text"
+                        value={quizData.retakeBtnText}
+                        onChange={e => updateScentQuiz(q => ({ ...q, retakeBtnText: e.target.value }))}
+                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded-md text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: Recommendation Logic & Fallback */}
+              {scentQuizTab === 'logic' && (
+                <div className="space-y-6 max-w-2xl mx-auto py-2">
+                  <div className="p-4 bg-[#FAF8F5] rounded-xl border border-[#EAE0D5] space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C5E35] flex items-center gap-1.5">
+                      <HelpCircle className="w-4 h-4" />
+                      <span>সেন্ট কুইজের রিকমেন্ডেশন কিভাবে কাজ করে?</span>
+                    </h4>
+                    <p className="text-xs text-[#5A5248] leading-relaxed">
+                      ১. <strong>সরাসরি ম্যাপিং:</strong> কাস্টমার যখন কুইজের বিভিন্ন প্রশ্নের অপশন সিলেক্ট করবেন, যে অপশনে আপনি নির্দিষ্ট প্রোডাক্ট সিলেক্ট করে রেখেছেন, সিস্টেম স্বয়ংক্রিয়ভাবে সেই প্রোডাক্টটি ফলাফল হিসেবে রিকমেন্ড করবে।
+                    </p>
+                    <p className="text-xs text-[#5A5248] leading-relaxed">
+                      ২. <strong>সর্বশেষ ধাপের প্রাধান্য:</strong> একাধিক প্রশ্নে যদি আলাদা ক্যান্ডেল ম্যাপ করা থাকে, তবে গ্রাহকের সর্বশেষ পছন্দের প্রোডাক্টটি ফলাফল হিসেবে প্রদর্শিত হবে।
+                    </p>
+                    <p className="text-xs text-[#5A5248] leading-relaxed">
+                      ৩. <strong>ডিফল্ট ক্যান্ডেল:</strong> গ্রাহকের বাছাই করা কোনো অপশনেই যদি নির্দিষ্ট ক্যান্ডেল বা ক্যাটাগরি সেট করা না থাকে, তবে নিচের ডিফল্ট ক্যান্ডেলটি প্রদর্শিত হবে।
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 p-4 bg-white rounded-xl border border-[#D8CEBE]">
+                    <label className="text-xs font-bold text-[#24211D] block">
+                      ডিফল্ট ফলব্যাক ক্যান্ডেল (Default Fallback Candle):
+                    </label>
+                    <p className="text-[11px] text-[#7A6F62]">
+                      যদি কোনো উত্তরের সাথেই নির্দিষ্ট প্রোডাক্ট না মেলে, তখন এই ক্যান্ডেলটি সাজেস্ট করবে:
+                    </p>
+                    <select
+                      value={quizData.defaultProductId || products[0]?.id || ''}
+                      onChange={e => updateScentQuiz(q => ({ ...q, defaultProductId: e.target.value }))}
+                      className="w-full p-2.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-md text-xs font-semibold text-[#24211D] focus:ring-1 focus:ring-[#8C5E35] cursor-pointer"
+                    >
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (৳{p.price}) — {p.category}
+                        </option>
+                      ))}
+                    </select>
+
+                    {(() => {
+                      const defProd = products.find(p => p.id === (quizData.defaultProductId || products[0]?.id));
+                      if (!defProd) return null;
+                      return (
+                        <div className="flex items-center gap-3 p-2 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] mt-2">
+                          <img src={defProd.image} alt={defProd.name} className="w-10 h-10 object-cover rounded border border-[#D8CEBE]" />
+                          <div>
+                            <p className="text-xs font-semibold text-[#24211D]">{defProd.name}</p>
+                            <p className="text-[11px] text-[#7A6F62]">{defProd.scentFamily} · ৳{defProd.price}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-[#EAE0D5] bg-[#F5F1EB] flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setIsTestingQuizLive(true)}
+                className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#24211D] border border-[#D8CEBE] rounded-md text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              >
+                <Play className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
+                <span>Test Live Quiz</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 bg-white hover:bg-[#FAF8F5] border border-[#D8CEBE] text-[#5A5248] text-xs font-medium rounded-md cursor-pointer transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-5 py-2 bg-[#24211D] hover:bg-[#3D3730] text-white text-xs font-semibold rounded-md cursor-pointer shadow-sm transition-colors flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4 text-emerald-300" />
+                  <span>Apply to Preview</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2369,6 +3247,18 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
           </div>
         </div>
       )}
+
+      {/* Live Scent Quiz Testing Modal in Studio Admin */}
+      <ScentQuiz
+        isOpen={isTestingQuizLive}
+        onClose={() => setIsTestingQuizLive(false)}
+        products={products}
+        content={content.scentQuiz}
+        onSelectProduct={(p) => {
+          alert(`🎯 Scent Quiz Recommendation Verified!\n\nRecommended Candle: ${p.name} (৳${p.price})\nCategory: ${p.category}\nScent Family: ${p.scentFamily}`);
+          setIsTestingQuizLive(false);
+        }}
+      />
       </>
     );
   }

@@ -80,7 +80,11 @@ export default function App() {
 
     const unsubscribeContent = subscribeToSiteContent((liveContent) => {
       if (liveContent) {
-        setSiteContent(liveContent);
+        setSiteContent({
+          ...DEFAULT_SITE_CONTENT,
+          ...liveContent,
+          scentQuiz: liveContent.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
+        });
         if (liveContent.theme) {
           applySiteThemeToDOM(liveContent.theme);
         }
@@ -405,6 +409,7 @@ export default function App() {
         isOpen={isQuizOpen}
         onClose={() => setIsQuizOpen(false)}
         products={products}
+        content={siteContent.scentQuiz}
         onSelectProduct={p => {
           setQuickViewProduct(p);
         }}

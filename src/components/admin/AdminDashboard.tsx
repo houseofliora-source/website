@@ -260,7 +260,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
 
     // Fetch and subscribe to site content
     const unsubContent = subscribeToSiteContent((liveContent) => {
-      if (liveContent) setSiteContent(liveContent);
+      if (liveContent) {
+        setSiteContent({
+          ...DEFAULT_SITE_CONTENT,
+          ...liveContent,
+          scentQuiz: liveContent.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
+        });
+      }
     });
 
     // Fetch settings
