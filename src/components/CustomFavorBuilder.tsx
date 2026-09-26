@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import { Sparkles, Check, Phone, ShieldCheck, HeartHandshake, Info } from 'lucide-react';
-import { CustomFavorItem } from '../types';
+import { Sparkles, Check, Phone, ShieldCheck, HeartHandshake, Info, Edit3 } from 'lucide-react';
+import { CustomFavorItem, SiteContent } from '../types';
+import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
 interface CustomFavorBuilderProps {
   onAddCustomToCart: (customOrder: CustomFavorItem) => void;
   facebookUrl?: string;
+  content?: SiteContent['favors'];
+  isEditMode?: boolean;
+  onEdit?: () => void;
 }
 
 export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   onAddCustomToCart,
   facebookUrl = 'https://www.facebook.com/houseofliorabd',
+  content = DEFAULT_SITE_CONTENT.favors,
+  isEditMode = false,
+  onEdit,
 }) => {
   const [candleStyle, setCandleStyle] = useState('bubble');
   const [quantity, setQuantity] = useState(50);
@@ -55,18 +62,29 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   };
 
   return (
-    <section id="custom-favors" className="py-16 md:py-20 bg-[#F5F1EB] border-b border-[#EAE0D5]">
+    <section id="custom-favors" className="py-16 md:py-20 bg-[#F5F1EB] border-b border-[#EAE0D5] relative group">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto text-center space-y-3 mb-12">
+        <div className="max-w-3xl mx-auto text-center space-y-3 mb-12 relative">
+          {isEditMode && (
+            <button
+              onClick={onEdit}
+              className="absolute -top-3 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+              title="Edit Custom Favors Headline & Description"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Favors Section</span>
+            </button>
+          )}
+
           <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center justify-center gap-1.5">
             <HeartHandshake className="w-4 h-4 text-[#C68B59]" />
-            Weddings, Receptions & Bespoke Favors
+            {content.badge}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
-            Bespoke Event & Wedding Gifting Studio
+            {content.title}
           </h2>
           <p className="text-sm sm:text-base text-[#5A5248] leading-relaxed">
-            Create unforgettable olfactory keepsakes for your guests. Select artisanal silhouettes, custom wax stamps, delicate calligraphy tags, and bespoke ribbons.
+            {content.subtitle}
           </p>
         </div>
 

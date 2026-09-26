@@ -1,0 +1,110 @@
+import { SiteContent } from '../types';
+
+export const DEFAULT_SITE_CONTENT: SiteContent = {
+  theme: {
+    headingFont: 'Cormorant Garamond',
+    bodyFont: 'Plus Jakarta Sans',
+    primaryColor: '#24211D',
+    accentColor: '#8C5E35',
+    backgroundColor: '#FAF8F5',
+  },
+  hero: {
+    badge: 'Artisanal Studio Collection',
+    title: 'The Art of Gentle',
+    titleHighlight: 'Luminescence',
+    subtitle: 'Poured in small artisanal batches using 100% pure botanical soy wax, lead-free braided cotton wicks, and phthalate-free fine fragrance oils. Designed to elevate living rituals and illuminate everyday spaces.',
+    btnPrimary: 'Explore Collections',
+    btnSecondary: 'Custom Wedding & Event Favors',
+    heroImage: '/images/hero_artisan_candles_1790333552254.jpg',
+    badge1Label: 'Wax Composition',
+    badge1Value: '100% Pure Soy',
+    badge2Label: 'Craft Technique',
+    badge2Value: 'Hand-Poured',
+    badge3Label: 'Fulfillment',
+    badge3Value: 'Nationwide Courier',
+    floatingTag: 'Organic Plant-Based Wax',
+    floatingTitle: 'The Líora Signature Atelier',
+    trustText: 'Zero toxic paraffin · Clean soot-free burn',
+  },
+  catalog: {
+    badge: 'Botanical Wax Catalog',
+    title: 'Hand-Poured Artisan Creations',
+    subtitle: 'Small batch botanical formulations. Pure cotton braided wicks, phthalate-free fine perfumes, and zero petroleum paraffin.',
+    quizBtnText: 'Take Scent Profile Quiz',
+  },
+  favors: {
+    badge: 'Bespoke Gifting Studio',
+    title: 'Custom Wedding & Event Favors',
+    subtitle: 'Memorable, fragrant tokens crafted with love for your special day. From intimate bridal showers to grand wedding celebrations.',
+    consultationBtn: 'Talk to Artisan via Facebook',
+  },
+  care: {
+    badge: 'Artisan Soy Wisdom',
+    title: 'The Líora Candle Care Ritual',
+    subtitle: 'Pure botanical soy wax is alive with natural plant characteristics. Follow these simple rituals for a clean, prolonged, and soot-free burn.',
+    step1Title: '1. The First Burn Memory',
+    step1Desc: 'Allow wax to melt completely across the top on your initial burn (1-2 hours) to avoid tunneling and preserve candle life.',
+    step2Title: '2. Trim Cotton Wick (1/4")',
+    step2Desc: 'Trim cotton wick to 1/4 inch before every burn. This prevents high flickering, black smoke, and ensures pure scent throw.',
+    step3Title: '3. Soy Frosting is Natural',
+    step3Desc: 'Slight white crystalline film (frosting) on your candle is a natural hallmark of 100% pure botanical soy wax with zero toxic additives.',
+    step4Title: '4. Use a Heat-Safe Dish',
+    step4Desc: 'Always place free-standing sculptural or pillar candles on a heat-safe ceramic plate or marble tray before lighting.',
+  },
+  reviews: {
+    badge: 'Customer Experiences',
+    title: 'Voices from Líora Patrons',
+    items: [
+      {
+        name: 'Nusrat Jahan',
+        location: 'Dhanmondi, Dhaka',
+        comment: 'Ordered the bubble candle and floating flowers. The fragrance fill is subtle and elegant. They make my coffee table look like a curated Pinterest board!',
+        product: 'Artisanal Bubble Soy Candle',
+        verified: true,
+      },
+      {
+        name: 'Tanvir Hossain & Raisa',
+        location: 'Gulshan 2, Dhaka',
+        comment: 'We ordered 60 bespoke favor boxes for our wedding celebration. The custom calligraphy tags and champagne ribbon were flawless. Guests loved them!',
+        product: 'Bespoke Event Favors (60 pcs)',
+        verified: true,
+      },
+      {
+        name: 'Sabrina Rahman',
+        location: 'Khulshi, Chittagong',
+        comment: 'Received the gift hamper in pristine condition within 3 days. Zero black smoke, true 100% pure soy wax. House of Líora is now my go-to gift brand.',
+        product: 'The Líora Luxe Signature Gift Hamper',
+        verified: true,
+      },
+    ],
+  },
+  faq: {
+    badge: 'Frequently Asked Questions',
+    title: 'Got Questions? We Have Answers.',
+    subtitle: 'Everything you need to know about our ingredients, delivery, and custom orders.',
+    items: [
+      {
+        q: 'What is the minimum order threshold for House of Líora?',
+        a: 'As per our boutique policy, our minimum order threshold is ৳200. You can mix and match any individual candles or accessories to easily complete checkout.',
+      },
+      {
+        q: 'How do custom event orders & wedding favor payments work?',
+        a: 'Custom event orders require a 50% advance deposit via bKash or Nagad upon order confirmation. The remaining 50% balance is collected via Cash on Delivery upon doorstep receipt. Please order 4–7 days in advance.',
+      },
+      {
+        q: 'What are the delivery charges and transit times?',
+        a: 'Inside Dhaka doorstep delivery is ৳70 (24–48 hours transit). Outside Dhaka nationwide delivery is ৳130 (2–4 business days via verified couriers).',
+      },
+      {
+        q: 'Why is 100% botanical soy wax superior to ordinary paraffin candles?',
+        a: 'Ordinary commercial candles are made from petroleum-derived paraffin wax that releases toxic soot and benzene fumes. Pure soy wax is cold-pressed from natural plant oils, burns 30–50% longer, and produces a soot-free burn that is safe for indoor air, children, and pets.',
+      },
+    ],
+  },
+  footer: {
+    brandTagline: 'Hand-pouring 100% botanical soy candles, floating floral blossoms, and architectural sculptural silhouettes. Clean-burning elegance for modern living spaces.',
+    deliveryPolicy: '📦 Delivery: Nationwide Doorstep Delivery (COD Available)',
+    paymentPolicy: '💳 Payment: Cash on Delivery / bKash / Nagad',
+    copyright: 'House of Líora (@houseofliorabd). All rights reserved.',
+  },
+};

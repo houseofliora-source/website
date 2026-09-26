@@ -28,9 +28,10 @@ import {
   Filter, 
   RefreshCw,
   Flame,
-  Sparkles
+  Sparkles,
+  Palette
 } from 'lucide-react';
-import { Product, OrderRecord, StoreSettings } from '../../types';
+import { Product, OrderRecord, StoreSettings, SiteContent } from '../../types';
 import { CustomerUser } from '../CustomerAuthModal';
 import { 
   saveProductToFirestore, 
@@ -41,9 +42,14 @@ import {
   fetchStoreSettings, 
   updateStoreSettingsInFirestore,
   subscribeToOrders,
-  subscribeToProducts
+  subscribeToProducts,
+  fetchSiteContent,
+  updateSiteContentInFirestore,
+  subscribeToSiteContent
 } from '../../services/firebase';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../../data/products';
+import { DEFAULT_SITE_CONTENT } from '../../data/defaultContent';
+import { VisualSiteEditor } from './VisualSiteEditor';
 
 interface AdminDashboardProps {
   onBackToStore: () => void;
@@ -61,7 +67,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'customers' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'editor' | 'products' | 'orders' | 'customers' | 'settings'>('editor');
+  const [siteContent, setSiteContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
 
   // Data States
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -142,6 +149,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
     // Fetch customers
     fetchAllCustomersFromFirestore().then(setCustomers);
 
+    // Fetch and subscribe to site content
+    const unsubContent = subscribeToSiteContent((liveContent) => {
+      if (liveContent) setSiteContent(liveContent);
+    });
+
     // Fetch settings
     fetchStoreSettings().then(st => {
       if (st) {
@@ -154,6 +166,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
     return () => {
       unsubProds();
       unsubOrders();
+      unsubContent();
     };
   }, [isAuthenticated]);
 
@@ -459,6 +472,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
 
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setActiveTab(activeTab === 'editor' ? 'products' : 'editor')}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs ${
+              activeTab === 'editor'
+                ? 'bg-[#24211D] text-white'
+                : 'bg-[#8C5E35] hover:bg-[#A36E3F] text-white'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>{activeTab === 'editor' ? 'Standard Dashboard' : '🎨 Live Website Editor'}</span>
+          </button>
+
+          <button
             onClick={onBackToStore}
             className="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
@@ -488,8 +513,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Main Container / Visual Live Editor */}
+      {activeTab === 'editor' ? (
+        <VisualSiteEditor
+          initialContent={siteContent}
+          storeSettings={settings}
+          products={products}
+          onSave={async (newContent) => {
+            const ok = await updateSiteContentInFirestore(newContent);
+            if (ok) {
+              setSiteContent(newContent);
+              flash('Website texts and font style published successfully!', 'success');
+            } else {
+              flash('Failed to publish website changes to Firestore', 'error');
+            }
+            return ok;
+          }}
+          onBackToAdmin={() => setActiveTab('products')}
+        />
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Metric Cards Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 bg-white rounded-lg border border-[#EAE0D5] shadow-xs space-y-1">
@@ -546,6 +589,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
 
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-[#EAE0D5] overflow-x-auto pb-px">
+          <button
+            onClick={() => setActiveTab('editor')}
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'editor'
+                ? 'border-[#8C5E35] text-[#8C5E35] bg-[#8C5E35]/10'
+                : 'border-transparent text-[#8C5E35] hover:text-[#24211D] bg-[#8C5E35]/5'
+            }`}
+          >
+            <Palette className="w-4 h-4 text-[#8C5E35]" />
+            <span>🎨 Visual Site Editor (লাইভ এডিটর)</span>
+            <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-mono font-medium">Pencil Mode</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('products')}
             className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer ${
@@ -1069,6 +1125,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
           </div>
         )}
       </main>
+      )}
 
       {/* ----------------------------------------------------------------- */}
       {/* PRODUCT CREATE / EDIT MODAL */}

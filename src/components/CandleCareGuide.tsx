@@ -1,19 +1,42 @@
 import React from 'react';
-import { Flame, Scissors, Sparkles, ShieldAlert } from 'lucide-react';
+import { Flame, Scissors, Sparkles, ShieldAlert, Edit3 } from 'lucide-react';
+import { SiteContent } from '../types';
+import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
-export const CandleCareGuide: React.FC = () => {
+interface CandleCareGuideProps {
+  content?: SiteContent['care'];
+  isEditMode?: boolean;
+  onEdit?: () => void;
+}
+
+export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
+  content = DEFAULT_SITE_CONTENT.care,
+  isEditMode = false,
+  onEdit,
+}) => {
   return (
-    <section id="candle-care" className="py-16 bg-[#FAF8F5] border-b border-[#EAE0D5]">
+    <section id="candle-care" className="py-16 bg-[#FAF8F5] border-b border-[#EAE0D5] relative group">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto text-center space-y-2 mb-12">
+        <div className="max-w-3xl mx-auto text-center space-y-2 mb-12 relative">
+          {isEditMode && (
+            <button
+              onClick={onEdit}
+              className="absolute -top-4 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+              title="Edit Candle Care Wisdom & Steps"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Care Guide</span>
+            </button>
+          )}
+
           <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
-            Artisan Soy Wisdom
+            {content.badge}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
-            The Líora Candle Care Ritual
+            {content.title}
           </h2>
           <p className="text-xs sm:text-sm text-[#5A5248]">
-            Pure botanical soy wax is alive with natural plant characteristics. Follow these simple rituals for a clean, prolonged, and soot-free burn.
+            {content.subtitle}
           </p>
         </div>
 
@@ -24,10 +47,10 @@ export const CandleCareGuide: React.FC = () => {
               <Flame className="w-4 h-4" />
             </div>
             <h3 className="font-serif text-base font-semibold text-[#24211D]">
-              1. The First Burn Memory
+              {content.step1Title}
             </h3>
             <p className="text-xs text-[#5A5248] leading-relaxed">
-              Allow wax to melt completely across the top on your initial burn (1-2 hours) to avoid tunneling and preserve candle life.
+              {content.step1Desc}
             </p>
           </div>
 
@@ -37,10 +60,10 @@ export const CandleCareGuide: React.FC = () => {
               <Scissors className="w-4 h-4" />
             </div>
             <h3 className="font-serif text-base font-semibold text-[#24211D]">
-              2. Trim Cotton Wick (1/4")
+              {content.step2Title}
             </h3>
             <p className="text-xs text-[#5A5248] leading-relaxed">
-              Trim cotton wick to 1/4 inch before every burn. This prevents high flickering, black smoke, and ensures pure scent throw.
+              {content.step2Desc}
             </p>
           </div>
 
@@ -50,10 +73,10 @@ export const CandleCareGuide: React.FC = () => {
               <Sparkles className="w-4 h-4" />
             </div>
             <h3 className="font-serif text-base font-semibold text-[#24211D]">
-              3. Soy Frosting is Natural
+              {content.step3Title}
             </h3>
             <p className="text-xs text-[#5A5248] leading-relaxed">
-              Slight white crystalline film (frosting) on your candle is a natural hallmark of 100% pure botanical soy wax with zero toxic additives.
+              {content.step3Desc}
             </p>
           </div>
 
@@ -63,10 +86,10 @@ export const CandleCareGuide: React.FC = () => {
               <ShieldAlert className="w-4 h-4" />
             </div>
             <h3 className="font-serif text-base font-semibold text-[#24211D]">
-              4. Use a Heat-Safe Dish
+              {content.step4Title}
             </h3>
             <p className="text-xs text-[#5A5248] leading-relaxed">
-              Always place free-standing sculptural or pillar candles on a heat-safe ceramic plate or marble tray before lighting.
+              {content.step4Desc}
             </p>
           </div>
         </div>

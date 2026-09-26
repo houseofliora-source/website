@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS, INITIAL_SAMPLE_ORDERS } from './data/products';
-import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings } from './types';
+import { DEFAULT_SITE_CONTENT } from './data/defaultContent';
+import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings, SiteContent } from './types';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
@@ -19,7 +20,9 @@ import {
   syncCustomerProfileToFirestore,
   fetchStoreSettings,
   updateDocumentFavicon,
-  subscribeToProducts
+  subscribeToProducts,
+  subscribeToSiteContent,
+  applySiteThemeToDOM
 } from './services/firebase';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 
@@ -51,15 +54,25 @@ export default function App() {
     };
   }, []);
 
-  // Store products and orders
+  // Store products, settings, and dynamic site content & typography
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  const [siteContent, setSiteContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
 
-  // Load real-time catalog and store settings (dynamic favicon, fees, banner) from Firestore
+  // Load real-time catalog, store settings, and site content from Firestore
   useEffect(() => {
     const unsubscribeProds = subscribeToProducts((liveCatalog) => {
       if (liveCatalog && liveCatalog.length > 0) {
         setProducts(liveCatalog);
+      }
+    });
+
+    const unsubscribeContent = subscribeToSiteContent((liveContent) => {
+      if (liveContent) {
+        setSiteContent(liveContent);
+        if (liveContent.theme) {
+          applySiteThemeToDOM(liveContent.theme);
+        }
       }
     });
 
@@ -74,6 +87,7 @@ export default function App() {
 
     return () => {
       if (unsubscribeProds) unsubscribeProds();
+      if (unsubscribeContent) unsubscribeContent();
     };
   }, []);
 
@@ -238,6 +252,7 @@ export default function App() {
             const el = document.getElementById('custom-favors');
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
+          content={siteContent.hero}
         />
 
         {/* Featured Collection Section */}
@@ -247,13 +262,13 @@ export default function App() {
             <div className="space-y-1.5">
               <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center gap-1.5">
                 <Flame className="w-3.5 h-3.5" />
-                Botanical Wax Catalog
+                {siteContent.catalog.badge}
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
-                Hand-Poured Artisan Creations
+                {siteContent.catalog.title}
               </h2>
               <p className="text-xs sm:text-sm text-[#5A5248] max-w-xl">
-                Small batch botanical formulations. Pure cotton braided wicks, phthalate-free fine perfumes, and zero petroleum paraffin.
+                {siteContent.catalog.subtitle}
               </p>
             </div>
 
@@ -263,7 +278,7 @@ export default function App() {
               className="px-4 py-2.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium transition-colors inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-              <span>Take Scent Profile Quiz</span>
+              <span>{siteContent.catalog.quizBtnText}</span>
             </button>
           </div>
 
@@ -345,19 +360,24 @@ export default function App() {
         <CustomFavorBuilder
           onAddCustomToCart={handleAddCustomToCart}
           facebookUrl={storeSettings.facebookUrl}
+          content={siteContent.favors}
         />
 
         {/* Candle Care Rituals Guide */}
-        <CandleCareGuide />
+        <CandleCareGuide content={siteContent.care} />
 
         {/* Social Proof & FAQs */}
-        <ReviewsAndFaq />
+        <ReviewsAndFaq 
+          reviewsContent={siteContent.reviews}
+          faqContent={siteContent.faq}
+        />
       </main>
 
       {/* Footer */}
       <Footer
         onOpenAuth={() => setIsAuthOpen(true)}
         storeSettings={storeSettings}
+        content={siteContent.footer}
       />
 
       {/* Modals & Overlays */}

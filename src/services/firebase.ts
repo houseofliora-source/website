@@ -12,8 +12,9 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import { Product, OrderRecord, StoreSettings } from '../types';
+import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme } from '../types';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../data/products';
+import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 import { CustomerUser } from '../components/CustomerAuthModal';
 
 // Firebase configuration from environment variables with House of Líora project defaults
@@ -344,6 +345,131 @@ export function subscribeToProducts(callback: (products: Product[]) => void) {
     });
   } catch (err) {
     console.error('[Firebase] subscribeToProducts error:', err);
+    return () => {};
+  }
+}
+
+/**
+ * Apply Site Theme CSS variables to DOM
+ */
+export function applySiteThemeToDOM(theme: SiteTheme) {
+  if (typeof document === 'undefined' || !theme) return;
+  const root = document.documentElement;
+  if (theme.headingFont) {
+    root.style.setProperty('--font-serif', `'${theme.headingFont}', Georgia, serif`);
+  }
+  if (theme.bodyFont) {
+    root.style.setProperty('--font-sans', `'${theme.bodyFont}', system-ui, sans-serif`);
+  }
+  if (theme.primaryColor) {
+    root.style.setProperty('--brand-primary', theme.primaryColor);
+  }
+  if (theme.accentColor) {
+    root.style.setProperty('--brand-accent', theme.accentColor);
+  }
+  if (theme.backgroundColor) {
+    root.style.setProperty('--brand-bg', theme.backgroundColor);
+  }
+}
+
+/**
+ * Fetch dynamic site content & typography theme from Firestore
+ */
+export async function fetchSiteContent(): Promise<SiteContent> {
+  if (!db) return DEFAULT_SITE_CONTENT;
+  try {
+    const contentRef = doc(db, 'settings', 'content');
+    const docSnap = await getDoc(contentRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data() as Partial<SiteContent>;
+      // Deep merge with DEFAULT_SITE_CONTENT
+      return {
+        theme: { ...DEFAULT_SITE_CONTENT.theme, ...(data.theme || {}) },
+        hero: { ...DEFAULT_SITE_CONTENT.hero, ...(data.hero || {}) },
+        catalog: { ...DEFAULT_SITE_CONTENT.catalog, ...(data.catalog || {}) },
+        favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
+        care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
+        reviews: {
+          badge: data.reviews?.badge || DEFAULT_SITE_CONTENT.reviews.badge,
+          title: data.reviews?.title || DEFAULT_SITE_CONTENT.reviews.title,
+          items: data.reviews?.items && data.reviews.items.length > 0 ? data.reviews.items : DEFAULT_SITE_CONTENT.reviews.items,
+        },
+        faq: {
+          badge: data.faq?.badge || DEFAULT_SITE_CONTENT.faq.badge,
+          title: data.faq?.title || DEFAULT_SITE_CONTENT.faq.title,
+          subtitle: data.faq?.subtitle || DEFAULT_SITE_CONTENT.faq.subtitle,
+          items: data.faq?.items && data.faq.items.length > 0 ? data.faq.items : DEFAULT_SITE_CONTENT.faq.items,
+        },
+        footer: { ...DEFAULT_SITE_CONTENT.footer, ...(data.footer || {}) },
+      };
+    }
+    return DEFAULT_SITE_CONTENT;
+  } catch (error) {
+    console.warn('[Firebase] Could not fetch site content, using default:', error);
+    return DEFAULT_SITE_CONTENT;
+  }
+}
+
+/**
+ * Update site content & theme in Firestore
+ */
+export async function updateSiteContentInFirestore(content: SiteContent): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const cleanContent = JSON.parse(JSON.stringify(content));
+    const contentRef = doc(db, 'settings', 'content');
+    await setDoc(contentRef, cleanContent, { merge: true });
+    if (content.theme) {
+      applySiteThemeToDOM(content.theme);
+    }
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to update site content:', error);
+    return false;
+  }
+}
+
+/**
+ * Real-time listener for Site Content
+ */
+export function subscribeToSiteContent(callback: (content: SiteContent) => void) {
+  if (!db) return () => {};
+  try {
+    const contentRef = doc(db, 'settings', 'content');
+    return onSnapshot(contentRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as Partial<SiteContent>;
+        const merged: SiteContent = {
+          theme: { ...DEFAULT_SITE_CONTENT.theme, ...(data.theme || {}) },
+          hero: { ...DEFAULT_SITE_CONTENT.hero, ...(data.hero || {}) },
+          catalog: { ...DEFAULT_SITE_CONTENT.catalog, ...(data.catalog || {}) },
+          favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
+          care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
+          reviews: {
+            badge: data.reviews?.badge || DEFAULT_SITE_CONTENT.reviews.badge,
+            title: data.reviews?.title || DEFAULT_SITE_CONTENT.reviews.title,
+            items: data.reviews?.items && data.reviews.items.length > 0 ? data.reviews.items : DEFAULT_SITE_CONTENT.reviews.items,
+          },
+          faq: {
+            badge: data.faq?.badge || DEFAULT_SITE_CONTENT.faq.badge,
+            title: data.faq?.title || DEFAULT_SITE_CONTENT.faq.title,
+            subtitle: data.faq?.subtitle || DEFAULT_SITE_CONTENT.faq.subtitle,
+            items: data.faq?.items && data.faq.items.length > 0 ? data.faq.items : DEFAULT_SITE_CONTENT.faq.items,
+          },
+          footer: { ...DEFAULT_SITE_CONTENT.footer, ...(data.footer || {}) },
+        };
+        if (merged.theme) {
+          applySiteThemeToDOM(merged.theme);
+        }
+        callback(merged);
+      } else {
+        callback(DEFAULT_SITE_CONTENT);
+      }
+    }, (error) => {
+      console.warn('[Firebase] Site content subscription warning:', error);
+    });
+  } catch (err) {
+    console.error('[Firebase] subscribeToSiteContent error:', err);
     return () => {};
   }
 }

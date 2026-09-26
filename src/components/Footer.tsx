@@ -1,19 +1,40 @@
 import React from 'react';
-import { Mail, Facebook, Instagram, ArrowUp, User, ShieldCheck } from 'lucide-react';
-import { StoreSettings } from '../types';
+import { Mail, Facebook, Instagram, ArrowUp, User, ShieldCheck, Edit3 } from 'lucide-react';
+import { StoreSettings, SiteContent } from '../types';
+import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
 interface FooterProps {
   onOpenAuth: () => void;
   storeSettings: StoreSettings;
+  content?: SiteContent['footer'];
+  isEditMode?: boolean;
+  onEdit?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAuth, storeSettings }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  onOpenAuth, 
+  storeSettings,
+  content = DEFAULT_SITE_CONTENT.footer,
+  isEditMode = false,
+  onEdit,
+}) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="bg-[#24211D] text-[#FAF8F5] pt-14 pb-8 border-t border-[#3D3730]">
+    <footer className="bg-[#24211D] text-[#FAF8F5] pt-14 pb-8 border-t border-[#3D3730] relative group">
+      {isEditMode && (
+        <button
+          onClick={onEdit}
+          className="absolute top-4 right-8 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-black flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+          title="Edit Footer Brand Text & Policies"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+          <span>Edit Footer</span>
+        </button>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           {/* Brand Info */}
@@ -22,7 +43,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAuth, storeSettings }) => 
               House of Líora
             </span>
             <p className="text-xs text-[#A89E90] leading-relaxed max-w-sm">
-              Hand-pouring 100% botanical soy candles, floating floral blossoms, and architectural sculptural silhouettes. Clean-burning elegance for modern living spaces.
+              {content.brandTagline}
             </p>
             <div className="flex items-center gap-3 pt-1">
               <a
@@ -92,8 +113,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAuth, storeSettings }) => 
               Store Policies & Fulfillment
             </h4>
             <div className="space-y-1.5 text-xs text-[#A89E90]">
-              <p>📦 Delivery: Nationwide Doorstep Delivery (COD Available)</p>
-              <p>💳 Payment: Cash on Delivery / bKash / Nagad</p>
+              <p>{content.deliveryPolicy}</p>
+              <p>{content.paymentPolicy}</p>
               <p>✨ Minimum Order: ৳{storeSettings.minimumOrder} · Custom Orders: 50% Advance</p>
               <p>✉️ Inquiries: {storeSettings.supportEmail}</p>
             </div>
@@ -102,7 +123,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAuth, storeSettings }) => 
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-[#38322B] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#877E71]">
-          <p>© {new Date().getFullYear()} House of Líora (@houseofliorabd). All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {content.copyright}</p>
 
           <div className="flex items-center gap-4">
             <button

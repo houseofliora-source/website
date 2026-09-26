@@ -69,3 +69,89 @@ export interface StoreSettings {
   facebookUrl: string;
   instagramUrl: string;
 }
+
+export interface SiteTheme {
+  headingFont: string;
+  bodyFont: string;
+  primaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+}
+
+export interface ReviewItem {
+  name: string;
+  location: string;
+  comment: string;
+  product: string;
+  verified?: boolean;
+}
+
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+export interface SiteContent {
+  theme: SiteTheme;
+  hero: {
+    badge: string;
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    btnPrimary: string;
+    btnSecondary: string;
+    heroImage: string;
+    badge1Label: string;
+    badge1Value: string;
+    badge2Label: string;
+    badge2Value: string;
+    badge3Label: string;
+    badge3Value: string;
+    floatingTag: string;
+    floatingTitle: string;
+    trustText: string;
+  };
+  catalog: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    quizBtnText: string;
+  };
+  favors: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    consultationBtn: string;
+  };
+  care: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    step1Title: string;
+    step1Desc: string;
+    step2Title: string;
+    step2Desc: string;
+    step3Title: string;
+    step3Desc: string;
+    step4Title: string;
+    step4Desc: string;
+  };
+  reviews: {
+    badge: string;
+    title: string;
+    items: ReviewItem[];
+  };
+  faq: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    items: FaqItem[];
+  };
+  footer: {
+    brandTagline: string;
+    deliveryPolicy: string;
+    paymentPolicy: string;
+    copyright: string;
+  };
+}
+
