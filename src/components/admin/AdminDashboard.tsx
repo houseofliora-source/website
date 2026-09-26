@@ -57,12 +57,80 @@ interface AdminDashboardProps {
 
 const DEFAULT_ADMIN_PASSCODE = 'liora2026';
 const ADMIN_AUTH_KEY = 'liora_admin_auth_token';
+const TRUSTED_DEVICE_KEY = 'liora_trusted_admin_session_v2';
+const FAILED_ATTEMPTS_KEY = 'liora_admin_failed_attempts';
+const LOCKOUT_EXPIRY_KEY = 'liora_admin_lockout_until';
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore }) => {
-  // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+  // Pre-load store settings to get custom passcode
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+
+  const [rememberDevice, setRememberDevice] = useState<boolean>(true);
+  const [showPasscode, setShowPasscode] = useState<boolean>(false);
+  const [lockoutRemaining, setLockoutRemaining] = useState<number>(() => {
+    try {
+      const lockUntil = Number(localStorage.getItem(LOCKOUT_EXPIRY_KEY) || '0');
+      const diff = lockUntil - Date.now();
+      return diff > 0 ? Math.ceil(diff / 1000) : 0;
+    } catch {
+      return 0;
+    }
   });
+
+  // Helper to format remaining lockout time (MM:SS)
+  const formatLockoutTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  // Pre-load store settings on initial mount so custom passcode is ready immediately
+  useEffect(() => {
+    fetchStoreSettings().then(st => {
+      if (st) {
+        setSettings(st);
+        setSettingsForm(st);
+        if (st.faviconUrl) setFaviconPreview(st.faviconUrl);
+      }
+    });
+  }, []);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutRemaining(prev => {
+        if (prev <= 1) {
+          localStorage.removeItem(LOCKOUT_EXPIRY_KEY);
+          localStorage.removeItem(FAILED_ATTEMPTS_KEY);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutRemaining]);
+
+  // Authentication State with 30-Day Trusted Device Check
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const savedSession = localStorage.getItem(TRUSTED_DEVICE_KEY);
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
+          return true; // Trusted device bypass
+        } else {
+          localStorage.removeItem(TRUSTED_DEVICE_KEY);
+        }
+      }
+      return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
 
@@ -74,7 +142,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
-  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -115,21 +182,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
-  // Auth Handler
-  const handleLogin = (e: React.FormEvent) => {
+  // Auth Handler with Brute-Force Rate Limiting & Remote Passcode Sync
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode.trim() === DEFAULT_ADMIN_PASSCODE) {
+
+    if (lockoutRemaining > 0) {
+      setAuthError(`⚠️ অতিরিক্ত ভুল চেষ্টার কারণে পোর্টাল লক। আর ${formatLockoutTimer(lockoutRemaining)} অপেক্ষা করুন।`);
+      return;
+    }
+
+    let expectedPasscode = settings.adminPasscode || DEFAULT_ADMIN_PASSCODE;
+
+    // Check if passcode entered matches, or verify with latest Firestore settings
+    if (passcode.trim() !== expectedPasscode) {
+      try {
+        const fresh = await fetchStoreSettings();
+        if (fresh?.adminPasscode) {
+          expectedPasscode = fresh.adminPasscode;
+          setSettings(fresh);
+        }
+      } catch (err) {
+        console.error('Settings recheck failed', err);
+      }
+    }
+
+    if (passcode.trim() === expectedPasscode) {
       setIsAuthenticated(true);
       sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+      if (rememberDevice) {
+        const sessionData = {
+          token: 'liora_trusted_' + Math.random().toString(36).substring(2),
+          expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+        };
+        localStorage.setItem(TRUSTED_DEVICE_KEY, JSON.stringify(sessionData));
+      }
+      localStorage.removeItem(FAILED_ATTEMPTS_KEY);
+      localStorage.removeItem(LOCKOUT_EXPIRY_KEY);
       setAuthError('');
     } else {
-      setAuthError('Incorrect Atelier Passcode. Please try again.');
+      const currentFails = Number(localStorage.getItem(FAILED_ATTEMPTS_KEY) || '0') + 1;
+      localStorage.setItem(FAILED_ATTEMPTS_KEY, String(currentFails));
+
+      if (currentFails >= MAX_FAILED_ATTEMPTS) {
+        const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
+        localStorage.setItem(LOCKOUT_EXPIRY_KEY, String(lockUntil));
+        setLockoutRemaining(Math.ceil(LOCKOUT_DURATION_MS / 1000));
+        setAuthError(`⚠️ ৫ বার ভুল পাসওয়ার্ড দেওয়া হয়েছে! নিরাপত্তার জন্য পোর্টাল ১৫ মিনিটের জন্য লক করা হয়েছে।`);
+      } else {
+        const remaining = MAX_FAILED_ATTEMPTS - currentFails;
+        setAuthError(`ভুল পাসকোড। সতর্ক থাকুন: আর ${remaining} বার ভুল দিলে পোর্টাল ১৫ মিনিটের জন্য লক হয়ে যাবে।`);
+      }
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem(ADMIN_AUTH_KEY);
+    localStorage.removeItem(TRUSTED_DEVICE_KEY);
   };
 
   // Load Real-time Data once Authenticated
@@ -383,60 +492,112 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-center items-center p-4 selection:bg-[#EAE0D5]">
-        <div className="w-full max-w-md bg-white border border-[#EAE0D5] rounded-xl shadow-lg p-8 space-y-6">
+        <div className="w-full max-w-md bg-white border border-[#EAE0D5] rounded-xl shadow-lg p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-[#24211D] text-white flex items-center justify-center mx-auto shadow-sm">
-              <Shield className="w-6 h-6 text-[#D4AF37]" />
+            <div className="w-14 h-14 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center mx-auto shadow-xs">
+              <Shield className="w-7 h-7" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#8C5E35]">
-              House of Líora
-            </span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#8C5E35]/10 text-[#8C5E35] text-[11px] font-mono font-medium">
+              <span>/studioadmin</span>
+              <span>·</span>
+              <span>Owner Portal</span>
+            </div>
             <h2 className="font-serif text-2xl sm:text-3xl text-[#24211D]">
-              Atelier Admin Portal
+              Studio Admin Portal
             </h2>
-            <p className="text-xs text-[#7A6F62]">
-              Enter your master passcode to access product inventory, order processing, and branding controls.
+            <p className="text-xs text-[#7A6F62] leading-relaxed">
+              মাস্টার পাসকোড দিয়ে আনলক করুন। "বিশ্বস্ত ডিভাইস" সিলেক্ট করলে আগামী ৩০ দিন বারবার পাসওয়ার্ড বা ফোন অথেনটিকেশনের ঝামেলা ছাড়াই অনায়াসে কাজ করতে পারবেন।
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-[#24211D] flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-[#8C5E35]" />
-                <span>Atelier Passcode</span>
-              </label>
-              <input
-                type="password"
-                required
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                placeholder="Enter passcode (default: liora2026)"
-                className="w-full px-3.5 py-2.5 text-sm bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35] focus:bg-white transition-all font-mono"
-              />
-            </div>
-
-            {authError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md flex items-center gap-2">
+          {lockoutRemaining > 0 ? (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center space-y-2.5">
+              <div className="flex items-center justify-center gap-2 text-red-800 font-semibold text-xs">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{authError}</span>
+                <span>পোর্টাল সাময়িকভাবে লক করা হয়েছে</span>
               </div>
-            )}
+              <p className="text-xs text-red-700">
+                নিরাপত্তার স্বার্থে ৫ বার ভুল পাসওয়ার্ড দেওয়ার পর পোর্টাল লক করা হয়েছে।
+              </p>
+              <div className="text-2xl font-mono font-bold text-red-900 bg-red-100/80 py-2 px-4 rounded-md inline-block tracking-wider">
+                {formatLockoutTimer(lockoutRemaining)}
+              </div>
+              <p className="text-[11px] text-red-600">
+                কাউন্টডাউন শূন্যে পৌঁছালে পুনরায় চেষ্টার সুযোগ পাবেন।
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-medium text-[#24211D] flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-[#8C5E35]" />
+                    <span>Master Studio Passcode</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasscode(!showPasscode)}
+                    className="text-[11px] text-[#8C5E35] hover:text-[#24211D] transition-colors cursor-pointer"
+                  >
+                    {showPasscode ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  type={showPasscode ? 'text' : 'password'}
+                  required
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  placeholder="মাস্টার পাসকোড দিন (ডিফল্ট: liora2026)"
+                  className="w-full px-3.5 py-2.5 text-sm bg-[#FAF8F5] border border-[#EAE0D5] rounded-md focus:outline-none focus:border-[#8C5E35] focus:bg-white transition-all font-mono"
+                />
+              </div>
 
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-medium tracking-wide uppercase transition-colors cursor-pointer"
-            >
-              Unlock Dashboard
-            </button>
-          </form>
+              {/* Trusted Device Option (30 Days) */}
+              <div className="p-3 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5]">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberDevice}
+                    onChange={(e) => setRememberDevice(e.target.checked)}
+                    className="mt-0.5 rounded accent-[#8C5E35] w-4 h-4 cursor-pointer shrink-0"
+                  />
+                  <div className="text-xs">
+                    <span className="font-semibold text-[#24211D] block">
+                      এই ডিভাইসটি ৩০ দিনের জন্য মনে রাখো (বিশ্বস্ত ডিভাইস)
+                    </span>
+                    <span className="text-[11px] text-[#7A6F62] leading-snug block mt-0.5">
+                      সারাদিনে বারবার পাসওয়ার্ড বা ফোন থেকে পারমিশন দেওয়ার দরকার হবে না। আপনার ডিভাইস থেকেই সরাসরি খুলবে।
+                    </span>
+                  </div>
+                </label>
+              </div>
 
-          <div className="pt-4 border-t border-[#EAE0D5] text-center">
+              {authError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-semibold tracking-wide uppercase transition-colors cursor-pointer shadow-xs"
+              >
+                Unlock Studio Dashboard
+              </button>
+            </form>
+          )}
+
+          <div className="pt-3 border-t border-[#EAE0D5] space-y-2 text-center">
+            <p className="text-[11px] text-[#7A6F62]">
+              🔒 সাধারণ <code>/admin</code> লিংক স্বয়ংক্রিয়ভাবে হোমপেজে রিডাইরেক্ট করা আছে যাতে বাইরের কেউ প্যানেল খুঁজে না পায়।
+            </p>
             <button
               onClick={onBackToStore}
-              className="text-xs text-[#8C5E35] hover:text-[#24211D] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="text-xs text-[#8C5E35] hover:text-[#24211D] transition-colors inline-flex items-center gap-1.5 cursor-pointer font-medium"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Public Storefront</span>
+              <span>Return to Public Boutique</span>
             </button>
           </div>
         </div>
@@ -461,7 +622,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
                 House of Líora
               </h1>
               <span className="text-[10px] font-mono uppercase bg-[#FAF8F5] text-[#8C5E35] border border-[#EAE0D5] px-2 py-0.5 rounded">
-                Atelier Admin
+                Studio Admin (/studioadmin)
               </span>
             </div>
             <p className="text-[11px] text-[#7A6F62] hidden sm:block">
@@ -1108,6 +1269,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
                     value={settingsForm.supportPhone}
                     onChange={(e) => setSettingsForm({ ...settingsForm, supportPhone: e.target.value })}
                     className="w-full px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE0D5] rounded-md font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Studio Admin Security Passcode */}
+              <div className="p-4 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] space-y-2">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-[#8C5E35]" />
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#24211D]">
+                    Studio Admin Master Passcode (মাস্টার পাসকোড)
+                  </h4>
+                </div>
+                <p className="text-[11px] text-[#7A6F62]">
+                  /studioadmin পোর্টালে প্রবেশের গোপন পাসওয়ার্ড। ডিফল্ট: <code>liora2026</code>। আপনি নিজের ইচ্ছেমতো যেকোনো সিকিউর পাসকোড লিখে "Save Settings"-এ ক্লিক করলেই এটি ক্লাউডে সেভ হবে।
+                </p>
+                <div className="max-w-xs space-y-1">
+                  <label className="text-xs font-medium text-[#24211D]">Custom Admin Passcode</label>
+                  <input
+                    type="text"
+                    value={settingsForm.adminPasscode || ''}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, adminPasscode: e.target.value })}
+                    placeholder="e.g. liora2026 or your private pin"
+                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#EAE0D5] rounded-md font-mono font-medium text-[#24211D] focus:outline-none focus:border-[#8C5E35]"
                   />
                 </div>
               </div>

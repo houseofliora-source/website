@@ -57,6 +57,7 @@ export interface OrderRecord {
 }
 
 export interface StoreSettings {
+  adminPasscode?: string;
   faviconUrl?: string;
   announcementText: string;
   minimumOrder: number;

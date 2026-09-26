@@ -34,15 +34,26 @@ const STORAGE_KEYS = {
 };
 
 export default function App() {
-  // Check if current route is /admin or #admin
+  // Check if current route is /studioadmin or #studioadmin
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return window.location.pathname.startsWith('/admin') || window.location.hash === '#admin';
+    // Decoy redirect: if someone visits /admin, quietly redirect to home /
+    if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
+      window.history.replaceState({}, '', '/');
+      return false;
+    }
+    return window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
   });
 
   useEffect(() => {
     const handleLocationChange = () => {
-      const isNowAdmin = window.location.pathname.startsWith('/admin') || window.location.hash === '#admin';
+      // Decoy redirect: if someone visits /admin, redirect to home
+      if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
+        window.history.replaceState({}, '', '/');
+        setIsAdminRoute(false);
+        return;
+      }
+      const isNowAdmin = window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
       setIsAdminRoute(isNowAdmin);
     };
 
