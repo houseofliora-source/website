@@ -174,6 +174,31 @@ export interface ScentQuizContent {
   questions: ScentQuizQuestion[];
 }
 
+export interface ProductPageContent {
+  courierGuarantee: string;
+  paymentGuarantee: string;
+  craftGuarantee: string;
+  tab1Label: string;
+  tab2Label: string;
+  tab3Label: string;
+  tab4Label: string;
+  philosophyTitle: string;
+  philosophyStory1: string;
+  philosophyStory2: string;
+  olfactorySubtitle: string;
+  careRitualsTitle: string;
+  ritual1Title: string;
+  ritual1Text: string;
+  ritual2Title: string;
+  ritual2Text: string;
+  ritual3Title: string;
+  ritual3Text: string;
+  ritual4Title: string;
+  ritual4Text: string;
+  relatedHeading: string;
+  relatedSubtitle: string;
+}
+
 export interface SiteContent {
   theme: SiteTheme;
   hero: {
@@ -200,6 +225,7 @@ export interface SiteContent {
   };
   catalog: CatalogContent;
   scentQuiz?: ScentQuizContent;
+  productPage?: ProductPageContent;
   favors: FavorContent;
   care: {
     badge: string;

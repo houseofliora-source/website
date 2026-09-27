@@ -1,4 +1,29 @@
-import { SiteContent } from '../types';
+import { SiteContent, ProductPageContent } from '../types';
+
+export const DEFAULT_PRODUCT_PAGE_CONTENT: ProductPageContent = {
+  courierGuarantee: 'Nationwide Courier: Dhaka ৳70 (24-48 hrs), Outside Dhaka ৳130 (2-4 days).',
+  paymentGuarantee: 'Payment Security: Cash on Delivery (COD) & Verified bKash/Nagad available.',
+  craftGuarantee: 'Pure Craftsmanship: 100% botanical soy wax, no petroleum paraffin, soot-free burn.',
+  tab1Label: 'Artisanal Story & Details',
+  tab2Label: 'Fragrance Architecture',
+  tab3Label: 'Burn Rituals & Care',
+  tab4Label: 'Craft Specifications',
+  philosophyTitle: 'The Philosophy Behind',
+  philosophyStory1: 'Every piece in the House of Líora collection is an intentional celebration of botanical beauty, slow living, and artisanal craftsmanship. Hand-poured in small numbered micro-batches in Dhaka, each silhouette transforms living spaces into serene, fragrant sanctuaries.',
+  philosophyStory2: 'Formulated exclusively with 100% plant-based soy wax and infused with high-potency, IFRA-compliant fine perfumery oils. Unlike commercial paraffin candles, our formulation burns exceptionally clean, cooler, and longer without toxic black soot or petroleum fumes.',
+  olfactorySubtitle: 'Our perfumed formulations develop gradually as the wax pool warms, releasing distinct fragrant dimensions into your sanctuary:',
+  careRitualsTitle: 'The Líora Candle Care Ritual',
+  ritual1Title: 'The First Burn',
+  ritual1Text: 'Allow the candle to burn for 2-3 hours until the melted wax pool reaches the edges. This establishes wax memory and prevents future tunneling.',
+  ritual2Title: 'Trim the Wick',
+  ritual2Text: 'Always trim the cotton braided wick to 5mm (1/4 inch) before each lighting to maintain a stable, soot-free flame.',
+  ritual3Title: 'Sculptural Placement',
+  ritual3Text: 'For pillar & bubble shapes, place on a heat-resistant tray or ceramic dish to collect natural wax teardrops.',
+  ritual4Title: 'Extinguish with Grace',
+  ritual4Text: 'Use a candle snuffer or gently dip the wick into the wax pool to prevent lingering smoke.',
+  relatedHeading: 'Complete Your Living Sanctuary',
+  relatedSubtitle: 'Complementary artisanal silhouettes and botanical aromas hand-poured in micro-batches.',
+};
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
   theme: {
@@ -45,6 +70,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       { id: 'jar', label: 'Aroma Tablets' },
     ],
   },
+  productPage: DEFAULT_PRODUCT_PAGE_CONTENT,
   scentQuiz: {
     badge: 'The Líora Olfactory Guide',
     title: 'Find Your Signature Candle Profile',
@@ -366,5 +392,9 @@ export function sanitizeSiteContent(raw: any): SiteContent {
             : (DEFAULT_SITE_CONTENT.scentQuiz?.questions || []),
         }
       : DEFAULT_SITE_CONTENT.scentQuiz,
+    productPage: {
+      ...DEFAULT_PRODUCT_PAGE_CONTENT,
+      ...(raw.productPage && typeof raw.productPage === 'object' ? raw.productPage : {}),
+    },
   };
 }

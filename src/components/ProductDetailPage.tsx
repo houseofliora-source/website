@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Product } from '../types';
+import { Product, ProductPageContent } from '../types';
+import { DEFAULT_PRODUCT_PAGE_CONTENT } from '../data/defaultContent';
 import { 
   ArrowLeft, 
   ShoppingBag, 
@@ -13,7 +14,8 @@ import {
   Heart,
   Share2,
   Droplets,
-  Wind
+  Wind,
+  Edit3
 } from 'lucide-react';
 
 interface ProductDetailPageProps {
@@ -21,8 +23,12 @@ interface ProductDetailPageProps {
   allProducts: Product[];
   onBack: () => void;
   onSelectProduct: (productId: string) => void;
-  onAddToCart: (product: Product, quantity: number, selectedScent?: string) => void;
-  onBuyNow: (product: Product, quantity: number, selectedScent?: string) => void;
+  onAddToCart?: (product: Product, quantity: number, selectedScent?: string) => void;
+  onBuyNow?: (product: Product, quantity: number, selectedScent?: string) => void;
+  pageContent?: ProductPageContent;
+  isEditMode?: boolean;
+  onEditProduct?: (product: Product) => void;
+  onEditPageSettings?: () => void;
 }
 
 export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
@@ -32,7 +38,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   onSelectProduct,
   onAddToCart,
   onBuyNow,
+  pageContent,
+  isEditMode = false,
+  onEditProduct,
+  onEditPageSettings,
 }) => {
+  const content = pageContent || DEFAULT_PRODUCT_PAGE_CONTENT;
   const [quantity, setQuantity] = useState(1);
   const [selectedNote, setSelectedNote] = useState<string>(
     product.scentNotes?.[0] || 'Artisanal Botanical Blend'
@@ -52,14 +63,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const isOutOfStock = product.inStock === false;
 
   const handleAddToCart = () => {
-    if (isOutOfStock) return;
+    if (isOutOfStock || !onAddToCart) return;
     onAddToCart(product, quantity, selectedNote);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleInstantBuy = () => {
-    if (isOutOfStock) return;
+    if (isOutOfStock || !onBuyNow) return;
     onBuyNow(product, quantity, selectedNote);
   };
 
@@ -176,9 +187,22 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         {/* Right Column: Title, Price, Variants, and Purchase Controls (6-7 cols) */}
         <div className="lg:col-span-6 space-y-6">
           <div className="space-y-3">
-            <span className="apple-glass-pill px-3 py-1 text-[10px] tracking-[0.25em] font-sans uppercase text-[#8C5E35] font-semibold inline-block">
-              {product.category} COLLECTION
-            </span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="apple-glass-pill px-3 py-1 text-[10px] tracking-[0.25em] font-sans uppercase text-[#8C5E35] font-semibold inline-block">
+                {product.category} COLLECTION
+              </span>
+              {isEditMode && onEditProduct && (
+                <button
+                  type="button"
+                  onClick={() => onEditProduct(product)}
+                  className="apple-glass-pill px-3 py-1 text-xs text-[#8C5E35] font-semibold hover:bg-white inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-all border border-[#8C5E35]/40"
+                  title="Edit Candle Price, Photos & Specifications"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Candle Info</span>
+                </button>
+              )}
+            </div>
 
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-[#24211D] leading-tight">
               {product.name}
@@ -314,18 +338,29 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
 
           {/* Artisanal Service Guarantees */}
-          <div className="apple-glass-card rounded-2xl p-4 sm:p-5 space-y-3 text-xs text-[#5A5248]">
-            <div className="flex items-center gap-3">
+          <div className="apple-glass-card rounded-2xl p-4 sm:p-5 space-y-3 text-xs text-[#5A5248] relative group">
+            {isEditMode && onEditPageSettings && (
+              <button
+                type="button"
+                onClick={onEditPageSettings}
+                className="absolute top-3 right-3 px-2.5 py-1 bg-[#8C5E35] hover:bg-[#A36E3F] text-white rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer shadow-xs transition-colors"
+                title="Edit Product Page Guarantees"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Edit Guarantees</span>
+              </button>
+            )}
+            <div className="flex items-center gap-3 pr-24 sm:pr-0">
               <Truck className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span><strong>Nationwide Courier:</strong> Dhaka ৳70 (24-48 hrs), Outside Dhaka ৳130 (2-4 days).</span>
+              <span>{content.courierGuarantee}</span>
             </div>
             <div className="flex items-center gap-3">
               <ShieldCheck className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span><strong>Payment Security:</strong> Cash on Delivery (COD) & Verified bKash/Nagad available.</span>
+              <span>{content.paymentGuarantee}</span>
             </div>
             <div className="flex items-center gap-3">
               <Flame className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span><strong>Pure Craftsmanship:</strong> 100% botanical soy wax, no petroleum paraffin, soot-free burn.</span>
+              <span>{content.craftGuarantee}</span>
             </div>
           </div>
         </div>
@@ -334,46 +369,61 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       {/* Structured Details & Candle Rituals Section */}
       <div className="space-y-6 pt-8 border-t border-[#EAE0D5]/80">
         {/* Tab Headers */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#EAE0D5] pb-3">
-          {[
-            { id: 'description', label: 'Artisanal Story & Details' },
-            { id: 'notes', label: 'Fragrance Architecture' },
-            { id: 'rituals', label: 'Burn Rituals & Care' },
-            { id: 'specs', label: 'Craft Specifications' },
-          ].map(tab => (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE0D5] pb-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'description', label: content.tab1Label || 'Artisanal Story & Details' },
+              { id: 'notes', label: content.tab2Label || 'Fragrance Architecture' },
+              { id: 'rituals', label: content.tab3Label || 'Burn Rituals & Care' },
+              { id: 'specs', label: content.tab4Label || 'Craft Specifications' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'apple-glass-dark text-white shadow-xs'
+                    : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {isEditMode && onEditPageSettings && (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? 'apple-glass-dark text-white shadow-xs'
-                  : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
-              }`}
+              type="button"
+              onClick={onEditPageSettings}
+              className="px-3 py-1.5 bg-[#8C5E35] hover:bg-[#A36E3F] text-white rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
             >
-              {tab.label}
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Tabs & Rituals</span>
             </button>
-          ))}
+          )}
         </div>
 
         {/* Tab Content Panes */}
         <div className="apple-glass-card rounded-3xl p-6 sm:p-8 text-sm leading-relaxed text-[#5A5248]">
           {activeTab === 'description' && (
             <div className="space-y-4 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">The Philosophy Behind {product.name}</h3>
+              <h3 className="font-serif text-2xl text-[#24211D]">
+                {(content.philosophyTitle || 'The Philosophy Behind {name}').replace('{name}', product.name)}
+              </h3>
               <p>
-                Every piece in the House of Líora collection is an intentional celebration of botanical beauty, slow living, and artisanal craftsmanship. Hand-poured in small numbered micro-batches in Dhaka, each silhouette transforms living spaces into serene, fragrant sanctuaries.
+                {content.philosophyStory1}
               </p>
               <p>
-                Formulated exclusively with 100% plant-based soy wax and infused with high-potency, IFRA-compliant fine perfumery oils. Unlike commercial paraffin candles, our formulation burns exceptionally clean, cooler, and longer without toxic black soot or petroleum fumes.
+                {content.philosophyStory2}
               </p>
             </div>
           )}
 
           {activeTab === 'notes' && (
             <div className="space-y-6 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">Olfactory Pyramid</h3>
+              <h3 className="font-serif text-2xl text-[#24211D]">{content.tab2Label || 'Fragrance Architecture'}</h3>
               <p className="text-xs text-[#7A6F62]">
-                Our perfumed formulations develop gradually as the wax pool warms, releasing distinct fragrant dimensions into your sanctuary:
+                {content.olfactorySubtitle}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1.5">
@@ -403,23 +453,23 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {activeTab === 'rituals' && (
             <div className="space-y-4 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">The Líora Candle Care Ritual</h3>
+              <h3 className="font-serif text-2xl text-[#24211D]">{content.careRitualsTitle}</h3>
               <ul className="space-y-3 text-xs sm:text-sm">
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">1</span>
-                  <span><strong>The First Burn:</strong> Allow the candle to burn for 2-3 hours until the melted wax pool reaches the edges. This establishes wax memory and prevents future tunneling.</span>
+                  <span><strong>{content.ritual1Title}:</strong> {content.ritual1Text}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">2</span>
-                  <span><strong>Trim the Wick:</strong> Always trim the cotton braided wick to 5mm (1/4 inch) before each lighting to maintain a stable, soot-free flame.</span>
+                  <span><strong>{content.ritual2Title}:</strong> {content.ritual2Text}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">3</span>
-                  <span><strong>Sculptural Placement:</strong> For pillar & bubble shapes, place on a heat-resistant tray or ceramic dish to collect natural wax teardrops.</span>
+                  <span><strong>{content.ritual3Title}:</strong> {content.ritual3Text}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">4</span>
-                  <span><strong>Extinguish with Grace:</strong> Use a candle snuffer or gently dip the wick into the wax pool to prevent lingering smoke.</span>
+                  <span><strong>{content.ritual4Title}:</strong> {content.ritual4Text}</span>
                 </li>
               </ul>
             </div>
@@ -461,11 +511,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <span>Pairings & Suggestions</span>
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#24211D]">
-                You May Also Adore
+                {content.relatedHeading || 'You May Also Adore'}
               </h2>
             </div>
             <p className="text-xs text-[#7A6F62]">
-              Handcrafted artisanal pieces curated to complement your olfactory sanctuary.
+              {content.relatedSubtitle || 'Handcrafted artisanal pieces curated to complement your olfactory sanctuary.'}
             </p>
           </div>
 

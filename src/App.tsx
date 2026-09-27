@@ -306,6 +306,7 @@ export default function App() {
           <ProductDetailPage
             product={currentProduct}
             allProducts={products}
+            pageContent={siteContent.productPage}
             onBack={navigateToHome}
             onSelectProduct={navigateToProduct}
             onAddToCart={(p, q, s) => {
