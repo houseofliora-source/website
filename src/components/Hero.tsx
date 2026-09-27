@@ -117,22 +117,22 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="max-w-7xl mx-auto flex items-center justify-start lg:justify-around gap-4 sm:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap">
           <div className="flex items-center gap-2 shrink-0">
             <Flame className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">100% Natural Botanical Soy Wax</span>
+            <span className="text-[11px] sm:text-xs font-medium">{content.ribbonItem1 || '100% Natural Botanical Soy Wax'}</span>
           </div>
           <span className="text-[#D8CEBE] shrink-0">·</span>
           <div className="flex items-center gap-2 shrink-0">
             <Truck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Doorstep Courier (Dhaka ৳70, Outside ৳130)</span>
+            <span className="text-[11px] sm:text-xs font-medium">{content.ribbonItem2 || 'Doorstep Courier (Dhaka ৳70, Outside ৳130)'}</span>
           </div>
           <span className="text-[#D8CEBE] shrink-0">·</span>
           <div className="flex items-center gap-2 shrink-0">
             <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Bespoke Gifting & Custom Event Favors</span>
+            <span className="text-[11px] sm:text-xs font-medium">{content.ribbonItem3 || 'Bespoke Gifting & Custom Event Favors'}</span>
           </div>
           <span className="text-[#D8CEBE] shrink-0">·</span>
           <div className="flex items-center gap-2 shrink-0">
             <ShieldCheck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
-            <span className="text-[11px] sm:text-xs font-medium">Cash on Delivery & Verified bKash</span>
+            <span className="text-[11px] sm:text-xs font-medium">{content.ribbonItem4 || 'Cash on Delivery & Verified bKash'}</span>
           </div>
         </div>
       </div>

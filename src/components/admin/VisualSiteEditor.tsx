@@ -667,6 +667,40 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
           </section>
 
+          {/* Hero Bottom Trust Ribbon Bar with Edit Button */}
+          <div className="relative group border-b border-[#EAE0D5] bg-[#FAF8F5] py-3.5 px-4 text-xs text-[#5A5248]">
+            {isEditMode && (
+              <button
+                onClick={() => setActiveModal('hero_text')}
+                className="absolute -top-3 right-4 z-20 px-3 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-xs rounded-full flex items-center gap-1.5 shadow-md cursor-pointer border border-white/40"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Edit 4 Trust Ribbon Points</span>
+              </button>
+            )}
+            <div className="max-w-7xl mx-auto flex items-center justify-start lg:justify-around gap-4 sm:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap">
+              <div className="flex items-center gap-2 shrink-0">
+                <Flame className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+                <span className="text-[11px] sm:text-xs font-medium">{content.hero.ribbonItem1 || '100% Natural Botanical Soy Wax'}</span>
+              </div>
+              <span className="text-[#D8CEBE] shrink-0">·</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <Truck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+                <span className="text-[11px] sm:text-xs font-medium">{content.hero.ribbonItem2 || 'Doorstep Courier (Dhaka ৳70, Outside ৳130)'}</span>
+              </div>
+              <span className="text-[#D8CEBE] shrink-0">·</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+                <span className="text-[11px] sm:text-xs font-medium">{content.hero.ribbonItem3 || 'Bespoke Gifting & Custom Event Favors'}</span>
+              </div>
+              <span className="text-[#D8CEBE] shrink-0">·</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <ShieldCheck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+                <span className="text-[11px] sm:text-xs font-medium">{content.hero.ribbonItem4 || 'Cash on Delivery & Verified bKash'}</span>
+              </div>
+            </div>
+          </div>
+
           {/* 2. Catalog Section Header with Direct Product Management */}
           <section className="p-6 sm:p-12 border-b border-[#EAE0D5] space-y-6">
             <div className="relative group border-2 border-dashed border-amber-600/30 hover:border-amber-600 p-4 rounded-lg bg-white/40 transition-all flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -1316,6 +1350,72 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     })}
                     className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
                   />
+                </div>
+              </div>
+
+              {/* Trust Ribbon (Image 3 bar under hero) */}
+              <div className="pt-3 border-t border-[#EAE0D5] space-y-2">
+                <div>
+                  <h4 className="font-semibold text-[#8C5E35] text-xs">
+                    Hero Bottom Trust Ribbon / ৪টি সুবিধা ও পলিসির পয়েন্ট:
+                  </h4>
+                  <p className="text-[11px] text-[#7A6F62]">
+                    হিরো সেকশনের ঠিক নিচে থাকা ৪টি সুবিধার টেক্সট এখান থেকে পরিবর্তন করুন:
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 1 (Flame Icon):</label>
+                    <input
+                      type="text"
+                      value={content.hero.ribbonItem1 ?? '100% Natural Botanical Soy Wax'}
+                      onChange={e => setContent({
+                        ...content,
+                        hero: { ...content.hero, ribbonItem1: e.target.value }
+                      })}
+                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                      placeholder="100% Natural Botanical Soy Wax"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 2 (Courier Icon):</label>
+                    <input
+                      type="text"
+                      value={content.hero.ribbonItem2 ?? 'Doorstep Courier (Dhaka ৳70, Outside ৳130)'}
+                      onChange={e => setContent({
+                        ...content,
+                        hero: { ...content.hero, ribbonItem2: e.target.value }
+                      })}
+                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                      placeholder="Doorstep Courier (Dhaka ৳70, Outside ৳130)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 3 (Sparkles Icon):</label>
+                    <input
+                      type="text"
+                      value={content.hero.ribbonItem3 ?? 'Bespoke Gifting & Custom Event Favors'}
+                      onChange={e => setContent({
+                        ...content,
+                        hero: { ...content.hero, ribbonItem3: e.target.value }
+                      })}
+                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                      placeholder="Bespoke Gifting & Custom Event Favors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 4 (Shield Icon):</label>
+                    <input
+                      type="text"
+                      value={content.hero.ribbonItem4 ?? 'Cash on Delivery & Verified bKash'}
+                      onChange={e => setContent({
+                        ...content,
+                        hero: { ...content.hero, ribbonItem4: e.target.value }
+                      })}
+                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                      placeholder="Cash on Delivery & Verified bKash"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -2733,6 +2833,20 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="font-medium text-[#5A5248] block mb-1">Care Section Subtitle / বিবরণ:</label>
+                <textarea
+                  rows={2}
+                  value={content.care.subtitle || ''}
+                  onChange={e => setContent({
+                    ...content,
+                    care: { ...content.care, subtitle: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                  placeholder="Pure botanical soy wax is alive with natural plant characteristics. Follow these simple rituals for a clean, prolonged, and soot-free burn."
+                />
               </div>
 
               {/* Step 1 */}

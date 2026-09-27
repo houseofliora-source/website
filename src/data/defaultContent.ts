@@ -25,6 +25,10 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     floatingTag: 'Organic Plant-Based Wax',
     floatingTitle: 'The Líora Signature Atelier',
     trustText: 'Zero toxic paraffin · Clean soot-free burn',
+    ribbonItem1: '100% Natural Botanical Soy Wax',
+    ribbonItem2: 'Doorstep Courier (Dhaka ৳70, Outside ৳130)',
+    ribbonItem3: 'Bespoke Gifting & Custom Event Favors',
+    ribbonItem4: 'Cash on Delivery & Verified bKash',
   },
   catalog: {
     badge: 'Botanical Wax Catalog',

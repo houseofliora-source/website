@@ -179,6 +179,10 @@ export interface SiteContent {
     floatingTag: string;
     floatingTitle: string;
     trustText: string;
+    ribbonItem1?: string;
+    ribbonItem2?: string;
+    ribbonItem3?: string;
+    ribbonItem4?: string;
   };
   catalog: {
     badge: string;
