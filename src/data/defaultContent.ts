@@ -280,3 +280,71 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     copyright: 'House of Líora (@houseofliorabd). All rights reserved.',
   },
 };
+
+export function sanitizeSiteContent(raw: any): SiteContent {
+  if (!raw || typeof raw !== 'object') {
+    return DEFAULT_SITE_CONTENT;
+  }
+  return {
+    theme: {
+      ...DEFAULT_SITE_CONTENT.theme,
+      ...(raw.theme && typeof raw.theme === 'object' ? raw.theme : {}),
+    },
+    hero: {
+      ...DEFAULT_SITE_CONTENT.hero,
+      ...(raw.hero && typeof raw.hero === 'object' ? raw.hero : {}),
+    },
+    catalog: {
+      ...DEFAULT_SITE_CONTENT.catalog,
+      ...(raw.catalog && typeof raw.catalog === 'object' ? raw.catalog : {}),
+    },
+    favors: {
+      ...DEFAULT_SITE_CONTENT.favors,
+      ...(raw.favors && typeof raw.favors === 'object' ? raw.favors : {}),
+      moldItems: Array.isArray(raw.favors?.moldItems) && raw.favors.moldItems.length > 0 
+        ? raw.favors.moldItems 
+        : (DEFAULT_SITE_CONTENT.favors.moldItems || []),
+      aromaItems: Array.isArray(raw.favors?.aromaItems) && raw.favors.aromaItems.length > 0 
+        ? raw.favors.aromaItems 
+        : (DEFAULT_SITE_CONTENT.favors.aromaItems || []),
+      ribbonItems: Array.isArray(raw.favors?.ribbonItems) && raw.favors.ribbonItems.length > 0 
+        ? raw.favors.ribbonItems 
+        : (DEFAULT_SITE_CONTENT.favors.ribbonItems || []),
+      packagingItems: Array.isArray(raw.favors?.packagingItems) && raw.favors.packagingItems.length > 0 
+        ? raw.favors.packagingItems 
+        : (DEFAULT_SITE_CONTENT.favors.packagingItems || []),
+    },
+    care: {
+      ...DEFAULT_SITE_CONTENT.care,
+      ...(raw.care && typeof raw.care === 'object' ? raw.care : {}),
+    },
+    reviews: {
+      badge: raw.reviews?.badge !== undefined ? raw.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,
+      title: raw.reviews?.title !== undefined ? raw.reviews.title : DEFAULT_SITE_CONTENT.reviews.title,
+      items: Array.isArray(raw.reviews?.items) && raw.reviews.items.length > 0
+        ? raw.reviews.items
+        : DEFAULT_SITE_CONTENT.reviews.items,
+    },
+    faq: {
+      badge: raw.faq?.badge !== undefined ? raw.faq.badge : DEFAULT_SITE_CONTENT.faq.badge,
+      title: raw.faq?.title !== undefined ? raw.faq.title : DEFAULT_SITE_CONTENT.faq.title,
+      subtitle: raw.faq?.subtitle !== undefined ? raw.faq.subtitle : DEFAULT_SITE_CONTENT.faq.subtitle,
+      items: Array.isArray(raw.faq?.items) && raw.faq.items.length > 0
+        ? raw.faq.items
+        : DEFAULT_SITE_CONTENT.faq.items,
+    },
+    footer: {
+      ...DEFAULT_SITE_CONTENT.footer,
+      ...(raw.footer && typeof raw.footer === 'object' ? raw.footer : {}),
+    },
+    scentQuiz: raw.scentQuiz && typeof raw.scentQuiz === 'object'
+      ? {
+          ...(DEFAULT_SITE_CONTENT.scentQuiz || {}),
+          ...raw.scentQuiz,
+          questions: Array.isArray(raw.scentQuiz.questions) && raw.scentQuiz.questions.length > 0
+            ? raw.scentQuiz.questions
+            : (DEFAULT_SITE_CONTENT.scentQuiz?.questions || []),
+        }
+      : DEFAULT_SITE_CONTENT.scentQuiz,
+  };
+}

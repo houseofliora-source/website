@@ -33,7 +33,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, ScentQuizContent, ScentQuizOption, ScentQuizQuestion } from '../../types';
-import { DEFAULT_SITE_CONTENT } from '../../data/defaultContent';
+import { DEFAULT_SITE_CONTENT, sanitizeSiteContent } from '../../data/defaultContent';
 import { applySiteThemeToDOM } from '../../services/firebase';
 import { CustomFavorBuilder } from '../CustomFavorBuilder';
 import { ScentQuiz } from '../ScentQuiz';
@@ -65,17 +65,13 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   onToggleStock,
 }) => {
   const [content, setContent] = useState<SiteContent>(() => {
-    const base = initialContent || DEFAULT_SITE_CONTENT;
-    return {
-      ...base,
-      scentQuiz: base.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
-    };
+    return sanitizeSiteContent(initialContent);
   });
 
   // Keep editor content in sync whenever initialContent changes from cloud or cache
   useEffect(() => {
     if (initialContent && activeModal === null) {
-      setContent(initialContent);
+      setContent(sanitizeSiteContent(initialContent));
     }
   }, [initialContent, activeModal]);
 
@@ -1134,7 +1130,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {content.reviews.items.map((r, i) => (
+                {(content.reviews?.items || []).map((r, i) => (
                   <div key={i} className="p-4 bg-white rounded border border-[#EAE0D5] space-y-2">
                     <div className="flex gap-0.5 text-[#C68B59]">
                       {[...Array(5)].map((_, star) => (
@@ -1181,7 +1177,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               </div>
 
               <div className="space-y-2">
-                {content.faq.items.map((f, i) => (
+                {(content.faq?.items || []).map((f, i) => (
                   <div key={i} className="p-3 bg-[#FAF8F5] rounded border border-[#EAE0D5] text-xs">
                     <p className="font-semibold text-[#24211D] mb-1">{f.q}</p>
                     <p className="text-[#5A5248]">{f.a}</p>
@@ -3017,7 +3013,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </div>
               </div>
 
-              {content.reviews.items.map((rev, idx) => (
+              {(content.reviews?.items || []).map((rev, idx) => (
                 <div key={idx} className="p-4 bg-white rounded border border-[#EAE0D5] space-y-2 relative">
                   <span className="font-semibold text-[#8C5E35] text-xs">Review #{idx + 1}</span>
                   <div className="grid grid-cols-2 gap-2">
@@ -3113,7 +3109,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </div>
               </div>
 
-              {content.faq.items.map((item, idx) => (
+              {(content.faq?.items || []).map((item, idx) => (
                 <div key={idx} className="p-4 bg-white rounded border border-[#EAE0D5] space-y-2 relative">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-[#8C5E35] text-xs">FAQ Question #{idx + 1}</span>

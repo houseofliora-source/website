@@ -48,7 +48,7 @@ import {
   subscribeToSiteContent
 } from '../../services/firebase';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../../data/products';
-import { DEFAULT_SITE_CONTENT } from '../../data/defaultContent';
+import { DEFAULT_SITE_CONTENT, sanitizeSiteContent } from '../../data/defaultContent';
 import { VisualSiteEditor } from './VisualSiteEditor';
 
 interface AdminDashboardProps {
@@ -138,19 +138,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   // Ops accordion — which section is open
   const [openSection, setOpenSection] = useState<'orders' | 'customers' | 'settings' | null>(null);
   const [siteContent, setSiteContent] = useState<SiteContent>(() => {
-    if (initialSiteContent && initialSiteContent !== DEFAULT_SITE_CONTENT) {
-      return initialSiteContent;
+    if (initialSiteContent) {
+      return sanitizeSiteContent(initialSiteContent);
     }
     try {
       const cached = localStorage.getItem('liora_site_content');
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        return sanitizeSiteContent(JSON.parse(cached));
+      }
     } catch {}
-    return initialSiteContent || DEFAULT_SITE_CONTENT;
+    return DEFAULT_SITE_CONTENT;
   });
 
   useEffect(() => {
-    if (initialSiteContent && initialSiteContent !== DEFAULT_SITE_CONTENT) {
-      setSiteContent(initialSiteContent);
+    if (initialSiteContent) {
+      setSiteContent(sanitizeSiteContent(initialSiteContent));
     }
   }, [initialSiteContent]);
 
@@ -277,9 +279,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
     // Fetch and subscribe to site content
     const unsubContent = subscribeToSiteContent((liveContent) => {
       if (liveContent) {
-        setSiteContent(liveContent);
+        const safe = sanitizeSiteContent(liveContent);
+        setSiteContent(safe);
         try {
-          localStorage.setItem('liora_site_content', JSON.stringify(liveContent));
+          localStorage.setItem('liora_site_content', JSON.stringify(safe));
         } catch {}
       }
     });
@@ -1049,11 +1052,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
           onDeleteProduct={handleDeleteProduct}
           onToggleStock={handleToggleStock}
           onSave={async (newContent) => {
-            const ok = await updateSiteContentInFirestore(newContent);
+            const safe = sanitizeSiteContent(newContent);
+            const ok = await updateSiteContentInFirestore(safe);
             if (ok) {
-              setSiteContent(newContent);
+              setSiteContent(safe);
               try {
-                localStorage.setItem('liora_site_content', JSON.stringify(newContent));
+                localStorage.setItem('liora_site_content', JSON.stringify(safe));
               } catch {}
               flash('Website texts and font style published successfully!', 'success');
             } else {

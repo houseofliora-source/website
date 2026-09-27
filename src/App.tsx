@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS, INITIAL_SAMPLE_ORDERS } from './data/products';
-import { DEFAULT_SITE_CONTENT } from './data/defaultContent';
+import { DEFAULT_SITE_CONTENT, sanitizeSiteContent } from './data/defaultContent';
 import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings, SiteContent } from './types';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -71,7 +71,10 @@ export default function App() {
   const [siteContent, setSiteContent] = useState<SiteContent>(() => {
     try {
       const cached = localStorage.getItem('liora_site_content');
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return sanitizeSiteContent(parsed);
+      }
     } catch {}
     return DEFAULT_SITE_CONTENT;
   });
@@ -86,12 +89,13 @@ export default function App() {
 
     const unsubscribeContent = subscribeToSiteContent((liveContent) => {
       if (liveContent) {
-        setSiteContent(liveContent);
+        const safe = sanitizeSiteContent(liveContent);
+        setSiteContent(safe);
         try {
-          localStorage.setItem('liora_site_content', JSON.stringify(liveContent));
+          localStorage.setItem('liora_site_content', JSON.stringify(safe));
         } catch {}
-        if (liveContent.theme) {
-          applySiteThemeToDOM(liveContent.theme);
+        if (safe.theme) {
+          applySiteThemeToDOM(safe.theme);
         }
       }
     });
