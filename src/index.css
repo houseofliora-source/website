@@ -43,3 +43,12 @@
 .animate-flame {
   animation: flame-subtle 3s ease-in-out infinite;
 }
+
+/* Hide scrollbar for Chrome, Safari, Opera, Edge, Firefox */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

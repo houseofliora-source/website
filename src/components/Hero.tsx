@@ -20,10 +20,10 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   return (
     <section className="relative overflow-hidden bg-[#FAF8F5] border-b border-[#EAE0D5]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 lg:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 md:py-20 lg:py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
           {/* Left Column: Editorial Headline & CTAs */}
-          <div className="lg:col-span-6 space-y-6 relative group">
+          <div className="lg:col-span-6 space-y-5 sm:space-y-6 relative group">
             {isEditMode && (
               <button
                 onClick={() => onEdit?.('hero')}
@@ -43,47 +43,47 @@ export const Hero: React.FC<HeroProps> = ({
               </span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#24211D] font-normal leading-[1.12] tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#24211D] font-normal leading-[1.14] tracking-tight">
               {content.title} <br />
               <span className="italic font-light text-[#8C5E35]">{content.titleHighlight}</span> for Modern Living
             </h1>
 
-            <p className="text-base sm:text-lg text-[#5A5248] leading-relaxed max-w-xl font-normal">
+            <p className="text-sm sm:text-base md:text-lg text-[#5A5248] leading-relaxed max-w-xl font-normal">
               {content.subtitle}
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* CTAs - Side-by-side on mobile with smooth horizontal scroll and no stacking */}
+            <div className="flex items-center gap-2.5 sm:gap-3 pt-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
               <button
                 onClick={onExplore}
-                className="px-6 py-3.5 bg-[#24211D] hover:bg-[#3D3730] text-white text-sm font-medium rounded transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm"
+                className="shrink-0 px-4 sm:px-6 py-3 sm:py-3.5 bg-[#24211D] hover:bg-[#3D3730] text-white text-xs sm:text-sm font-medium rounded transition-colors inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-sm whitespace-nowrap"
               >
                 <span>{content.btnPrimary}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 shrink-0" />
               </button>
 
               <button
                 onClick={onOpenCustomFavors}
-                className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] text-sm font-medium rounded transition-colors inline-flex items-center gap-2 cursor-pointer"
+                className="shrink-0 px-3.5 sm:px-5 py-3 sm:py-3.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] text-xs sm:text-sm font-medium rounded transition-colors inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
               >
-                <Sparkles className="w-4 h-4 text-[#8C5E35]" />
+                <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
                 <span>{content.btnSecondary}</span>
               </button>
             </div>
 
-            {/* Quiet Editorial Proof adjacency */}
-            <div className="pt-4 border-t border-[#EAE0D5]/70 grid grid-cols-3 gap-3 text-[#5A5248]">
-              <div>
-                <p className="text-xs uppercase text-[#8C5E35] font-semibold">{content.badge1Label}</p>
-                <p className="text-sm font-medium text-[#24211D]">{content.badge1Value}</p>
+            {/* Quiet Editorial Proof adjacency - side-by-side proportionally scaled without wrapping */}
+            <div className="pt-4 border-t border-[#EAE0D5]/70 grid grid-cols-3 gap-2 sm:gap-3 text-[#5A5248]">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge1Label}</p>
+                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate">{content.badge1Value}</p>
               </div>
-              <div>
-                <p className="text-xs uppercase text-[#8C5E35] font-semibold">{content.badge2Label}</p>
-                <p className="text-sm font-medium text-[#24211D]">{content.badge2Value}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge2Label}</p>
+                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate">{content.badge2Value}</p>
               </div>
-              <div>
-                <p className="text-xs uppercase text-[#8C5E35] font-semibold">{content.badge3Label}</p>
-                <p className="text-sm font-medium text-[#24211D]">{content.badge3Value}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge3Label}</p>
+                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate">{content.badge3Value}</p>
               </div>
             </div>
           </div>
@@ -101,49 +101,39 @@ export const Hero: React.FC<HeroProps> = ({
 
               {/* Quiet overlay label */}
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-xs">
-                <span className="font-serif italic text-base drop-shadow-sm">
+                <span className="font-serif italic text-sm sm:text-base drop-shadow-sm">
                   {content.floatingTitle}
                 </span>
-                <span className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded text-[11px] font-sans">
+                <span className="bg-white/20 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded text-[10px] sm:text-[11px] font-sans">
                   {content.floatingTag}
                 </span>
               </div>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between text-xs text-[#7A6F62]">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#8C5E35]" />
-                {content.trustText}
-              </span>
-              <span className="font-mono text-[#8C5E35]">
-                Min Order: ৳200
-              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Trust Ribbon */}
-      <div className="bg-[#F3EFEA] border-t border-[#EAE0D5] py-3.5 px-4 text-xs text-[#5A5248]">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-around gap-4 text-center">
-          <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-[#8C5E35]" />
-            <span>100% Natural Botanical Soy Wax</span>
+      {/* Trust Ribbon - side-by-side with smooth horizontal swipe/scroll on mobile without wrapping */}
+      <div className="bg-[#F3EFEA] border-t border-[#EAE0D5] py-3 px-4 text-xs text-[#5A5248]">
+        <div className="max-w-7xl mx-auto flex items-center justify-start lg:justify-around gap-4 sm:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <div className="flex items-center gap-2 shrink-0">
+            <Flame className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+            <span className="text-[11px] sm:text-xs">100% Natural Botanical Soy Wax</span>
           </div>
-          <span className="hidden sm:inline text-[#D8CEBE]">·</span>
-          <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-[#8C5E35]" />
-            <span>Doorstep Courier (Dhaka ৳70, Outside ৳130)</span>
+          <span className="text-[#D8CEBE] shrink-0">·</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Truck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+            <span className="text-[11px] sm:text-xs">Doorstep Courier (Dhaka ৳70, Outside ৳130)</span>
           </div>
-          <span className="hidden sm:inline text-[#D8CEBE]">·</span>
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#8C5E35]" />
-            <span>Bespoke Gifting & Custom Event Favors</span>
+          <span className="text-[#D8CEBE] shrink-0">·</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+            <span className="text-[11px] sm:text-xs">Bespoke Gifting & Custom Event Favors</span>
           </div>
-          <span className="hidden sm:inline text-[#D8CEBE]">·</span>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#8C5E35]" />
-            <span>Cash on Delivery & Verified bKash</span>
+          <span className="text-[#D8CEBE] shrink-0">·</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <ShieldCheck className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
+            <span className="text-[11px] sm:text-xs">Cash on Delivery & Verified bKash</span>
           </div>
         </div>
       </div>
