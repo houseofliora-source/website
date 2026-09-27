@@ -67,6 +67,17 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [content, setContent] = useState<SiteContent>(() => {
     return sanitizeSiteContent(initialContent);
   });
+  const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isEditMode, setIsEditMode] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [favorEditTab, setFavorEditTab] = useState<'general' | 'molds' | 'quantity' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('general');
+  const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
+  const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
+  const [selectedQuizQuestionIndex, setSelectedQuizQuestionIndex] = useState<number>(0);
+  const [isTestingQuizLive, setIsTestingQuizLive] = useState<boolean>(false);
 
   // Keep editor content in sync whenever initialContent changes from cloud or cache
   useEffect(() => {
@@ -81,14 +92,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
       applySiteThemeToDOM(content.theme);
     }
   }, [content.theme]);
-  const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [isEditMode, setIsEditMode] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [favorEditTab, setFavorEditTab] = useState<'general' | 'molds' | 'quantity' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('general');
-  const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
 
   const handleAddCategory = () => {
     const trimmed = newCategoryLabel.trim();
@@ -106,11 +109,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
     }));
     setNewCategoryLabel('');
   };
-
-  // Scent Finder Studio State
-  const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
-  const [selectedQuizQuestionIndex, setSelectedQuizQuestionIndex] = useState<number>(0);
-  const [isTestingQuizLive, setIsTestingQuizLive] = useState<boolean>(false);
 
   // Safe accessor for scent quiz data
   const quizData: ScentQuizContent = content.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz || {

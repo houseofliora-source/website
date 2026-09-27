@@ -65,11 +65,43 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, initialSiteContent }) => {
-  // Pre-load store settings to get custom passcode
+  // ── All States Grouped at the Very Top ─────────────────────────────
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
-
+  const [settingsForm, setSettingsForm] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  const [faviconPreview, setFaviconPreview] = useState<string>('');
   const [rememberDevice, setRememberDevice] = useState<boolean>(true);
   const [showPasscode, setShowPasscode] = useState<boolean>(false);
+  const [passcode, setPasscode] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [openSection, setOpenSection] = useState<'orders' | 'customers' | 'settings' | null>(null);
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] = useState<Partial<Product>>({
+    name: '',
+    category: 'bubble',
+    price: 350,
+    originalPrice: 400,
+    image: '',
+    scentFamily: 'Floral',
+    scentNotes: ['French Vanilla', 'Rose Petals'],
+    dimensions: '6cm x 6cm x 6cm',
+    burnTime: '20 Hours',
+    waxType: '100% Pure Botanical Soy Wax',
+    description: '',
+    inStock: true,
+    isBestseller: false,
+    isNewArrival: false,
+  });
+  const [productImagePreview, setProductImagePreview] = useState<string>('');
+  const [scentNotesInput, setScentNotesInput] = useState<string>('');
+  const [orderFilter, setOrderFilter] = useState<string>('all');
+  const [orderSearch, setOrderSearch] = useState<string>('');
+
   const [lockoutRemaining, setLockoutRemaining] = useState<number>(() => {
     try {
       const lockUntil = Number(localStorage.getItem(LOCKOUT_EXPIRY_KEY) || '0');
@@ -80,14 +112,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
     }
   });
 
-  // Helper to format remaining lockout time (MM:SS)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const savedSession = localStorage.getItem(TRUSTED_DEVICE_KEY);
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
+          return true; // Trusted device bypass
+        } else {
+          localStorage.removeItem(TRUSTED_DEVICE_KEY);
+        }
+      }
+      return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
+    if (initialSiteContent) {
+      return sanitizeSiteContent(initialSiteContent);
+    }
+    try {
+      const cached = localStorage.getItem('liora_site_content');
+      if (cached) {
+        return sanitizeSiteContent(JSON.parse(cached));
+      }
+    } catch {}
+    return DEFAULT_SITE_CONTENT;
+  });
+
+  // ── Helper functions and effects ───────────────────────────────────
   const formatLockoutTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Pre-load store settings on initial mount so custom passcode is ready immediately
+  const flash = (text: string, type: 'success' | 'error' = 'success') => {
+    setStatusMessage({ text, type });
+    setTimeout(() => setStatusMessage(null), 4000);
+  };
+
+  // Pre-load store settings on initial mount
   useEffect(() => {
     fetchStoreSettings().then(st => {
       if (st) {
@@ -114,91 +181,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
     return () => clearInterval(interval);
   }, [lockoutRemaining]);
 
-  // Authentication State with 30-Day Trusted Device Check
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      const savedSession = localStorage.getItem(TRUSTED_DEVICE_KEY);
-      if (savedSession) {
-        const parsed = JSON.parse(savedSession);
-        if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
-          return true; // Trusted device bypass
-        } else {
-          localStorage.removeItem(TRUSTED_DEVICE_KEY);
-        }
-      }
-      return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const [passcode, setPasscode] = useState('');
-  const [authError, setAuthError] = useState('');
-
-  // Ops accordion — which section is open
-  const [openSection, setOpenSection] = useState<'orders' | 'customers' | 'settings' | null>(null);
-  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
-    if (initialSiteContent) {
-      return sanitizeSiteContent(initialSiteContent);
-    }
-    try {
-      const cached = localStorage.getItem('liora_site_content');
-      if (cached) {
-        return sanitizeSiteContent(JSON.parse(cached));
-      }
-    } catch {}
-    return DEFAULT_SITE_CONTENT;
-  });
-
   useEffect(() => {
     if (initialSiteContent) {
       setSiteContent(sanitizeSiteContent(initialSiteContent));
     }
   }, [initialSiteContent]);
-
-  // Data States
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [orders, setOrders] = useState<OrderRecord[]>([]);
-  const [customers, setCustomers] = useState<CustomerUser[]>([]);
-
-  const [loading, setLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  // Products Modal State
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState<Partial<Product>>({
-    name: '',
-    category: 'bubble',
-    price: 350,
-    originalPrice: 400,
-    image: '',
-    scentFamily: 'Floral',
-    scentNotes: ['French Vanilla', 'Rose Petals'],
-    dimensions: '6cm x 6cm x 6cm',
-    burnTime: '20 Hours',
-    waxType: '100% Pure Botanical Soy Wax',
-    description: '',
-    inStock: true,
-    isBestseller: false,
-    isNewArrival: false,
-  });
-  const [productImagePreview, setProductImagePreview] = useState<string>('');
-  const [scentNotesInput, setScentNotesInput] = useState<string>('');
-
-  // Orders Filter
-  const [orderFilter, setOrderFilter] = useState<string>('all');
-  const [orderSearch, setOrderSearch] = useState<string>('');
-
-  // Settings State Form
-  const [settingsForm, setSettingsForm] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
-  const [faviconPreview, setFaviconPreview] = useState<string>('');
-
-  // Flash message helper
-  const flash = (text: string, type: 'success' | 'error' = 'success') => {
-    setStatusMessage({ text, type });
-    setTimeout(() => setStatusMessage(null), 4000);
-  };
 
   // Auth Handler with Brute-Force Rate Limiting & Remote Passcode Sync
   const handleLogin = async (e: React.FormEvent) => {
