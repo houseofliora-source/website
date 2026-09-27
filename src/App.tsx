@@ -68,7 +68,13 @@ export default function App() {
   // Store products, settings, and dynamic site content & typography
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
-  const [siteContent, setSiteContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
+  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
+    try {
+      const cached = localStorage.getItem('liora_site_content');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return DEFAULT_SITE_CONTENT;
+  });
 
   // Load real-time catalog, store settings, and site content from Firestore
   useEffect(() => {
@@ -80,11 +86,10 @@ export default function App() {
 
     const unsubscribeContent = subscribeToSiteContent((liveContent) => {
       if (liveContent) {
-        setSiteContent({
-          ...DEFAULT_SITE_CONTENT,
-          ...liveContent,
-          scentQuiz: liveContent.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
-        });
+        setSiteContent(liveContent);
+        try {
+          localStorage.setItem('liora_site_content', JSON.stringify(liveContent));
+        } catch {}
         if (liveContent.theme) {
           applySiteThemeToDOM(liveContent.theme);
         }
@@ -236,6 +241,7 @@ export default function App() {
   if (isAdminRoute) {
     return (
       <AdminDashboard
+        initialSiteContent={siteContent}
         onBackToStore={() => {
           window.history.pushState({}, '', '/');
           setIsAdminRoute(false);

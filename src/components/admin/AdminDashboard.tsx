@@ -53,6 +53,7 @@ import { VisualSiteEditor } from './VisualSiteEditor';
 
 interface AdminDashboardProps {
   onBackToStore: () => void;
+  initialSiteContent?: SiteContent;
 }
 
 const DEFAULT_ADMIN_PASSCODE = 'liora2026';
@@ -63,7 +64,7 @@ const LOCKOUT_EXPIRY_KEY = 'liora_admin_lockout_until';
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, initialSiteContent }) => {
   // Pre-load store settings to get custom passcode
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
 
@@ -136,7 +137,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
 
   // Ops accordion — which section is open
   const [openSection, setOpenSection] = useState<'orders' | 'customers' | 'settings' | null>(null);
-  const [siteContent, setSiteContent] = useState<SiteContent>(DEFAULT_SITE_CONTENT);
+  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
+    if (initialSiteContent && initialSiteContent !== DEFAULT_SITE_CONTENT) {
+      return initialSiteContent;
+    }
+    try {
+      const cached = localStorage.getItem('liora_site_content');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return initialSiteContent || DEFAULT_SITE_CONTENT;
+  });
+
+  useEffect(() => {
+    if (initialSiteContent && initialSiteContent !== DEFAULT_SITE_CONTENT) {
+      setSiteContent(initialSiteContent);
+    }
+  }, [initialSiteContent]);
 
   // Data States
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -261,11 +277,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
     // Fetch and subscribe to site content
     const unsubContent = subscribeToSiteContent((liveContent) => {
       if (liveContent) {
-        setSiteContent({
-          ...DEFAULT_SITE_CONTENT,
-          ...liveContent,
-          scentQuiz: liveContent.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
-        });
+        setSiteContent(liveContent);
+        try {
+          localStorage.setItem('liora_site_content', JSON.stringify(liveContent));
+        } catch {}
       }
     });
 
@@ -1037,6 +1052,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
             const ok = await updateSiteContentInFirestore(newContent);
             if (ok) {
               setSiteContent(newContent);
+              try {
+                localStorage.setItem('liora_site_content', JSON.stringify(newContent));
+              } catch {}
               flash('Website texts and font style published successfully!', 'success');
             } else {
               flash('Failed to publish website changes to Firestore', 'error');

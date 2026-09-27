@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Edit3, 
   Save, 
@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, ScentQuizContent, ScentQuizOption, ScentQuizQuestion } from '../../types';
 import { DEFAULT_SITE_CONTENT } from '../../data/defaultContent';
+import { applySiteThemeToDOM } from '../../services/firebase';
 import { CustomFavorBuilder } from '../CustomFavorBuilder';
 import { ScentQuiz } from '../ScentQuiz';
 
@@ -70,6 +71,20 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
       scentQuiz: base.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
     };
   });
+
+  // Keep editor content in sync whenever initialContent changes from cloud or cache
+  useEffect(() => {
+    if (initialContent && activeModal === null) {
+      setContent(initialContent);
+    }
+  }, [initialContent, activeModal]);
+
+  // Apply typography & colors to DOM whenever theme changes
+  useEffect(() => {
+    if (content.theme) {
+      applySiteThemeToDOM(content.theme);
+    }
+  }, [content.theme]);
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isEditMode, setIsEditMode] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -264,6 +279,12 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
     const ok = await onSave(content);
     setIsSaving(false);
     if (ok) {
+      try {
+        localStorage.setItem('liora_site_content', JSON.stringify(content));
+      } catch {}
+      if (content.theme) {
+        applySiteThemeToDOM(content.theme);
+      }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3500);
     }

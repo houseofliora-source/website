@@ -383,29 +383,38 @@ export async function fetchSiteContent(): Promise<SiteContent> {
     if (docSnap.exists()) {
       const data = docSnap.data() as Partial<SiteContent>;
       // Deep merge with DEFAULT_SITE_CONTENT
-      return {
+      const merged: SiteContent = {
         theme: { ...DEFAULT_SITE_CONTENT.theme, ...(data.theme || {}) },
         hero: { ...DEFAULT_SITE_CONTENT.hero, ...(data.hero || {}) },
         catalog: { ...DEFAULT_SITE_CONTENT.catalog, ...(data.catalog || {}) },
         favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
         care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
         reviews: {
-          badge: data.reviews?.badge || DEFAULT_SITE_CONTENT.reviews.badge,
-          title: data.reviews?.title || DEFAULT_SITE_CONTENT.reviews.title,
+          badge: data.reviews?.badge !== undefined ? data.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,
+          title: data.reviews?.title !== undefined ? data.reviews.title : DEFAULT_SITE_CONTENT.reviews.title,
           items: data.reviews?.items && data.reviews.items.length > 0 ? data.reviews.items : DEFAULT_SITE_CONTENT.reviews.items,
         },
         faq: {
-          badge: data.faq?.badge || DEFAULT_SITE_CONTENT.faq.badge,
-          title: data.faq?.title || DEFAULT_SITE_CONTENT.faq.title,
-          subtitle: data.faq?.subtitle || DEFAULT_SITE_CONTENT.faq.subtitle,
+          badge: data.faq?.badge !== undefined ? data.faq.badge : DEFAULT_SITE_CONTENT.faq.badge,
+          title: data.faq?.title !== undefined ? data.faq.title : DEFAULT_SITE_CONTENT.faq.title,
+          subtitle: data.faq?.subtitle !== undefined ? data.faq.subtitle : DEFAULT_SITE_CONTENT.faq.subtitle,
           items: data.faq?.items && data.faq.items.length > 0 ? data.faq.items : DEFAULT_SITE_CONTENT.faq.items,
         },
         footer: { ...DEFAULT_SITE_CONTENT.footer, ...(data.footer || {}) },
+        scentQuiz: data.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
       };
+      try {
+        localStorage.setItem('liora_site_content', JSON.stringify(merged));
+      } catch {}
+      return merged;
     }
     return DEFAULT_SITE_CONTENT;
   } catch (error) {
     console.warn('[Firebase] Could not fetch site content, using default:', error);
+    try {
+      const cached = localStorage.getItem('liora_site_content');
+      if (cached) return JSON.parse(cached);
+    } catch {}
     return DEFAULT_SITE_CONTENT;
   }
 }
@@ -419,6 +428,9 @@ export async function updateSiteContentInFirestore(content: SiteContent): Promis
     const cleanContent = JSON.parse(JSON.stringify(content));
     const contentRef = doc(db, 'settings', 'content');
     await setDoc(contentRef, cleanContent, { merge: true });
+    try {
+      localStorage.setItem('liora_site_content', JSON.stringify(cleanContent));
+    } catch {}
     if (content.theme) {
       applySiteThemeToDOM(content.theme);
     }
@@ -446,18 +458,22 @@ export function subscribeToSiteContent(callback: (content: SiteContent) => void)
           favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
           care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
           reviews: {
-            badge: data.reviews?.badge || DEFAULT_SITE_CONTENT.reviews.badge,
-            title: data.reviews?.title || DEFAULT_SITE_CONTENT.reviews.title,
+            badge: data.reviews?.badge !== undefined ? data.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,
+            title: data.reviews?.title !== undefined ? data.reviews.title : DEFAULT_SITE_CONTENT.reviews.title,
             items: data.reviews?.items && data.reviews.items.length > 0 ? data.reviews.items : DEFAULT_SITE_CONTENT.reviews.items,
           },
           faq: {
-            badge: data.faq?.badge || DEFAULT_SITE_CONTENT.faq.badge,
-            title: data.faq?.title || DEFAULT_SITE_CONTENT.faq.title,
-            subtitle: data.faq?.subtitle || DEFAULT_SITE_CONTENT.faq.subtitle,
+            badge: data.faq?.badge !== undefined ? data.faq.badge : DEFAULT_SITE_CONTENT.faq.badge,
+            title: data.faq?.title !== undefined ? data.faq.title : DEFAULT_SITE_CONTENT.faq.title,
+            subtitle: data.faq?.subtitle !== undefined ? data.faq.subtitle : DEFAULT_SITE_CONTENT.faq.subtitle,
             items: data.faq?.items && data.faq.items.length > 0 ? data.faq.items : DEFAULT_SITE_CONTENT.faq.items,
           },
           footer: { ...DEFAULT_SITE_CONTENT.footer, ...(data.footer || {}) },
+          scentQuiz: data.scentQuiz || DEFAULT_SITE_CONTENT.scentQuiz,
         };
+        try {
+          localStorage.setItem('liora_site_content', JSON.stringify(merged));
+        } catch {}
         if (merged.theme) {
           applySiteThemeToDOM(merged.theme);
         }
