@@ -11,6 +11,12 @@
     font-family: var(--font-sans);
     color: #24211D;
     background-color: #FAF8F5;
+    background-image: 
+      radial-gradient(at 5% 0%, rgba(198, 139, 89, 0.09) 0px, transparent 45%),
+      radial-gradient(at 95% 15%, rgba(216, 206, 190, 0.3) 0px, transparent 50%),
+      radial-gradient(at 10% 55%, rgba(140, 94, 53, 0.06) 0px, transparent 50%),
+      radial-gradient(at 85% 85%, rgba(198, 139, 89, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 
   h1, h2, h3, .font-display {
@@ -51,4 +57,129 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ============================================================
+   APPLE LIQUID GLASS (VISIONOS / iOS INSPIRED DESIGN SYSTEM)
+   ============================================================ */
+
+/* Primary Apple Liquid Glass Surface */
+.apple-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(250, 248, 245, 0.55) 100%);
+  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 10px 30px -5px rgba(36, 33, 29, 0.06);
+}
+
+/* Floating Navigation / Header Liquid Bar */
+.apple-glass-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(250, 248, 245, 0.74) 100%);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 32px 0 rgba(36, 33, 29, 0.04);
+}
+
+/* Apple Liquid Pill - The Signature Floating Island / Capsule */
+.apple-glass-pill {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.48) 100%);
+  backdrop-filter: blur(20px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%) contrast(102%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 9999px;
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.04),
+    0 4px 16px -2px rgba(36, 33, 29, 0.07);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-glass-pill:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.65) 100%);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    inset 0 2px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.03),
+    0 8px 24px -2px rgba(36, 33, 29, 0.12);
+  transform: translateY(-1px);
+}
+
+.apple-glass-pill:active {
+  transform: scale(0.97);
+}
+
+/* Apple Dark Liquid Glass (for primary buttons, bag pill, dark pills) */
+.apple-glass-dark {
+  background: linear-gradient(135deg, rgba(36, 33, 29, 0.92) 0%, rgba(55, 48, 42, 0.82) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+  box-shadow: 
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.3),
+    0 8px 24px -3px rgba(24, 22, 19, 0.28);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-glass-dark:hover {
+  background: linear-gradient(135deg, rgba(46, 42, 37, 0.96) 0%, rgba(68, 60, 52, 0.88) 100%);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 
+    inset 0 2px 1.5px 0 rgba(255, 255, 255, 0.48),
+    0 12px 28px -3px rgba(24, 22, 19, 0.35);
+  transform: translateY(-1px);
+}
+
+.apple-glass-dark:active {
+  transform: scale(0.97);
+}
+
+/* Apple Liquid Card (Product Cards, Ritual Cards, Review Cards, Builder Steps) */
+.apple-glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.75) 0%, rgba(250, 248, 245, 0.58) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.02),
+    0 8px 28px -4px rgba(36, 33, 29, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-glass-card:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(252, 250, 247, 0.72) 100%);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    inset 0 2px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.02),
+    0 16px 36px -4px rgba(36, 33, 29, 0.09);
+}
+
+/* Apple Liquid Input / Controls */
+.apple-glass-input {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.04),
+    0 2px 8px 0 rgba(36, 33, 29, 0.02);
+  transition: all 0.2s ease;
+}
+
+.apple-glass-input:focus {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(140, 94, 53, 0.5);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.02),
+    0 0 0 3px rgba(140, 94, 53, 0.15);
+  outline: none;
 }

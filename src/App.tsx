@@ -287,20 +287,20 @@ export default function App() {
               </p>
             </div>
 
-            {/* Scent Quiz Trigger */}
+            {/* Scent Quiz Trigger in Apple Liquid Glass Pill */}
             <button
               onClick={() => setIsQuizOpen(true)}
-              className="px-4 py-2.5 bg-[#FAF8F5] hover:bg-[#EAE0D5] text-[#24211D] border border-[#D8CEBE] rounded text-xs font-medium transition-colors inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-xs"
+              className="px-4 py-2.5 apple-glass-pill text-[#24211D] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-sm"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
               <span>{siteContent.catalog.quizBtnText}</span>
             </button>
           </div>
 
-          {/* Filter Bar (Segmented Controls) */}
+          {/* Filter Bar (Segmented Controls in Apple Liquid Glass Pill Capsule) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             {/* Category Segmented Buttons */}
-            <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-[#F3EFEA] rounded-md border border-[#EAE0D5] max-w-full">
+            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 apple-glass-pill max-w-full no-scrollbar shadow-xs">
               {[
                 { id: 'all', label: 'All Pieces' },
                 { id: 'bubble', label: 'Bubble Cubes' },
@@ -312,10 +312,10 @@ export default function App() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer ${
                     selectedCategory === cat.id
-                      ? 'bg-[#24211D] text-white shadow-xs'
-                      : 'text-[#5A5248] hover:text-[#24211D]'
+                      ? 'apple-glass-dark text-white shadow-xs'
+                      : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
                   }`}
                 >
                   {cat.label}
@@ -323,14 +323,14 @@ export default function App() {
               ))}
             </div>
 
-            {/* Scent Family Dropdown filter */}
-            <div className="flex items-center gap-2 text-xs text-[#5A5248]">
+            {/* Scent Family Dropdown filter in Apple Liquid Glass Pill */}
+            <div className="flex items-center gap-2 text-xs text-[#5A5248] apple-glass-pill px-3 py-1.5 shadow-xs">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#8C5E35]" />
-              <span>Scent Family:</span>
+              <span className="font-medium">Scent Family:</span>
               <select
                 value={selectedScentFamily}
                 onChange={e => setSelectedScentFamily(e.target.value)}
-                className="bg-white border border-[#D8CEBE] rounded px-2.5 py-1 text-xs text-[#24211D] focus:border-[#24211D]"
+                className="bg-transparent border-0 text-xs font-medium text-[#24211D] focus:ring-0 cursor-pointer outline-none"
               >
                 <option value="all">All Aromas</option>
                 <option value="Floral">Floral</option>
@@ -343,7 +343,7 @@ export default function App() {
 
           {/* Product Grid */}
           {filteredProducts.length === 0 ? (
-            <div className="p-12 text-center bg-[#F5F1EB] rounded-lg border border-[#EAE0D5] space-y-3">
+            <div className="p-12 text-center apple-glass-card rounded-2xl space-y-3">
               <p className="text-sm text-[#7A6F62]">
                 No candles match the selected filters.
               </p>
@@ -352,7 +352,7 @@ export default function App() {
                   setSelectedCategory('all');
                   setSelectedScentFamily('all');
                 }}
-                className="px-3.5 py-1.5 text-xs bg-[#24211D] text-white rounded cursor-pointer"
+                className="px-4 py-2 text-xs apple-glass-dark text-white rounded-full cursor-pointer"
               >
                 Reset Filters
               </button>

@@ -20,9 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   announcementText,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EAE0D5] transition-all">
+    <header className="sticky top-0 z-40 apple-glass-nav transition-all duration-300">
       {/* Announcement top ribbon */}
-      <div className="bg-[#24211D] text-[#FAF8F5] text-xs py-1.5 px-4 text-center tracking-wide font-medium flex items-center justify-center gap-2">
+      <div className="bg-[#24211D]/90 backdrop-blur-md text-[#FAF8F5] text-xs py-1.5 px-4 text-center tracking-wide font-medium flex items-center justify-center gap-2 border-b border-white/10">
         <span>{announcementText || '✨ 100% Handcrafted Botanical Soy Wax Candles · Nationwide Delivery · Min Order ৳200'}</span>
       </div>
 
@@ -38,33 +38,42 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </a>
 
-        {/* Zone 2: Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-[#4A443C]">
-          <a href="#collections" className="hover:text-[#24211D] transition-colors">
+        {/* Zone 2: Navigation Links in Apple Liquid Glass Pill Capsule */}
+        <nav className="hidden lg:flex items-center gap-1 p-1.5 apple-glass-pill text-xs font-medium text-[#4A443C]">
+          <a 
+            href="#collections" 
+            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
+          >
             Collections
           </a>
           <button 
             onClick={onOpenQuiz} 
-            className="hover:text-[#24211D] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all inline-flex items-center gap-1.5 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
             <span>Scent Finder</span>
           </button>
-          <a href="#custom-favors" className="hover:text-[#24211D] transition-colors">
+          <a 
+            href="#custom-favors" 
+            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
+          >
             Custom Favors & Events
           </a>
-          <a href="#candle-care" className="hover:text-[#24211D] transition-colors">
+          <a 
+            href="#candle-care" 
+            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
+          >
             Candle Care
           </a>
         </nav>
 
-        {/* Zone 3: Actions (Customer Account & Shopping Bag) */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        {/* Zone 3: Actions (Customer Account & Shopping Bag as Apple Liquid Glass Buttons) */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <button
             onClick={onOpenAuth}
             aria-label="Customer Account"
             title={currentUser ? `Signed in as ${currentUser.name}` : "Customer Account"}
-            className="px-2.5 py-2 text-[#4A443C] hover:text-[#24211D] hover:bg-[#EAE0D5] rounded transition-colors inline-flex items-center justify-center cursor-pointer border border-[#D8CEBE]"
+            className="w-10 h-10 apple-glass-pill inline-flex items-center justify-center text-[#4A443C] hover:text-[#24211D] cursor-pointer"
           >
             <User className="w-4 h-4 text-[#8C5E35]" />
           </button>
@@ -72,12 +81,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onOpenCart}
             aria-label="Open Shopping Bag"
-            className="relative px-3.5 py-2 text-xs font-medium text-white bg-[#24211D] rounded hover:bg-[#3D3730] transition-colors inline-flex items-center gap-2 cursor-pointer"
+            className="h-10 px-4 apple-glass-dark inline-flex items-center gap-2 text-xs font-medium text-white cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" />
             <span className="hidden sm:inline">Bag</span>
             {cartCount > 0 && (
-              <span className="bg-[#C68B59] text-white text-[11px] font-bold rounded-full w-4.5 h-4.5 inline-flex items-center justify-center font-mono">
+              <span className="bg-[#C68B59] text-white text-[11px] font-bold rounded-full w-4.5 h-4.5 inline-flex items-center justify-center font-mono shadow-xs">
                 {cartCount}
               </span>
             )}

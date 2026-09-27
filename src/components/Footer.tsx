@@ -27,7 +27,7 @@ export const Footer: React.FC<FooterProps> = ({
       {isEditMode && (
         <button
           onClick={onEdit}
-          className="absolute top-4 right-8 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-black flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+          className="absolute top-4 right-8 z-20 px-3.5 py-1.5 apple-glass-dark text-white rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 transition-all cursor-pointer animate-pulse"
           title="Edit Footer Brand Text & Policies"
         >
           <Edit3 className="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@ export const Footer: React.FC<FooterProps> = ({
                 href={storeSettings.facebookUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded bg-[#332E28] hover:bg-[#C68B59] hover:text-white text-[#D8CEBE] flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full apple-glass-dark text-[#D8CEBE] hover:text-white flex items-center justify-center transition-all hover:scale-110 shadow-sm"
                 title="Facebook @houseofliorabd"
               >
                 <Facebook className="w-4 h-4" />
@@ -59,14 +59,14 @@ export const Footer: React.FC<FooterProps> = ({
                 href={storeSettings.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded bg-[#332E28] hover:bg-[#C68B59] hover:text-white text-[#D8CEBE] flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full apple-glass-dark text-[#D8CEBE] hover:text-white flex items-center justify-center transition-all hover:scale-110 shadow-sm"
                 title="Instagram"
               >
                 <Instagram className="w-4 h-4" />
               </a>
               <a
                 href={`mailto:${storeSettings.supportEmail}`}
-                className="w-8 h-8 rounded bg-[#332E28] hover:bg-[#C68B59] hover:text-white text-[#D8CEBE] flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full apple-glass-dark text-[#D8CEBE] hover:text-white flex items-center justify-center transition-all hover:scale-110 shadow-sm"
                 title="Email Support"
               >
                 <Mail className="w-4 h-4" />
@@ -125,17 +125,16 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="pt-8 border-t border-[#38322B] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#877E71]">
           <p>© {new Date().getFullYear()} {content.copyright}</p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={onOpenAuth}
-              className="hover:text-white transition-colors cursor-pointer text-[#C68B59]"
+              className="apple-glass-dark px-3 py-1.5 text-xs text-[#FAF8F5] rounded-full hover:text-[#C68B59] transition-all cursor-pointer shadow-xs"
             >
               Sign In / Account
             </button>
-            <span aria-hidden="true">·</span>
             <button
               onClick={scrollToTop}
-              className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+              className="apple-glass-dark px-3.5 py-1.5 text-xs text-[#FAF8F5] rounded-full hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <span>Back to Top</span>
               <ArrowUp className="w-3.5 h-3.5" />

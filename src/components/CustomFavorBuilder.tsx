@@ -103,7 +103,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
           {isEditMode && (
             <button
               onClick={() => onEdit?.('general')}
-              className="absolute -top-3 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40"
+              className="absolute -top-3 right-0 z-20 px-3 py-1.5 apple-glass-dark text-white rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 transition-all cursor-pointer"
               title="Edit Custom Favors Headline & Description"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -111,10 +111,10 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
             </button>
           )}
 
-          <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center justify-center gap-1.5">
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
             <HeartHandshake className="w-4 h-4 text-[#C68B59]" />
-            {content.badge}
-          </span>
+            <span>{content.badge}</span>
+          </div>
           <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
             {content.title}
           </h2>
@@ -125,8 +125,8 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
 
         {/* Interactive Matrix */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Controls: Left 7 Columns */}
-          <div className="lg:col-span-7 bg-[#FAF8F5] p-6 sm:p-8 rounded-lg border border-[#EAE0D5] shadow-xs space-y-6">
+          {/* Controls: Left 7 Columns in Apple Liquid Glass Card */}
+          <div className="lg:col-span-7 apple-glass-card p-6 sm:p-8 rounded-3xl border border-white/70 shadow-lg space-y-6">
             {/* 1. Style Selection */}
             <div className="space-y-2 relative border border-transparent hover:border-amber-600/40 p-2 rounded-md transition-all">
               <div className="flex items-center justify-between">
@@ -136,7 +136,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 {isEditMode && (
                   <button
                     onClick={() => onEdit?.('molds')}
-                    className="p-1 px-2 text-[10px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                    className="p-1 px-2 text-[10px] apple-glass-dark text-white rounded-full flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3 h-3" />
                     <span>Edit Molds / Forms</span>
@@ -149,10 +149,10 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     key={item.id}
                     type="button"
                     onClick={() => setCandleStyle(item.id)}
-                    className={`p-3 rounded border text-center transition-all cursor-pointer ${
+                    className={`p-3 rounded-2xl text-center transition-all cursor-pointer ${
                       candleStyle === item.id
-                        ? 'border-[#24211D] bg-[#24211D] text-white shadow-xs'
-                        : 'border-[#D8CEBE] bg-[#FAF8F5] text-[#5A5248] hover:border-[#8C5E35]'
+                        ? 'apple-glass-dark text-white shadow-md'
+                        : 'apple-glass-pill text-[#5A5248] hover:text-[#24211D]'
                     }`}
                   >
                     <p className="text-xs font-semibold">{item.label}</p>
@@ -230,7 +230,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 <select
                   value={scent}
                   onChange={(e) => setScent(e.target.value)}
-                  className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
+                  className="w-full p-2.5 text-xs apple-glass-input rounded-xl focus:border-[#24211D] text-[#24211D]"
                 >
                   {aromaItems.map((a, idx) => (
                     <option key={idx} value={a}>{a}</option>
@@ -246,7 +246,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                   {isEditMode && (
                     <button
                       onClick={() => onEdit?.('ribbons')}
-                      className="p-0.5 px-1.5 text-[9px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                      className="p-0.5 px-1.5 text-[9px] apple-glass-dark text-white rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <Edit3 className="w-2.5 h-2.5" />
                       <span>Edit Ribbons</span>
@@ -256,7 +256,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 <select
                   value={ribbonColor}
                   onChange={(e) => setRibbonColor(e.target.value)}
-                  className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
+                  className="w-full p-2.5 text-xs apple-glass-input rounded-xl focus:border-[#24211D] text-[#24211D]"
                 >
                   {ribbonItems.map((r, idx) => (
                     <option key={idx} value={r}>{r}</option>
@@ -274,7 +274,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 {isEditMode && (
                   <button
                     onClick={() => onEdit?.('packaging')}
-                    className="p-1 px-2 text-[10px] bg-[#8C5E35] hover:bg-[#24211D] text-white rounded flex items-center gap-1 cursor-pointer"
+                    className="p-1 px-2 text-[10px] apple-glass-dark text-white rounded-full flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3 h-3" />
                     <span>Edit Card View Boxes</span>
@@ -287,10 +287,10 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     key={b.id}
                     type="button"
                     onClick={() => setPackagingType(b.id)}
-                    className={`p-3 rounded border text-left transition-all cursor-pointer ${
+                    className={`p-3 rounded-2xl text-left transition-all cursor-pointer ${
                       packagingType === b.id
-                        ? 'border-[#24211D] bg-[#F3EFEA]'
-                        : 'border-[#D8CEBE] bg-[#FAF8F5]'
+                        ? 'apple-glass-card border-[#24211D] ring-2 ring-[#8C5E35]/40 shadow-md'
+                        : 'apple-glass-card hover:border-[#8C5E35]'
                     }`}
                   >
                     <div className="flex justify-between items-center">
@@ -313,7 +313,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 value={tagMessage}
                 onChange={(e) => setTagMessage(e.target.value)}
                 placeholder="e.g. Tanvir & Raisa · 2026 or Brand Event Name"
-                className="w-full p-2.5 text-xs bg-white border border-[#D8CEBE] rounded focus:border-[#24211D] text-[#24211D]"
+                className="w-full p-2.5 text-xs apple-glass-input rounded-xl focus:border-[#24211D] text-[#24211D]"
               />
               <p className="text-[11px] text-[#7A6F62]">
                 {content.inscriptionNote || 'Includes personalized foil-accented card and botanical sprig.'}
@@ -321,12 +321,12 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
             </div>
           </div>
 
-          {/* Quotation Summary Card: Right 5 Columns */}
-          <div className="lg:col-span-5 bg-[#FAF8F5] p-6 sm:p-7 rounded-lg border border-[#EAE0D5] space-y-6 shadow-xs relative border-2 border-transparent hover:border-amber-600/40 transition-all">
+          {/* Quotation Summary Card: Right 5 Columns in Apple Liquid Glass Card */}
+          <div className="lg:col-span-5 apple-glass-card p-6 sm:p-7 rounded-3xl border border-white/80 space-y-6 shadow-xl relative border-2 border-transparent hover:border-amber-600/40 transition-all">
             {isEditMode && (
               <button
                 onClick={() => onEdit?.('quotation')}
-                className="absolute top-4 right-4 z-20 px-2.5 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-[11px] rounded-full flex items-center gap-1 cursor-pointer border border-white/40 shadow-sm"
+                className="absolute top-4 right-4 z-20 px-2.5 py-1 apple-glass-dark text-white text-[11px] rounded-full flex items-center gap-1 cursor-pointer"
                 title="Edit Quotation Card Box"
               >
                 <Edit3 className="w-3 h-3" />
@@ -334,7 +334,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
               </button>
             )}
 
-            <div className="border-b border-[#EAE0D5] pb-4">
+            <div className="border-b border-[#EAE0D5]/70 pb-4">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#8C5E35]">
                 {content.cardBoxBadge || 'Live Estimate & Terms'}
               </span>
@@ -367,7 +367,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
               </div>
 
               {/* Total & 50% Advance Notice */}
-              <div className="pt-3 border-t border-[#EAE0D5] flex justify-between items-baseline">
+              <div className="pt-3 border-t border-[#EAE0D5]/70 flex justify-between items-baseline">
                 <span className="text-sm font-semibold text-[#24211D]">
                   Total Estimated Cost:
                 </span>
@@ -376,8 +376,8 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 </span>
               </div>
 
-              {/* Advance policy note */}
-              <div className="p-3 bg-[#F3EFEA] border border-[#D8CEBE] rounded-md space-y-1 mt-2">
+              {/* Advance policy note in Apple Liquid Glass Card */}
+              <div className="p-3.5 apple-glass rounded-2xl border border-white/60 space-y-1 mt-2">
                 <div className="flex items-center gap-1.5 text-[#8C5E35] font-semibold text-xs">
                   <Info className="w-3.5 h-3.5" />
                   <span>Custom Order Terms: 50% Advance</span>
@@ -392,10 +392,10 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
             <div className="space-y-2.5 pt-2">
               <button
                 onClick={handleBook}
-                className={`w-full py-3 px-4 text-xs sm:text-sm font-medium rounded transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+                className={`w-full py-3.5 px-4 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
                   added
-                    ? 'bg-emerald-800 text-white'
-                    : 'bg-[#24211D] hover:bg-[#3D3730] text-white'
+                    ? 'bg-emerald-700 text-white'
+                    : 'apple-glass-dark text-white'
                 }`}
               >
                 {added ? (
@@ -415,7 +415,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                 href={facebookUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full py-2.5 px-4 text-xs font-medium text-[#24211D] bg-[#EAE0D5] hover:bg-[#DFD3C5] border border-[#D8CEBE] rounded transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 text-xs font-medium text-[#24211D] apple-glass-pill rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
                 <span>Discuss Directly on Facebook Page</span>

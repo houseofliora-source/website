@@ -65,7 +65,6 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
 
     const answersList = Object.values(selectedAnswers);
 
-    // 1. Check if any selected option has a specific targetProductId (latest chosen first)
     for (let i = answersList.length - 1; i >= 0; i--) {
       const opt = answersList[i];
       if (opt.targetProductId) {
@@ -74,7 +73,6 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
       }
     }
 
-    // 2. Check category match from latest answers backwards
     for (let i = answersList.length - 1; i >= 0; i--) {
       const opt = answersList[i];
       if (opt.targetCategory) {
@@ -83,13 +81,11 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
       }
     }
 
-    // 3. Check configured default fallback product
     if (quizContent.defaultProductId) {
       const defaultMatch = products.find(p => p.id === quizContent.defaultProductId);
       if (defaultMatch) return defaultMatch;
     }
 
-    // 4. Ultimate fallback to first product
     return products[0];
   };
 
@@ -98,24 +94,24 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
   const recommendedProduct = getRecommendation();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="relative w-full max-w-xl bg-[#FAF8F5] rounded-xl border border-[#EAE0D5] p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Close Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-xl apple-glass rounded-3xl border border-white/80 p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Close Button in Liquid Pill */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#7A6F62] hover:text-[#24211D] p-1.5 rounded-full hover:bg-[#EAE0D5] transition-colors cursor-pointer z-10"
+          className="absolute top-4 right-4 w-9 h-9 apple-glass-pill flex items-center justify-center text-[#7A6F62] hover:text-[#24211D] cursor-pointer z-10"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         <div className="space-y-6 flex-1 overflow-y-auto pr-1">
           {/* Header */}
-          <div className="text-center space-y-1">
-            <span className="text-xs font-semibold text-[#8C5E35] uppercase tracking-widest inline-flex items-center gap-1.5">
+          <div className="text-center space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
               <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-              {quizContent.badge || 'The Líora Olfactory Guide'}
-            </span>
-            <h3 className="font-serif text-2xl text-[#24211D]">
+              <span>{quizContent.badge || 'The Líora Olfactory Guide'}</span>
+            </div>
+            <h3 className="font-serif text-2xl sm:text-3xl text-[#24211D]">
               {quizContent.title || 'Find Your Signature Candle Profile'}
             </h3>
             <p className="text-xs text-[#5A5248] max-w-md mx-auto">
@@ -141,7 +137,7 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
                 {step > 1 && (
                   <button
                     onClick={() => setStep(step - 1)}
-                    className="text-xs text-[#7A6F62] hover:text-[#24211D] flex items-center gap-1 cursor-pointer shrink-0 px-2 py-1 rounded hover:bg-[#EAE0D5]"
+                    className="apple-glass-pill px-3 py-1 text-xs text-[#7A6F62] hover:text-[#24211D] flex items-center gap-1 cursor-pointer shrink-0"
                   >
                     <ArrowLeft className="w-3 h-3" />
                     <span>Back</span>
@@ -162,7 +158,7 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
                         setStep(totalQuestions + 1);
                       }
                     }}
-                    className="p-3.5 text-left border border-[#D8CEBE] hover:border-[#8C5E35] hover:bg-[#F3EFEA] rounded-lg transition-all cursor-pointer group bg-white shadow-2xs hover:shadow-xs flex flex-col justify-between"
+                    className="p-4 text-left apple-glass-card rounded-2xl border border-white/75 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer group flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -182,14 +178,14 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
           {/* Result Step */}
           {isResultStep && (
             <div className="space-y-5 animate-fade-in">
-              <div className="p-4 sm:p-5 bg-[#F3EFEA] rounded-xl border border-[#EAE0D5] flex flex-col sm:flex-row items-center gap-4">
+              <div className="p-4 sm:p-5 apple-glass-card rounded-2xl border border-white/80 flex flex-col sm:flex-row items-center gap-4">
                 <img
                   src={recommendedProduct.image}
                   alt={recommendedProduct.name}
-                  className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg border border-[#D8CEBE] shrink-0 shadow-xs"
+                  className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl border border-white/60 shrink-0 shadow-sm"
                 />
                 <div className="space-y-1.5 text-center sm:text-left flex-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8C5E35] bg-[#8C5E35]/10 px-2 py-0.5 rounded">
+                  <span className="apple-glass-pill text-[11px] font-semibold uppercase tracking-wider text-[#8C5E35] px-2.5 py-0.5 inline-block">
                     {quizContent.resultBadge || 'Your Ideal Scent Match'}
                   </span>
                   <h4 className="font-serif text-xl font-medium text-[#24211D]">
@@ -207,7 +203,7 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
               <div className="flex items-center justify-between gap-3 pt-2">
                 <button
                   onClick={resetQuiz}
-                  className="px-3.5 py-2 text-xs font-medium text-[#5A5248] hover:text-[#24211D] rounded-md border border-[#D8CEBE] hover:bg-[#F3EFEA] inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                  className="px-4 py-2.5 apple-glass-pill text-xs font-medium text-[#5A5248] hover:text-[#24211D] inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{quizContent.retakeBtnText || 'Retake Quiz'}</span>
@@ -218,7 +214,7 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
                     onSelectProduct(recommendedProduct);
                     onClose();
                   }}
-                  className="px-5 py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white text-xs font-medium rounded-md transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 apple-glass-dark text-white text-xs font-medium rounded-full inline-flex items-center gap-2 cursor-pointer shadow-md"
                 >
                   <span>{quizContent.resultCtaText || 'View & Order Candle'}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -229,7 +225,7 @@ export const ScentQuiz: React.FC<ScentQuizProps> = ({
 
           {/* Progress Indicators */}
           {!isResultStep && totalQuestions > 0 && (
-            <div className="flex items-center justify-between text-xs text-[#7A6F62] pt-3 border-t border-[#EAE0D5]">
+            <div className="flex items-center justify-between text-xs text-[#7A6F62] pt-3 border-t border-[#EAE0D5]/70">
               <span>Question {step} of {totalQuestions}</span>
               <div className="flex gap-1.5">
                 {questions.map((_, idx) => (

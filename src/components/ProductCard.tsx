@@ -23,10 +23,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={() => onQuickView(product)}
-      className="group relative flex flex-col bg-white border border-[#EAE0D5] rounded-xs overflow-hidden hover:border-[#D8CEBE] hover:shadow-md transition-all duration-300 cursor-pointer"
+      className="group relative flex flex-col apple-glass-card rounded-2xl overflow-hidden hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer"
     >
       {/* Product Image Stage */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[#FAF8F5]">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#FAF8F5]/80">
         <img
           src={product.image}
           alt={product.name}
@@ -38,27 +38,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }}
         />
 
-        {/* Minimalist Top Tag (Inspired by reference Image 2) */}
-        <span className="absolute top-2.5 left-2.5 border border-[#D8CEBE] bg-[#FAF8F5]/90 backdrop-blur-xs px-2 py-0.5 text-[9px] sm:text-[10px] tracking-[0.2em] font-sans uppercase text-[#5A5248]">
+        {/* Minimalist Top Tag in Apple Liquid Glass Pill */}
+        <span className="absolute top-3 left-3 apple-glass-pill px-2.5 py-1 text-[9px] sm:text-[10px] tracking-[0.2em] font-sans uppercase text-[#5A5248] font-medium shadow-xs">
           {tagLabel}
         </span>
 
         {isOutOfStock && (
-          <span className="absolute top-2.5 right-2.5 border border-red-200 bg-white/95 backdrop-blur-xs px-2 py-0.5 text-[9px] sm:text-[10px] tracking-[0.15em] font-sans uppercase text-red-700">
+          <span className="absolute top-3 right-3 apple-glass-pill px-2.5 py-1 text-[9px] sm:text-[10px] tracking-[0.15em] font-sans uppercase text-red-700 bg-red-50/80 border-red-200">
             Out of Stock
           </span>
         )}
       </div>
 
       {/* Minimalist Product Details (Name, Price & VIEW Button) */}
-      <div className="p-3 sm:p-3.5 bg-white flex flex-col justify-between gap-1.5">
-        <h3 className="font-serif text-sm sm:text-base font-normal text-[#24211D] group-hover:text-[#8C5E35] transition-colors line-clamp-1 leading-snug">
+      <div className="p-3.5 sm:p-4 flex flex-col justify-between gap-2">
+        <h3 className="font-serif text-base sm:text-lg font-normal text-[#24211D] group-hover:text-[#8C5E35] transition-colors line-clamp-1 leading-snug">
           {product.name}
         </h3>
 
         <div className="flex items-center justify-between pt-0.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-serif text-base sm:text-lg font-medium text-[#8C5E35] tracking-tight">
+            <span className="font-serif text-base sm:text-xl font-medium text-[#8C5E35] tracking-tight">
               ৳{product.price}
             </span>
             {product.originalPrice && (
@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               e.stopPropagation();
               onQuickView(product);
             }}
-            className="border border-[#D8CEBE] group-hover:border-[#24211D] group-hover:bg-[#24211D] group-hover:text-white px-2.5 py-0.5 text-[10px] tracking-[0.2em] font-sans uppercase text-[#7A6F62] rounded-xs transition-colors cursor-pointer"
+            className="apple-glass-pill group-hover:apple-glass-dark group-hover:text-white px-3 py-1 text-[10px] tracking-[0.2em] font-sans uppercase text-[#7A6F62] font-semibold transition-all cursor-pointer"
           >
             VIEW
           </button>

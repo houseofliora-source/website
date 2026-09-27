@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ChevronDown, ChevronUp, MessageSquareQuote, CheckCircle, Edit3 } from 'lucide-react';
+import { Star, ChevronDown, ChevronUp, MessageSquareQuote, CheckCircle, Edit3, HelpCircle } from 'lucide-react';
 import { SiteContent } from '../types';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
@@ -29,14 +29,14 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
     : DEFAULT_SITE_CONTENT.faq.items;
 
   return (
-    <section className="py-16 bg-[#F5F1EB] border-b border-[#EAE0D5] relative group">
+    <section className="py-16 md:py-20 border-b border-[#EAE0D5]/80 relative group">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* Testimonials */}
         <div className="space-y-8 relative">
           {isEditMode && (
             <button
               onClick={onEditReviews}
-              className="absolute -top-3 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+              className="absolute -top-3 right-0 z-20 px-3.5 py-1.5 apple-glass-dark text-white rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 transition-all cursor-pointer animate-pulse"
               title="Edit Patron Testimonials"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -44,12 +44,12 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
             </button>
           )}
 
-          <div className="max-w-2xl mx-auto text-center space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center justify-center gap-1.5">
+          <div className="max-w-2xl mx-auto text-center space-y-2">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
               <MessageSquareQuote className="w-4 h-4" />
-              {reviewsContent.badge}
-            </span>
-            <h2 className="font-serif text-3xl text-[#24211D]">
+              <span>{reviewsContent.badge}</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
               {reviewsContent.title}
             </h2>
           </div>
@@ -58,7 +58,7 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
             {reviewsList.map((rev, idx) => (
               <div
                 key={idx}
-                className="p-6 bg-[#FAF8F5] rounded-md border border-[#EAE0D5] flex flex-col justify-between space-y-4 shadow-xs"
+                className="p-6 apple-glass-card rounded-3xl border border-white/70 flex flex-col justify-between space-y-4 shadow-sm hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
               >
                 <div className="space-y-3">
                   <div className="flex gap-1 text-[#C68B59]">
@@ -71,11 +71,11 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-[#EAE0D5] space-y-0.5">
+                <div className="pt-3 border-t border-[#EAE0D5]/70 space-y-0.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-[#24211D]">{rev.name}</span>
-                    <span className="text-[10px] text-emerald-800 flex items-center gap-1 font-medium">
-                      <CheckCircle className="w-3 h-3" /> Verified Buyer
+                    <span className="apple-glass-pill px-2 py-0.5 text-[10px] text-emerald-800 flex items-center gap-1 font-semibold">
+                      <CheckCircle className="w-3 h-3 text-emerald-700" /> Verified Patron
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A6F62]">{rev.location}</p>
@@ -91,7 +91,7 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
           {isEditMode && (
             <button
               onClick={onEditFaq}
-              className="absolute -top-1 right-0 z-20 px-3 py-1.5 bg-[#8C5E35] text-white rounded-full text-xs font-medium shadow-lg hover:bg-[#24211D] flex items-center gap-1.5 transition-all cursor-pointer border border-white/40 animate-pulse"
+              className="absolute -top-1 right-0 z-20 px-3.5 py-1.5 apple-glass-dark text-white rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 transition-all cursor-pointer animate-pulse"
               title="Edit Questions & Answers"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -99,10 +99,11 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
             </button>
           )}
 
-          <div className="text-center space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
-              {faqContent.badge}
-            </span>
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>{faqContent.badge}</span>
+            </div>
             <h3 className="font-serif text-2xl sm:text-3xl text-[#24211D]">
               {faqContent.title}
             </h3>
@@ -119,11 +120,11 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-md border border-[#EAE0D5] overflow-hidden transition-all"
+                  className="apple-glass-card rounded-2xl border border-white/70 overflow-hidden shadow-xs transition-all"
                 >
                   <button
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full p-4 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-[#FAF8F5]"
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-white/40 transition-colors"
                   >
                     <span className="text-xs sm:text-sm font-semibold text-[#24211D]">
                       {faq.q}
@@ -136,7 +137,7 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
                   </button>
 
                   {isOpen && (
-                    <div className="px-4 pb-4 pt-1 text-xs text-[#5A5248] leading-relaxed border-t border-[#EAE0D5]/50">
+                    <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-1 text-xs sm:text-sm text-[#5A5248] leading-relaxed border-t border-[#EAE0D5]/60">
                       {faq.a}
                     </div>
                   )}

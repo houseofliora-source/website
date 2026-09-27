@@ -77,18 +77,18 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-md animate-fade-in">
       <div 
-        className="relative w-full max-w-lg bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-lg apple-glass rounded-3xl border border-white/80 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#EAE0D5] bg-[#F5F1EB] flex items-center justify-between">
+        <div className="p-5 border-b border-[#EAE0D5]/70 flex items-center justify-between">
           <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center gap-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 apple-glass-pill text-[10px] font-semibold uppercase tracking-widest text-[#8C5E35]">
               <User className="w-3.5 h-3.5" />
-              Líora Patron Circle
-            </span>
+              <span>Líora Patron Circle</span>
+            </div>
             <h3 className="font-serif text-2xl text-[#24211D]">
               {currentUser ? `Welcome, ${currentUser.name}` : mode === 'signin' ? 'Sign In to Your Account' : 'Create Customer Account'}
             </h3>
@@ -96,9 +96,9 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-[#EAE0D5] transition-colors cursor-pointer"
+            className="w-9 h-9 apple-glass-pill flex items-center justify-center text-[#5A5248] hover:text-[#24211D] cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -108,10 +108,10 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
             /* Logged In Customer Profile View */
             <div className="space-y-6">
               {/* Profile Card */}
-              <div className="p-4 bg-white rounded-md border border-[#EAE0D5] space-y-3">
+              <div className="p-4 apple-glass-card rounded-2xl border border-white/70 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#24211D] text-white flex items-center justify-center font-serif text-lg font-medium">
+                    <div className="w-10 h-10 rounded-full apple-glass-dark text-white flex items-center justify-center font-serif text-lg font-medium shadow-sm">
                       {currentUser.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -119,12 +119,12 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                       <p className="text-xs text-[#7A6F62]">{currentUser.email}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-[#8C5E35] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#EAE0D5]">
+                  <span className="text-[10px] font-mono text-[#8C5E35] apple-glass-pill px-2.5 py-1">
                     Member since {currentUser.joinedAt}
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-[#EAE0D5] grid grid-cols-2 gap-2 text-xs text-[#5A5248]">
+                <div className="pt-2 border-t border-[#EAE0D5]/70 grid grid-cols-2 gap-2 text-xs text-[#5A5248]">
                   <div className="flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
                     <span>{currentUser.phone}</span>
@@ -149,13 +149,13 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                 </div>
 
                 {userOrders.length === 0 ? (
-                  <div className="p-8 text-center bg-white rounded-md border border-[#EAE0D5] space-y-2">
+                  <div className="p-8 text-center apple-glass-card rounded-2xl space-y-2">
                     <p className="text-xs text-[#7A6F62]">
                       You haven't placed any candle orders yet.
                     </p>
                     <button
                       onClick={onClose}
-                      className="px-3.5 py-1.5 bg-[#24211D] text-white text-xs font-medium rounded hover:bg-[#3D3730] transition-colors cursor-pointer"
+                      className="px-4 py-2 apple-glass-dark text-white text-xs font-medium rounded-full cursor-pointer"
                     >
                       Browse Candles
                     </button>
@@ -163,10 +163,10 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                 ) : (
                   <div className="space-y-2.5">
                     {userOrders.map(order => (
-                      <div key={order.id} className="p-3 bg-white rounded border border-[#EAE0D5] space-y-1.5 text-xs">
+                      <div key={order.id} className="p-3 apple-glass-card rounded-xl border border-white/60 space-y-1.5 text-xs">
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-[#24211D]">{order.id}</span>
-                          <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-medium">
+                          <span className="apple-glass-pill px-2 py-0.5 text-[10px] text-emerald-800 font-semibold">
                             {order.status}
                           </span>
                         </div>
@@ -184,7 +184,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
               </div>
 
               {/* Sign Out */}
-              <div className="pt-2 border-t border-[#EAE0D5] flex justify-between items-center">
+              <div className="pt-2 border-t border-[#EAE0D5]/70 flex justify-between items-center">
                 <button
                   onClick={onSignOut}
                   className="text-xs text-[#7A6F62] hover:text-red-700 flex items-center gap-1.5 cursor-pointer"
@@ -194,7 +194,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-[#24211D] hover:bg-[#3D3730] text-white text-xs font-medium rounded cursor-pointer"
+                  className="px-5 py-2.5 apple-glass-dark text-white text-xs font-medium rounded-full cursor-pointer"
                 >
                   Back to Boutique
                 </button>
@@ -203,6 +203,28 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
           ) : (
             /* Auth Form (Sign In / Sign Up) */
             <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+              {/* Segmented Mode Control in Liquid Pill */}
+              <div className="apple-glass-pill p-1 flex gap-1 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setMode('signin')}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                    mode === 'signin' ? 'apple-glass-dark text-white shadow-xs' : 'text-[#5A5248] hover:text-[#24211D]'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('signup')}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                    mode === 'signup' ? 'apple-glass-dark text-white shadow-xs' : 'text-[#5A5248] hover:text-[#24211D]'
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
               {mode === 'signup' && (
                 <div className="space-y-1">
                   <label className="font-semibold text-[#24211D] block">Full Name *</label>
@@ -212,7 +234,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Raisa Ahmed"
-                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
+                    className="w-full p-2.5 apple-glass-input rounded-xl focus:border-[#24211D]"
                   />
                 </div>
               )}
@@ -225,7 +247,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
+                  className="w-full p-2.5 apple-glass-input rounded-xl focus:border-[#24211D]"
                 />
               </div>
 
@@ -237,62 +259,33 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
+                  className="w-full p-2.5 apple-glass-input rounded-xl focus:border-[#24211D]"
                 />
               </div>
 
               {mode === 'signup' && (
-                <>
-                  <div className="space-y-1">
-                    <label className="font-semibold text-[#24211D] block">Mobile Phone *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="017XXXXXXXX"
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded focus:border-[#24211D]"
-                    />
-                  </div>
-                </>
+                <div className="space-y-1">
+                  <label className="font-semibold text-[#24211D] block">Mobile Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="017XXXXXXXX"
+                    className="w-full p-2.5 apple-glass-input rounded-xl focus:border-[#24211D]"
+                  />
+                </div>
               )}
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#24211D] hover:bg-[#3D3730] text-white font-medium rounded transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                className="w-full py-3.5 apple-glass-dark text-white font-medium rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-2"
               >
-                <span>{mode === 'signin' ? 'Sign In' : 'Create Account'}</span>
+                <span>{mode === 'signin' ? 'Sign In to Boutique' : 'Create Customer Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {/* Mode switch */}
-              <div className="text-center pt-2 border-t border-[#EAE0D5] text-[#7A6F62]">
-                {mode === 'signin' ? (
-                  <p>
-                    Don't have an account?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setMode('signup')}
-                      className="text-[#8C5E35] font-semibold hover:underline cursor-pointer"
-                    >
-                      Sign Up here
-                    </button>
-                  </p>
-                ) : (
-                  <p>
-                    Already have an account?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setMode('signin')}
-                      className="text-[#8C5E35] font-semibold hover:underline cursor-pointer"
-                    >
-                      Sign In
-                    </button>
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#7A6F62] pt-1">
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#7A6F62] pt-2">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#8C5E35]" />
                 <span>Your customer data is encrypted and confidential.</span>
               </div>
