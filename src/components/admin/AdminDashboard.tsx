@@ -1139,36 +1139,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                 </div>
               </div>
 
-              {/* Category & Scent Family */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-medium text-[#24211D]">Category</label>
-                  <select
-                    value={productForm.category || 'bubble'}
-                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value as Product['category'] })}
-                    className="w-full px-3.5 py-2 bg-white border border-[#EAE0D5] rounded-md focus:outline-none"
-                  >
-                    <option value="bubble">Bubble Soy Cube</option>
-                    <option value="floating">Floating Botanical Bloom</option>
-                    <option value="sculpted">Sculpted Pillar / Torso</option>
-                    <option value="jar">Aroma Jar / Wax Tablet</option>
-                    <option value="hampers">Luxe Gift Hamper</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-medium text-[#24211D]">Scent Family</label>
-                  <select
-                    value={productForm.scentFamily || 'Floral'}
-                    onChange={(e) => setProductForm({ ...productForm, scentFamily: e.target.value as Product['scentFamily'] })}
-                    className="w-full px-3.5 py-2 bg-white border border-[#EAE0D5] rounded-md focus:outline-none"
-                  >
-                    <option value="Floral">Floral</option>
-                    <option value="Woody & Warm">Woody & Warm</option>
-                    <option value="Fresh & Citrus">Fresh & Citrus</option>
-                    <option value="Sweet Gourmand">Sweet Gourmand</option>
-                  </select>
-                </div>
+              {/* Product Category (Dynamically synced with Studio Admin Categories) */}
+              <div className="space-y-1">
+                <label className="font-medium text-[#24211D]">Product Category</label>
+                <select
+                  value={productForm.category || 'bubble'}
+                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                  className="w-full px-3.5 py-2 bg-white border border-[#EAE0D5] rounded-md focus:outline-none"
+                >
+                  {(siteContent.catalog?.categories || [
+                    { id: 'bubble', label: 'Bubble Cubes' },
+                    { id: 'floating', label: 'Floating Blooms' },
+                    { id: 'sculpted', label: 'Sculpted Columns' },
+                    { id: 'hampers', label: 'Gift Hampers' },
+                    { id: 'jar', label: 'Aroma Tablets' },
+                  ])
+                  .filter(c => c.id !== 'all')
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                  {/* Keep current custom category if not in standard list */}
+                  {productForm.category && !siteContent.catalog?.categories?.some(c => c.id === productForm.category) && (
+                    <option value={productForm.category}>{productForm.category}</option>
+                  )}
+                </select>
               </div>
 
               {/* Price & Original Price */}

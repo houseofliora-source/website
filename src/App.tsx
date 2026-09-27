@@ -5,6 +5,7 @@ import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings, SiteCon
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
+import { ProductDetailPage } from './components/ProductDetailPage';
 import { ProductQuickView } from './components/ProductQuickView';
 import { ScentQuiz } from './components/ScentQuiz';
 import { CustomFavorBuilder } from './components/CustomFavorBuilder';
@@ -13,7 +14,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CandleCareGuide } from './components/CandleCareGuide';
 import { ReviewsAndFaq } from './components/ReviewsAndFaq';
 import { Footer } from './components/Footer';
-import { Sparkles, SlidersHorizontal, Flame } from 'lucide-react';
+import { Sparkles, Flame } from 'lucide-react';
 import { 
   fetchLiveProducts, 
   submitOrderToFirestore, 
@@ -45,16 +46,45 @@ export default function App() {
     return window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
   });
 
+  const getProductIdFromUrl = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname;
+    const match = path.match(/^\/product\/([^/]+)/);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    if (window.location.hash.startsWith('#product/')) {
+      return window.location.hash.replace('#product/', '').trim();
+    }
+    return null;
+  };
+
+  const [activeProductId, setActiveProductId] = useState<string | null>(getProductIdFromUrl);
+
+  const navigateToProduct = (productId: string) => {
+    window.history.pushState({}, '', `/product/${productId}`);
+    setActiveProductId(productId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToHome = () => {
+    window.history.pushState({}, '', '/');
+    setActiveProductId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   useEffect(() => {
     const handleLocationChange = () => {
       // Decoy redirect: if someone visits /admin, redirect to home
       if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
         window.history.replaceState({}, '', '/');
         setIsAdminRoute(false);
+        setActiveProductId(null);
         return;
       }
       const isNowAdmin = window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
       setIsAdminRoute(isNowAdmin);
+      setActiveProductId(getProductIdFromUrl());
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -142,7 +172,6 @@ export default function App() {
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedScentFamily, setSelectedScentFamily] = useState<string>('all');
 
   // Cart state
   const [cartItems, setCartItems] = useState<CartItem[]>([
@@ -231,14 +260,17 @@ export default function App() {
     submitOrderToFirestore(newOrder);
   };
 
-  // Filtered products
+  // Dynamic filtered products (matching custom categories)
   const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'all') return products;
+    const currentCat = siteContent.catalog?.categories?.find(c => c.id === selectedCategory);
     return products.filter(p => {
-      const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-      const matchesScent = selectedScentFamily === 'all' || p.scentFamily === selectedScentFamily;
-      return matchesCategory && matchesScent;
+      const catVal = (p.category || '').toLowerCase();
+      const selVal = selectedCategory.toLowerCase();
+      const labelVal = (currentCat?.label || '').toLowerCase();
+      return catVal === selVal || catVal === labelVal || (catVal && labelVal.includes(catVal)) || (catVal && selVal.includes(catVal));
     });
-  }, [products, selectedCategory, selectedScentFamily]);
+  }, [products, selectedCategory, siteContent.catalog?.categories]);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0) + customFavors.length;
 
@@ -254,6 +286,8 @@ export default function App() {
     );
   }
 
+  const currentProduct = activeProductId ? products.find(p => p.id === activeProductId) : null;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#24211D]">
       {/* Primary Top Bar */}
@@ -264,138 +298,151 @@ export default function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         currentUser={currentUser}
         announcementText={storeSettings.announcementText}
+        onNavigateHome={navigateToHome}
       />
 
       <main className="flex-1">
-        {/* Campaign Hero Section */}
-        <Hero
-          onExplore={() => {
-            const el = document.getElementById('collections');
-            el?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          onOpenCustomFavors={() => {
-            const el = document.getElementById('custom-favors');
-            el?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          content={siteContent.hero}
-        />
-
-        {/* Featured Collection Section */}
-        <section id="collections" className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-[#EAE0D5]">
-            <div className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5" />
-                {siteContent.catalog.badge}
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
-                {siteContent.catalog.title}
-              </h2>
-              <p className="text-xs sm:text-sm text-[#5A5248] max-w-xl">
-                {siteContent.catalog.subtitle}
-              </p>
-            </div>
-
-            {/* Scent Quiz Trigger in Apple Liquid Glass Pill */}
+        {activeProductId && currentProduct ? (
+          <ProductDetailPage
+            product={currentProduct}
+            allProducts={products}
+            onBack={navigateToHome}
+            onSelectProduct={navigateToProduct}
+            onAddToCart={(p, q, s) => {
+              handleAddToCart(p, q, s);
+            }}
+            onBuyNow={(p, q, s) => {
+              handleAddToCart(p, q, s);
+              setIsCartOpen(true);
+            }}
+          />
+        ) : activeProductId ? (
+          <div className="py-24 text-center space-y-4 max-w-md mx-auto px-4">
+            <h2 className="font-serif text-2xl text-[#24211D]">Product Not Found</h2>
+            <p className="text-xs text-[#7A6F62]">The piece you are looking for may have been archived or updated.</p>
             <button
-              onClick={() => setIsQuizOpen(true)}
-              className="px-4 py-2.5 apple-glass-pill text-[#24211D] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-sm"
+              onClick={navigateToHome}
+              className="px-6 py-2.5 apple-glass-dark text-white text-xs font-semibold rounded-full cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-              <span>{siteContent.catalog.quizBtnText}</span>
+              Back to Collection
             </button>
           </div>
+        ) : (
+          <>
+            {/* Campaign Hero Section */}
+            <Hero
+              onExplore={() => {
+                const el = document.getElementById('collections');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onOpenCustomFavors={() => {
+                const el = document.getElementById('custom-favors');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              content={siteContent.hero}
+            />
 
-          {/* Filter Bar (Segmented Controls in Apple Liquid Glass Pill Capsule) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            {/* Category Segmented Buttons */}
-            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 apple-glass-pill max-w-full no-scrollbar shadow-xs">
-              {[
-                { id: 'all', label: 'All Pieces' },
-                { id: 'bubble', label: 'Bubble Cubes' },
-                { id: 'floating', label: 'Floating Blooms' },
-                { id: 'sculpted', label: 'Sculpted Columns' },
-                { id: 'hampers', label: 'Gift Hampers' },
-                { id: 'jar', label: 'Aroma Tablets' },
-              ].map(cat => (
+            {/* Featured Collection Section */}
+            <section id="collections" className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Section Header */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-[#EAE0D5]">
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35] flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5" />
+                    {siteContent.catalog.badge}
+                  </span>
+                  <h2 className="font-serif text-3xl sm:text-4xl text-[#24211D]">
+                    {siteContent.catalog.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#5A5248] max-w-xl">
+                    {siteContent.catalog.subtitle}
+                  </p>
+                </div>
+
+                {/* Scent Quiz Trigger in Apple Liquid Glass Pill */}
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer ${
-                    selectedCategory === cat.id
-                      ? 'apple-glass-dark text-white shadow-xs'
-                      : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
-                  }`}
+                  onClick={() => setIsQuizOpen(true)}
+                  className="px-4 py-2.5 apple-glass-pill text-[#24211D] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-sm"
                 >
-                  {cat.label}
+                  <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
+                  <span>{siteContent.catalog.quizBtnText}</span>
                 </button>
-              ))}
-            </div>
+              </div>
 
-            {/* Scent Family Dropdown filter in Apple Liquid Glass Pill */}
-            <div className="flex items-center gap-2 text-xs text-[#5A5248] apple-glass-pill px-3 py-1.5 shadow-xs">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#8C5E35]" />
-              <span className="font-medium">Scent Family:</span>
-              <select
-                value={selectedScentFamily}
-                onChange={e => setSelectedScentFamily(e.target.value)}
-                className="bg-transparent border-0 text-xs font-medium text-[#24211D] focus:ring-0 cursor-pointer outline-none"
-              >
-                <option value="all">All Aromas</option>
-                <option value="Floral">Floral</option>
-                <option value="Woody & Warm">Woody & Warm</option>
-                <option value="Fresh & Citrus">Fresh & Citrus</option>
-                <option value="Sweet Gourmand">Sweet Gourmand</option>
-              </select>
-            </div>
-          </div>
+              {/* Filter Bar (Segmented Controls in Apple Liquid Glass Pill Capsule) */}
+              {siteContent.catalog.showFilter !== false && (
+                <div className="flex items-center justify-center sm:justify-start mb-8">
+                  <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 apple-glass-pill max-w-full no-scrollbar shadow-xs">
+                    {(siteContent.catalog.categories || [
+                      { id: 'all', label: 'All Pieces' },
+                      { id: 'bubble', label: 'Bubble Cubes' },
+                      { id: 'floating', label: 'Floating Blooms' },
+                      { id: 'sculpted', label: 'Sculpted Columns' },
+                      { id: 'hampers', label: 'Gift Hampers' },
+                      { id: 'jar', label: 'Aroma Tablets' },
+                    ]).map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer ${
+                          selectedCategory === cat.id
+                            ? 'apple-glass-dark text-white shadow-xs'
+                            : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Product Grid */}
-          {filteredProducts.length === 0 ? (
-            <div className="p-12 text-center apple-glass-card rounded-2xl space-y-3">
-              <p className="text-sm text-[#7A6F62]">
-                No candles match the selected filters.
-              </p>
-              <button
-                onClick={() => {
-                  setSelectedCategory('all');
-                  setSelectedScentFamily('all');
-                }}
-                className="px-4 py-2 text-xs apple-glass-dark text-white rounded-full cursor-pointer"
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
-              {filteredProducts.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onQuickView={p => setQuickViewProduct(p)}
-                  onAddToCart={p => handleAddToCart(p, 1)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+              {/* Product Grid */}
+              {filteredProducts.length === 0 ? (
+                <div className="p-12 text-center apple-glass-card rounded-2xl space-y-3">
+                  <p className="text-sm text-[#7A6F62]">
+                    No candles or items match the selected filter.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('all');
+                    }}
+                    className="px-4 py-2 text-xs apple-glass-dark text-white rounded-full cursor-pointer"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+                  {filteredProducts.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onQuickView={p => navigateToProduct(p.id)}
+                      onAddToCart={p => handleAddToCart(p, 1)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-        {/* Custom Favor & Wedding Builder Studio */}
-        <CustomFavorBuilder
-          onAddCustomToCart={handleAddCustomToCart}
-          facebookUrl={storeSettings.facebookUrl}
-          content={siteContent.favors}
-        />
+            {/* Custom Favor & Wedding Builder Studio */}
+            <CustomFavorBuilder
+              onAddCustomToCart={handleAddCustomToCart}
+              facebookUrl={storeSettings.facebookUrl}
+              content={siteContent.favors}
+            />
 
-        {/* Candle Care Rituals Guide */}
-        <CandleCareGuide content={siteContent.care} />
+            {/* Candle Care Rituals Guide */}
+            <CandleCareGuide content={siteContent.care} />
 
-        {/* Social Proof & FAQs */}
-        <ReviewsAndFaq 
-          reviewsContent={siteContent.reviews}
-          faqContent={siteContent.faq}
-        />
+            {/* Social Proof & FAQs */}
+            <ReviewsAndFaq 
+              reviewsContent={siteContent.reviews}
+              faqContent={siteContent.faq}
+            />
+          </>
+        )}
       </main>
 
       {/* Footer */}
@@ -421,7 +468,7 @@ export default function App() {
         products={products}
         content={siteContent.scentQuiz}
         onSelectProduct={p => {
-          setQuickViewProduct(p);
+          navigateToProduct(p.id);
         }}
       />
 

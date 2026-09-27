@@ -88,6 +88,24 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [favorEditTab, setFavorEditTab] = useState<'general' | 'molds' | 'quantity' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('general');
+  const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
+
+  const handleAddCategory = () => {
+    const trimmed = newCategoryLabel.trim();
+    if (!trimmed) return;
+    const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `cat-${Date.now()}`;
+    const currentCats = content.catalog?.categories || DEFAULT_SITE_CONTENT.catalog.categories || [];
+    if (currentCats.some(c => c.id.toLowerCase() === slug.toLowerCase() || c.label.toLowerCase() === trimmed.toLowerCase())) {
+      alert('This category or slug already exists!');
+      return;
+    }
+    const updated = [...currentCats, { id: slug, label: trimmed }];
+    setContent(prev => ({
+      ...prev,
+      catalog: { ...prev.catalog, categories: updated }
+    }));
+    setNewCategoryLabel('');
+  };
 
   // Scent Finder Studio State
   const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
@@ -770,48 +788,68 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
 
             {/* Category Filter Tabs & Add Button */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { id: 'all', label: 'All Creations' },
-                  { id: 'bubble', label: 'Bubble Cubes' },
-                  { id: 'floating', label: 'Floating Blooms' },
-                  { id: 'sculpted', label: 'Sculpted Columns' },
-                  { id: 'jar', label: 'Aroma Jars & Tablets' },
-                  { id: 'hampers', label: 'Gift Sets' },
-                ].map(cat => {
-                  const count = cat.id === 'all' ? products.length : products.filter(p => p.category === cat.id).length;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-3 py-1.5 text-xs rounded-full border transition-all cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? 'bg-[#24211D] text-white border-[#24211D] font-medium shadow-xs'
-                          : 'bg-white text-[#5A5248] border-[#D8CEBE] hover:border-[#8C5E35]'
-                      }`}
-                    >
-                      <span>{cat.label}</span>
-                      <span className="ml-1.5 text-[10px] opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {onCreateProduct && (
+            {content.catalog.showFilter === false ? (
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between">
+                <span className="italic">⚠️ Filter Section is currently HIDDEN on live storefront (Click 'Edit Catalog Header' to enable).</span>
                 <button
-                  onClick={onCreateProduct}
-                  className="px-3 py-1.5 text-xs bg-[#8C5E35] hover:bg-[#24211D] text-white rounded-md flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                  onClick={() => setActiveModal('catalog')}
+                  className="text-xs text-[#8C5E35] underline font-medium cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Add Product</span>
+                  Configure Filters
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(content.catalog.categories || DEFAULT_SITE_CONTENT.catalog.categories || []).map(cat => {
+                    const count = cat.id === 'all' 
+                      ? products.length 
+                      : products.filter(p => {
+                          const pCat = (p.category || '').toLowerCase();
+                          const cId = cat.id.toLowerCase();
+                          const cLabel = cat.label.toLowerCase();
+                          return pCat === cId || pCat === cLabel || (pCat && cLabel.includes(pCat));
+                        }).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-all cursor-pointer ${
+                          selectedCategory === cat.id
+                            ? 'bg-[#24211D] text-white border-[#24211D] font-medium shadow-xs'
+                            : 'bg-white text-[#5A5248] border-[#D8CEBE] hover:border-[#8C5E35]'
+                        }`}
+                      >
+                        <span>{cat.label}</span>
+                        <span className="ml-1.5 text-[10px] opacity-70">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {onCreateProduct && (
+                  <button
+                    onClick={onCreateProduct}
+                    className="px-3 py-1.5 text-xs bg-[#8C5E35] hover:bg-[#24211D] text-white rounded-md flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Add Product</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Products Grid with full live cards and direct editing */}
             {(() => {
-              const filtered = selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory);
+              const currentCat = (content.catalog.categories || []).find(c => c.id === selectedCategory);
+              const filtered = selectedCategory === 'all' 
+                ? products 
+                : products.filter(p => {
+                    const pCat = (p.category || '').toLowerCase();
+                    const cId = selectedCategory.toLowerCase();
+                    const cLabel = (currentCat?.label || '').toLowerCase();
+                    return pCat === cId || pCat === cLabel || (pCat && cLabel.includes(pCat));
+                  });
               if (filtered.length === 0) {
                 return (
                   <div className="p-8 text-center bg-white rounded-lg border border-[#EAE0D5] space-y-3">
@@ -1449,21 +1487,147 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
         </div>
       )}
 
-      {/* MODAL 2: Catalog Header Editor */}
+      {/* MODAL 2: Catalog Header & Dynamic Categories Editor */}
       {activeModal === 'catalog' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF8F5] text-[#24211D] rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-[#D8CEBE]">
+          <div className="bg-[#FAF8F5] text-[#24211D] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-[#D8CEBE] max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#EAE0D5]">
-              <h3 className="font-serif text-lg font-semibold flex items-center gap-2">
+              <h3 className="font-serif text-lg font-semibold flex items-center gap-2 text-[#24211D]">
                 <Edit3 className="w-4 h-4 text-[#8C5E35]" />
-                <span>Edit Catalog Section Titles</span>
+                <span>Catalog Section & Category Filter Control</span>
               </h3>
               <button onClick={() => setActiveModal(null)} className="p-1 hover:bg-[#EAE0D5] rounded cursor-pointer">
                 <X className="w-5 h-5 text-[#5A5248]" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Part A: Master Toggle for Filter Section */}
+            <div className="p-3.5 bg-white rounded-xl border border-[#D8CEBE] shadow-xs flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <span className="font-semibold text-xs text-[#24211D] block">
+                  Show Filter Section on Live Website
+                </span>
+                <p className="text-[11px] text-[#7A6F62] leading-tight">
+                  ফিল্টার সেকশন অন বা অফ রাখুন। অফ করলে ওয়েবসাইটে ফিল্টার বারটি হাইড হয়ে যাবে।
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={content.catalog.showFilter !== false}
+                  onChange={e => setContent({
+                    ...content,
+                    catalog: { ...content.catalog, showFilter: e.target.checked }
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8C5E35]"></div>
+              </label>
+            </div>
+
+            {/* Part B: Dynamic Categories Management */}
+            <div className="p-4 bg-white rounded-xl border border-[#D8CEBE] shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-1 border-b border-[#F0EBE3]">
+                <div>
+                  <h4 className="font-semibold text-xs text-[#24211D]">
+                    Dynamic Store Categories
+                  </h4>
+                  <p className="text-[10px] text-[#7A6F62]">
+                    আপনার ইচ্ছামতো ক্যাটাগরি তৈরি, রিনেম বা রিমুভ করুন (যেমন: Candles, Flower Vase, Gift Sets)
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-full text-[#8C5E35]">
+                  {(content.catalog.categories || DEFAULT_SITE_CONTENT.catalog.categories || []).length} Categories
+                </span>
+              </div>
+
+              {/* Categories List */}
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                {(content.catalog.categories || DEFAULT_SITE_CONTENT.catalog.categories || []).map((cat, idx) => {
+                  const currentList = content.catalog.categories || DEFAULT_SITE_CONTENT.catalog.categories || [];
+                  return (
+                    <div key={cat.id} className="p-2.5 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5] flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <label className="text-[9px] text-[#7A6F62] uppercase tracking-wider block font-semibold">
+                          Category Label:
+                        </label>
+                        <input
+                          type="text"
+                          value={cat.label}
+                          onChange={e => {
+                            const updated = [...currentList];
+                            updated[idx] = { ...updated[idx], label: e.target.value };
+                            setContent({
+                              ...content,
+                              catalog: { ...content.catalog, categories: updated }
+                            });
+                          }}
+                          className="w-full px-2.5 py-1 bg-white border border-[#D8CEBE] rounded text-xs text-[#24211D] font-medium"
+                          placeholder="Category Title"
+                        />
+                        <span className="text-[10px] text-[#A89E90] font-mono">
+                          ID: <span className="font-semibold">{cat.id}</span>
+                        </span>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-1.5 pt-3">
+                        {cat.id !== 'all' ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = currentList.filter(c => c.id !== cat.id);
+                              setContent({
+                                ...content,
+                                catalog: { ...content.catalog, categories: updated }
+                              });
+                            }}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                            title="Remove Category"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-[#8C5E35] font-serif italic px-2 bg-amber-50 rounded border border-amber-200">
+                            Default (All Items)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add New Category Form */}
+              <div className="pt-2 border-t border-[#F0EBE3] flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newCategoryLabel}
+                  onChange={e => setNewCategoryLabel(e.target.value)}
+                  placeholder="New Category (e.g. Flower Vase, Luxe Jars)"
+                  className="flex-1 p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs text-[#24211D]"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCategory();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  disabled={!newCategoryLabel.trim()}
+                  className="px-4 py-2 bg-[#8C5E35] hover:bg-[#24211D] text-white rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Category</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Part C: Section Titles & Descriptions */}
+            <div className="space-y-3 text-xs bg-white p-4 rounded-xl border border-[#D8CEBE] shadow-xs">
+              <h4 className="font-semibold text-xs text-[#24211D] pb-1 border-b border-[#F0EBE3]">
+                Section Titles & Descriptions
+              </h4>
               <div>
                 <label className="font-medium text-[#5A5248] block mb-1">Badge Tagline:</label>
                 <input
@@ -1473,7 +1637,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     ...content,
                     catalog: { ...content.catalog, badge: e.target.value }
                   })}
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs"
                 />
               </div>
               <div>
@@ -1485,19 +1649,19 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     ...content,
                     catalog: { ...content.catalog, title: e.target.value }
                   })}
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs"
                 />
               </div>
               <div>
                 <label className="font-medium text-[#5A5248] block mb-1">Section Description:</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={content.catalog.subtitle}
                   onChange={e => setContent({
                     ...content,
                     catalog: { ...content.catalog, subtitle: e.target.value }
                   })}
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs"
                 />
               </div>
               <div>
@@ -1509,7 +1673,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     ...content,
                     catalog: { ...content.catalog, quizBtnText: e.target.value }
                   })}
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs"
                 />
               </div>
             </div>
@@ -1517,7 +1681,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             <div className="flex justify-end gap-2 pt-3 border-t border-[#EAE0D5]">
               <button
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-2 bg-[#24211D] text-white text-xs rounded hover:bg-[#3D3730] cursor-pointer"
+                className="px-5 py-2.5 bg-[#24211D] text-white text-xs font-semibold rounded-lg hover:bg-[#3D3730] cursor-pointer shadow-sm"
               >
                 Apply to Preview
               </button>

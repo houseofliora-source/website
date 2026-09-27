@@ -1,11 +1,25 @@
+export interface CustomCategory {
+  id: string;
+  label: string;
+}
+
+export interface CatalogContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  quizBtnText: string;
+  showFilter?: boolean;
+  categories?: CustomCategory[];
+}
+
 export interface Product {
   id: string;
   name: string;
-  category: 'bubble' | 'floating' | 'sculpted' | 'jar' | 'hampers';
+  category: string;
   price: number;
   originalPrice?: number;
   image: string;
-  scentFamily: 'Floral' | 'Woody & Warm' | 'Fresh & Citrus' | 'Sweet Gourmand';
+  scentFamily: string;
   scentNotes: string[];
   dimensions: string;
   burnTime: string;
@@ -184,12 +198,7 @@ export interface SiteContent {
     ribbonItem3?: string;
     ribbonItem4?: string;
   };
-  catalog: {
-    badge: string;
-    title: string;
-    subtitle: string;
-    quizBtnText: string;
-  };
+  catalog: CatalogContent;
   scentQuiz?: ScentQuizContent;
   favors: FavorContent;
   care: {

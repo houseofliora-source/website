@@ -13,12 +13,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const isOutOfStock = product.inStock === false;
 
-  // Format category badge label like "ROSE CANDLE" / "BUBBLE CANDLE"
+  // Format category badge label like "BESTSELLER" / "NEW ARRIVAL" / "BUBBLE" / "FLOWER VASE"
   const tagLabel = product.isBestseller
     ? 'BESTSELLER'
     : product.isNewArrival
     ? 'NEW ARRIVAL'
-    : `${product.category} CANDLE`;
+    : (product.category || 'ARTISANAL').toUpperCase();
 
   return (
     <div

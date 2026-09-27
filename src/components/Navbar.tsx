@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenAuth: () => void;
   currentUser: CustomerUser | null;
   announcementText?: string;
+  onNavigateHome?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   currentUser,
   announcementText,
+  onNavigateHome,
 }) => {
   return (
     <header className="sticky top-0 z-40 apple-glass-nav transition-all duration-300">
@@ -29,7 +31,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top Bar: 3 Zones */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
         {/* Zone 1: Brand Wordmark */}
-        <a href="#" className="flex flex-col group">
+        <a 
+          href="/" 
+          onClick={(e) => {
+            if (onNavigateHome) {
+              e.preventDefault();
+              onNavigateHome();
+            }
+          }}
+          className="flex flex-col group cursor-pointer"
+        >
           <span className="font-serif text-2xl sm:text-3xl font-medium tracking-tight text-[#24211D] group-hover:text-[#8C5E35] transition-colors">
             House of Líora
           </span>
@@ -42,6 +53,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <nav className="hidden lg:flex items-center gap-1 p-1.5 apple-glass-pill text-xs font-medium text-[#4A443C]">
           <a 
             href="#collections" 
+            onClick={(e) => {
+              if (onNavigateHome) {
+                onNavigateHome();
+              }
+            }}
             className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
           >
             Collections

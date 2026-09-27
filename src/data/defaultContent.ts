@@ -35,6 +35,15 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     title: 'Hand-Poured Artisan Creations',
     subtitle: 'Small batch botanical formulations. Pure cotton braided wicks, phthalate-free fine perfumes, and zero petroleum paraffin.',
     quizBtnText: 'Take Scent Profile Quiz',
+    showFilter: true,
+    categories: [
+      { id: 'all', label: 'All Pieces' },
+      { id: 'bubble', label: 'Bubble Cubes' },
+      { id: 'floating', label: 'Floating Blooms' },
+      { id: 'sculpted', label: 'Sculpted Columns' },
+      { id: 'hampers', label: 'Gift Hampers' },
+      { id: 'jar', label: 'Aroma Tablets' },
+    ],
   },
   scentQuiz: {
     badge: 'The Líora Olfactory Guide',
@@ -297,6 +306,17 @@ export function sanitizeSiteContent(raw: any): SiteContent {
     catalog: {
       ...DEFAULT_SITE_CONTENT.catalog,
       ...(raw.catalog && typeof raw.catalog === 'object' ? raw.catalog : {}),
+      showFilter: raw.catalog?.showFilter !== undefined ? Boolean(raw.catalog.showFilter) : true,
+      categories: Array.isArray(raw.catalog?.categories) && raw.catalog.categories.length > 0
+        ? raw.catalog.categories
+        : (DEFAULT_SITE_CONTENT.catalog.categories || [
+            { id: 'all', label: 'All Pieces' },
+            { id: 'bubble', label: 'Bubble Cubes' },
+            { id: 'floating', label: 'Floating Blooms' },
+            { id: 'sculpted', label: 'Sculpted Columns' },
+            { id: 'hampers', label: 'Gift Hampers' },
+            { id: 'jar', label: 'Aroma Tablets' },
+          ]),
     },
     favors: {
       ...DEFAULT_SITE_CONTENT.favors,

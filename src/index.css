@@ -183,3 +183,25 @@
     0 0 0 3px rgba(140, 94, 53, 0.15);
   outline: none;
 }
+
+/* Continuous Smooth Train / Marquee Motion for Mobile Product Suggestions */
+@keyframes train-glide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-train-glide {
+  display: flex;
+  width: max-content;
+  animation: train-glide 32s linear infinite;
+}
+
+.animate-train-glide:hover,
+.animate-train-glide:active {
+  animation-play-state: paused;
+}
+
