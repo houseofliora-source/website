@@ -54,11 +54,12 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Reviews Row - Horizontally side-by-side on mobile with smooth swipe, 3-cols on desktop */}
+          <div className="flex md:grid md:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
             {reviewsList.map((rev, idx) => (
               <div
                 key={idx}
-                className="p-6 apple-glass-card rounded-3xl border border-white/70 flex flex-col justify-between space-y-4 shadow-sm hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+                className="w-[84vw] sm:w-[340px] md:w-auto shrink-0 snap-center p-5 sm:p-6 apple-glass-card rounded-3xl border border-white/70 flex flex-col justify-between space-y-4 shadow-sm hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
               >
                 <div className="space-y-3">
                   <div className="flex gap-1 text-[#C68B59]">
@@ -82,6 +83,13 @@ export const ReviewsAndFaq: React.FC<ReviewsAndFaqProps> = ({
                   <p className="text-[10px] text-[#8C5E35] font-mono mt-1">Purchased: {rev.product}</p>
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Subtle mobile swipe indicator pills */}
+          <div className="flex md:hidden items-center justify-center gap-1.5 pt-1">
+            {reviewsList.map((_, i) => (
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#8C5E35]/40" />
             ))}
           </div>
         </div>

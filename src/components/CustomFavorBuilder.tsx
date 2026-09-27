@@ -281,13 +281,13 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="flex sm:grid sm:grid-cols-3 gap-2.5 overflow-x-auto no-scrollbar pb-1.5 -mx-1 px-1 snap-x snap-mandatory">
                 {packagingItems.map((b) => (
                   <button
                     key={b.id}
                     type="button"
                     onClick={() => setPackagingType(b.id)}
-                    className={`p-3 rounded-2xl text-left transition-all cursor-pointer ${
+                    className={`w-[70vw] sm:w-auto shrink-0 snap-center p-3 rounded-2xl text-left transition-all cursor-pointer ${
                       packagingType === b.id
                         ? 'apple-glass-card border-[#24211D] ring-2 ring-[#8C5E35]/40 shadow-md'
                         : 'apple-glass-card hover:border-[#8C5E35]'

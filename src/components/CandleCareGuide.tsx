@@ -41,9 +41,10 @@ export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Candle Care Ritual Cards - Side-by-side on mobile with smooth swipe, 4-cols on desktop */}
+        <div className="flex lg:grid lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
           {/* Rule 1 in Apple Liquid Glass Card */}
-          <div className="p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
+          <div className="w-[76vw] sm:w-[260px] lg:w-auto shrink-0 snap-center p-5 sm:p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
             <div className="w-10 h-10 rounded-full apple-glass-pill text-[#8C5E35] flex items-center justify-center">
               <Flame className="w-4 h-4" />
             </div>
@@ -56,7 +57,7 @@ export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
           </div>
 
           {/* Rule 2 in Apple Liquid Glass Card */}
-          <div className="p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
+          <div className="w-[76vw] sm:w-[260px] lg:w-auto shrink-0 snap-center p-5 sm:p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
             <div className="w-10 h-10 rounded-full apple-glass-pill text-[#8C5E35] flex items-center justify-center">
               <Scissors className="w-4 h-4" />
             </div>
@@ -69,7 +70,7 @@ export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
           </div>
 
           {/* Rule 3 in Apple Liquid Glass Card */}
-          <div className="p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
+          <div className="w-[76vw] sm:w-[260px] lg:w-auto shrink-0 snap-center p-5 sm:p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
             <div className="w-10 h-10 rounded-full apple-glass-pill text-[#8C5E35] flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -82,7 +83,7 @@ export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
           </div>
 
           {/* Rule 4 in Apple Liquid Glass Card */}
-          <div className="p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
+          <div className="w-[76vw] sm:w-[260px] lg:w-auto shrink-0 snap-center p-5 sm:p-6 apple-glass-card rounded-3xl border border-white/70 space-y-3 hover:scale-[1.02] hover:shadow-xl transition-all duration-300">
             <div className="w-10 h-10 rounded-full apple-glass-pill text-[#8C5E35] flex items-center justify-center">
               <ShieldAlert className="w-4 h-4" />
             </div>
@@ -93,6 +94,13 @@ export const CandleCareGuide: React.FC<CandleCareGuideProps> = ({
               {content.step4Desc}
             </p>
           </div>
+        </div>
+
+        {/* Mobile swipe indicator pills */}
+        <div className="flex lg:hidden items-center justify-center gap-1.5 pt-1">
+          {[...Array(4)].map((_, i) => (
+            <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#8C5E35]/40" />
+          ))}
         </div>
       </div>
     </section>
