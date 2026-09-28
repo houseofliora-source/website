@@ -34,24 +34,7 @@ interface CheckoutPageProps {
   onOpenAuth: () => void;
 }
 
-const POPULAR_DISTRICTS = [
-  'Dhaka',
-  'Gazipur',
-  'Narayanganj',
-  'Chattogram',
-  'Sylhet',
-  'Rajshahi',
-  'Khulna',
-  'Barishal',
-  'Rangpur',
-  'Mymensingh',
-  'Cumilla',
-  'Cox\'s Bazar',
-  'Bogura',
-  'Jessore',
-  'Tangail',
-  'Faridpur'
-];
+import { BANGLADESH_DISTRICTS, DISTRICT_THANAS } from '../data/bangladeshGeo';
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   items,
@@ -73,12 +56,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [customerAddress, setCustomerAddress] = useState(currentUser?.address || '');
   const [district, setDistrict] = useState(currentUser?.city === 'Outside Dhaka' ? 'Chattogram' : 'Dhaka');
   const [thana, setThana] = useState('');
+  const [customThana, setCustomThana] = useState('');
   const [deliveryArea, setDeliveryArea] = useState<'dhaka' | 'outside'>(
     district.toLowerCase().includes('dhaka') ? 'dhaka' : 'outside'
   );
-
-  // Billing address state
-  const [sameAsShipping, setSameAsShipping] = useState(true);
 
   // Payment method
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bkash' | 'nagad'>('cod');
@@ -111,6 +92,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   // Sync delivery area when district changes
   const handleDistrictChange = (newDistrict: string) => {
     setDistrict(newDistrict);
+    setThana('');
+    setCustomThana('');
     if (newDistrict.toLowerCase() === 'dhaka') {
       setDeliveryArea('dhaka');
     } else {
@@ -171,8 +154,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       return;
     }
 
-    if (!customerName || !customerPhone || !customerAddress) {
-      alert('Please fill in your name, contact phone number, and delivery address.');
+    const finalThana = thana === 'Other' ? customThana.trim() : thana.trim();
+    if (!customerName.trim() || !customerPhone.trim() || !district.trim() || !finalThana || !customerAddress.trim()) {
+      alert('Please fill in your Name, Contact Phone Number, District, Thana/Upazila, and Full Delivery Address.');
       return;
     }
 
@@ -194,7 +178,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       customerName,
       customerPhone,
       customerEmail: customerEmail || undefined,
-      customerAddress: `${customerAddress}, ${thana ? thana + ', ' : ''}${district}`,
+      customerAddress: `${customerAddress.trim()}, ${finalThana}, ${district}`,
       deliveryArea,
       paymentMethod,
       transactionId: transactionId || undefined,
@@ -510,6 +494,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
 
             <div className="space-y-4 text-xs">
+              {/* Row 1: Full Name & Phone Number (Both Required) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="font-medium text-[#24211D] block">
@@ -545,9 +530,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
               </div>
 
+              {/* Row 2: Email Address (Optional) */}
               <div className="space-y-1.5">
                 <label className="font-medium text-[#24211D] block">
-                  Email Address (Optional)
+                  Email Address <span className="text-[#7A6F62] font-normal">(Optional)</span>
                 </label>
                 <input
                   type="email"
@@ -558,6 +544,62 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 />
               </div>
 
+              {/* Row 3: Select District & Thana/Upazila (Both Required) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="font-medium text-[#24211D] block">
+                    Select District *
+                  </label>
+                  <select
+                    required
+                    value={district}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
+                    className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans bg-white cursor-pointer"
+                  >
+                    <option value="Dhaka">
+                      Dhaka (Inside Dhaka - ৳{storeSettings.deliveryFeeDhaka})
+                    </option>
+                    {BANGLADESH_DISTRICTS.filter(d => d !== 'Dhaka').map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist} (Outside Dhaka - ৳{storeSettings.deliveryFeeOutside})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-medium text-[#24211D] block">
+                    Select Thana / Upazila *
+                  </label>
+                  <select
+                    required
+                    value={thana}
+                    onChange={(e) => setThana(e.target.value)}
+                    className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans bg-white cursor-pointer"
+                  >
+                    <option value="" disabled>-- Select Thana / Upazila * --</option>
+                    {(DISTRICT_THANAS[district] || []).map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                    <option value="Other">Other / Area Not Listed</option>
+                  </select>
+
+                  {thana === 'Other' && (
+                    <input
+                      type="text"
+                      required
+                      value={customThana}
+                      onChange={(e) => setCustomThana(e.target.value)}
+                      placeholder="Type your Thana / Upazila name *"
+                      className="w-full mt-2 px-3.5 py-2 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans animate-fade-in"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Row 4: Full Delivery Address (Required) */}
               <div className="space-y-1.5">
                 <label className="font-medium text-[#24211D] block">
                   Full Delivery Address *
@@ -567,61 +609,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   rows={2}
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
-                  placeholder="ex: House no. / building / street / area"
+                  placeholder="House no., Building / Street / Road, Area details"
                   className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans leading-relaxed"
                 />
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="font-medium text-[#24211D] block">
-                    Select District *
-                  </label>
-                  <select
-                    value={district}
-                    onChange={(e) => handleDistrictChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans bg-white cursor-pointer"
-                  >
-                    {POPULAR_DISTRICTS.map((dist) => (
-                      <option key={dist} value={dist}>
-                        {dist} {dist.toLowerCase() === 'dhaka' ? '(Inside Dhaka - ৳70)' : '(Outside Dhaka - ৳130)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-medium text-[#24211D] block">
-                    Select Thana / Upazila (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={thana}
-                    onChange={(e) => setThana(e.target.value)}
-                    placeholder="e.g. Dhanmondi, Gulshan, Mirpur"
-                    className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans"
-                  />
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* 3. BILLING ADDRESS (Matching Demo Section 3) */}
-          <div className="apple-glass-card rounded-2xl p-4 sm:p-5 border border-[#EAE0D5] flex items-center justify-between shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-[#8C5E35] rounded-full inline-block" />
-              <span className="font-serif text-base text-[#24211D]">Billing Address</span>
-            </div>
-
-            <label className="flex items-center gap-2 text-xs text-[#5A5248] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sameAsShipping}
-                onChange={(e) => setSameAsShipping(e.target.checked)}
-                className="w-4 h-4 rounded text-[#8C5E35] focus:ring-[#8C5E35] accent-[#8C5E35] cursor-pointer"
-              />
-              <span>Same as shipping address</span>
-            </label>
           </div>
         </div>
 
@@ -747,41 +739,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
           </div>
 
-          {/* 5. DELIVERY DESTINATION / METHOD */}
-          <div className="apple-glass-card rounded-2xl p-4 sm:p-5 border border-[#EAE0D5] space-y-3 shadow-xs">
-            <span className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
-              <Truck className="w-3.5 h-3.5 text-[#8C5E35]" />
-              <span>Delivery Destination & Timing:</span>
-            </span>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setDeliveryArea('dhaka')}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                  deliveryArea === 'dhaka'
-                    ? 'apple-glass-dark text-white border-transparent shadow-sm'
-                    : 'bg-white/60 border-[#EAE0D5] text-[#5A5248] hover:text-[#24211D]'
-                }`}
-              >
-                <span className="font-semibold block">Inside Dhaka</span>
-                <span className="text-[11px] opacity-90 block">৳{storeSettings.deliveryFeeDhaka} (24-48 hrs)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDeliveryArea('outside')}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                  deliveryArea === 'outside'
-                    ? 'apple-glass-dark text-white border-transparent shadow-sm'
-                    : 'bg-white/60 border-[#EAE0D5] text-[#5A5248] hover:text-[#24211D]'
-                }`}
-              >
-                <span className="font-semibold block">Outside Dhaka</span>
-                <span className="text-[11px] opacity-90 block">৳{storeSettings.deliveryFeeOutside} (2-4 days)</span>
-              </button>
-            </div>
-          </div>
 
           {/* 6. HAVE ANY COUPON OR GIFT VOUCHER? (Matching Demo Section 6) */}
           <div className="apple-glass-card rounded-3xl p-5 border border-[#EAE0D5] space-y-3 shadow-xs">
@@ -849,7 +807,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               </div>
 
               <div className="flex justify-between items-center">
-                <span>Delivery cost</span>
+                <span>Delivery ({deliveryArea === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka'})</span>
                 <span className="font-mono font-medium text-[#24211D]">৳{deliveryFee} BDT</span>
               </div>
 
