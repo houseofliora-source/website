@@ -86,9 +86,10 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [favorEditTab, setFavorEditTab] = useState<'general' | 'molds' | 'quantity' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('general');
-  const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
+  const [favorEditTab, setFavorEditTab] = useState<'flows' | 'general' | 'quantity' | 'molds' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('flows');
+  const [selectedFlowCategory, setSelectedFlowCategory] = useState<string>('all');
+  const [newQuestionTitle, setNewQuestionTitle] = useState<string>('');
+  const [newQuestionOptions, setNewQuestionOptions] = useState<string>('');
   const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
   const [selectedQuizQuestionIndex, setSelectedQuizQuestionIndex] = useState<number>(0);
   const [isTestingQuizLive, setIsTestingQuizLive] = useState<boolean>(false);
@@ -1349,9 +1350,11 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             onAddCustomToCart={() => {}}
             facebookUrl={storeSettings.facebookUrl}
             content={content.favors}
+            categories={content.catalog.categories}
+            products={products}
             isEditMode={isEditMode}
             onEdit={(tab) => {
-              setFavorEditTab((tab as any) || 'general');
+              setFavorEditTab((tab as any) || 'flows');
               setActiveModal('favors');
             }}
           />
@@ -2579,13 +2582,9 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             {/* Navigation Tabs */}
             <div className="flex overflow-x-auto border-b border-[#EAE0D5] bg-white px-4 py-2 gap-1.5 scrollbar-thin">
               {[
-                { id: 'general', label: '📝 সাধারণ / General' },
-                { id: 'molds', label: '🕯️ মোল্ড ফর্ম' },
-                { id: 'quantity', label: '🔢 কোয়ান্টিটি' },
-                { id: 'aromas', label: '🌸 সুবাস / অ্যারোমা' },
-                { id: 'ribbons', label: '🎀 ফিতা / রিবন' },
-                { id: 'packaging', label: '📦 কার্ড ভিউ বক্স' },
-                { id: 'quotation', label: '📜 কোটেশন কার্ড' },
+                { id: 'flows', label: '⚙️ কাস্টম প্রশ্ন ও অপশন (Dynamic Flows)' },
+                { id: 'general', label: '📝 সাধারণ শিরোনাম / General' },
+                { id: 'quantity', label: '🔢 কোয়ান্টিটি ও ডিসকাউন্ট' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -2603,6 +2602,168 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
 
             {/* Tab Contents */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+              {/* TAB 0: Dynamic Category Flows & Questions */}
+              {favorEditTab === 'flows' && (
+                <div className="space-y-5">
+                  <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl space-y-1 text-amber-900">
+                    <p className="font-semibold flex items-center gap-1.5 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
+                      <span>ডায়নামিক ক্যাটাগরি কোশ্চেন ও অপশন বিল্ডার:</span>
+                    </p>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      যেকোনো ক্যাটাগরির (যেমন: ক্যান্ডেল, সোপ, সিরামিক ট্রে ইত্যাদি) জন্য আপনি নিজে প্রশ্ন তৈরি করতে পারবেন এবং কি কি অপশন শো করবে তা লিখে দিতে পারবেন। কাস্টমার ওয়েবসাইটে সেই ক্যাটাগরি সিলেক্ট করলে স্বয়ংক্রিয়ভাবে এই প্রশ্নগুলো আসবে।
+                    </p>
+                  </div>
+
+                  {/* Category Selector */}
+                  <div className="p-3 bg-white border border-[#D8CEBE] rounded-xl flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <span className="font-semibold text-xs text-[#24211D] block">Configure Category:</span>
+                      <span className="text-[11px] text-[#7A6F62]">যে ক্যাটাগরির জন্য কাস্টম প্রশ্ন কনফিগার করতে চান তা বেছে নিন:</span>
+                    </div>
+                    <select
+                      value={selectedFlowCategory}
+                      onChange={(e) => setSelectedFlowCategory(e.target.value)}
+                      className="px-3 py-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs font-medium text-[#24211D] focus:border-[#8C5E35] cursor-pointer"
+                    >
+                      {(content.catalog.categories || [{ id: 'all', label: 'Artisanal Candles' }]).map(c => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Questions List for Selected Category */}
+                  {(() => {
+                    const flows = content.favors.categoryFlows || DEFAULT_SITE_CONTENT.favors.categoryFlows || [];
+                    const currentFlow = flows.find(f => f.categoryId === selectedFlowCategory) || flows[0];
+                    const currentQuestions = currentFlow?.questions || [];
+
+                    const updateFlowQuestions = (newQuestions: typeof currentQuestions) => {
+                      const updatedFlows = flows.some(f => f.categoryId === selectedFlowCategory)
+                        ? flows.map(f => f.categoryId === selectedFlowCategory ? { ...f, questions: newQuestions } : f)
+                        : [
+                            ...flows,
+                            {
+                              categoryId: selectedFlowCategory,
+                              categoryLabel: content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || selectedFlowCategory,
+                              questions: newQuestions
+                            }
+                          ];
+                      setContent({
+                        ...content,
+                        favors: { ...content.favors, categoryFlows: updatedFlows }
+                      });
+                    };
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-xs text-[#24211D]">
+                            Questions for {content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || 'Selected Category'}:
+                          </span>
+                          <span className="text-[10px] font-mono text-[#8C5E35] bg-[#FAF8F5] border border-[#D8CEBE] px-2 py-0.5 rounded-full">
+                            {currentQuestions.length} Questions Configured
+                          </span>
+                        </div>
+
+                        {currentQuestions.map((q, qIdx) => (
+                          <div key={q.id || qIdx} className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-xs text-[#24211D] flex items-center gap-1.5">
+                                <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">
+                                  {qIdx + 1}
+                                </span>
+                                <span>{q.title}</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = currentQuestions.filter((_, idx) => idx !== qIdx);
+                                  updateFlowQuestions(updated);
+                                }}
+                                className="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded cursor-pointer"
+                                title="Delete Question"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <div>
+                              <span className="text-[11px] text-[#7A6F62] block mb-1">Available Options:</span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {q.options.map((opt, optIdx) => (
+                                  <span key={optIdx} className="px-2.5 py-1 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-[11px] text-[#24211D]">
+                                    {opt}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Add New Question Form */}
+                        <div className="p-4 bg-[#FAF8F5] border border-dashed border-[#8C5E35]/60 rounded-xl space-y-3">
+                          <span className="font-semibold text-xs text-[#8C5E35] block">
+                            + Add New Question to this Category:
+                          </span>
+
+                          <div className="space-y-2">
+                            <div>
+                              <label className="text-[11px] font-medium text-[#5A5248] block mb-0.5">Question Title (প্রশ্ন):</label>
+                              <input
+                                type="text"
+                                value={newQuestionTitle}
+                                onChange={(e) => setNewQuestionTitle(e.target.value)}
+                                placeholder="e.g. Choose Essential Oil Blend, Select Color, etc."
+                                className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[11px] font-medium text-[#5A5248] block mb-0.5">
+                                Options (কমা দিয়ে আলাদা করে লিখুন / Comma-separated options):
+                              </label>
+                              <input
+                                type="text"
+                                value={newQuestionOptions}
+                                onChange={(e) => setNewQuestionOptions(e.target.value)}
+                                placeholder="e.g. French Vanilla, Wild Rose, Amber Sandalwood"
+                                className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!newQuestionTitle.trim()) {
+                                  alert('Please enter a question title.');
+                                  return;
+                                }
+                                const opts = newQuestionOptions.split(',').map(s => s.trim()).filter(Boolean);
+                                if (opts.length === 0) {
+                                  alert('Please provide at least one option (comma-separated).');
+                                  return;
+                                }
+                                const newQ = {
+                                  id: 'q_' + Date.now(),
+                                  title: newQuestionTitle.trim(),
+                                  options: opts,
+                                };
+                                updateFlowQuestions([...currentQuestions, newQ]);
+                                setNewQuestionTitle('');
+                                setNewQuestionOptions('');
+                              }}
+                              className="px-4 py-2 bg-[#8C5E35] hover:bg-[#24211D] text-white rounded text-xs font-semibold cursor-pointer transition-colors"
+                            >
+                              + Add Question to {content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || 'Category'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
               {/* TAB 1: General Texts */}
               {favorEditTab === 'general' && (
                 <div className="space-y-3">

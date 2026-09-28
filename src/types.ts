@@ -125,18 +125,33 @@ export interface FavorPackagingItem {
   desc: string;
 }
 
+export interface CustomFlowQuestion {
+  id: string;
+  title: string;
+  options: string[];
+}
+
+export interface CustomCategoryFlow {
+  categoryId: string;
+  categoryLabel: string;
+  questions: CustomFlowQuestion[];
+}
+
 export interface FavorContent {
   badge: string;
   title: string;
   subtitle: string;
   consultationBtn: string;
-  moldTitle?: string;
-  moldItems?: FavorMoldItem[];
-  quantityTitle?: string;
   minQuantity?: number;
   maxQuantity?: number;
   quantityStep?: number;
   tierDiscountText?: string;
+  leadTimeText?: string;
+  advanceNoticeText?: string;
+  categoryFlows?: CustomCategoryFlow[];
+  moldTitle?: string;
+  moldItems?: FavorMoldItem[];
+  quantityTitle?: string;
   aromaTitle?: string;
   aromaItems?: string[];
   ribbonTitle?: string;
@@ -147,8 +162,6 @@ export interface FavorContent {
   inscriptionNote?: string;
   cardBoxBadge?: string;
   cardBoxTitle?: string;
-  leadTimeText?: string;
-  advanceNoticeText?: string;
 }
 
 export interface ScentQuizOption {

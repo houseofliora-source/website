@@ -206,6 +206,48 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     title: 'Custom Wedding & Event Favors',
     subtitle: 'Memorable, fragrant tokens crafted with love for your special day. From intimate bridal showers to grand wedding celebrations.',
     consultationBtn: 'Talk to Artisan via Facebook',
+    minQuantity: 20,
+    maxQuantity: 500,
+    quantityStep: 10,
+    tierDiscountText: '50+ pcs: 5% off · 100+ pcs: 10% off · 200+ pcs: 15% off',
+    leadTimeText: '4–7 Business Days',
+    advanceNoticeText: '50% advance required upon confirmation.',
+    categoryFlows: [
+      {
+        categoryId: 'all',
+        categoryLabel: 'Artisanal Candles',
+        questions: [
+          {
+            id: 'q_fragrance',
+            title: 'Choose Signature Fragrance Blend:',
+            options: [
+              'French Vanilla & Sweet Almond',
+              'Wild Peony & Bulgarian Rose',
+              'Amber Sandalwood & Cedar',
+              'White Tea & Fresh Bergamot',
+              'Unscented (Pure Botanical Soy)',
+            ],
+          },
+          {
+            id: 'q_wax',
+            title: 'Select Wax Composition & Quality:',
+            options: [
+              '100% Pure Botanical Soy Wax (Clean & Eco)',
+              'Organic Coconut & Soy Wax Blend (Luxe Creamy)',
+              'Beeswax & Soy Blend (Longest Burning)',
+            ],
+          },
+          {
+            id: 'q_wick',
+            title: 'Wick & Burn Profile:',
+            options: [
+              'Lead-Free Braided Organic Cotton Wick',
+              'Crackling FSC Certified Natural Wooden Wick',
+            ],
+          },
+        ],
+      },
+    ],
     moldTitle: '1. Select Candle Mold Form:',
     moldItems: [
       { id: 'bubble', label: 'Bubble Cube', basePrice: 280 },
@@ -214,10 +256,6 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       { id: 'tablet', label: 'Aroma Tablet', basePrice: 220 },
     ],
     quantityTitle: '2. Order Quantity (Pieces):',
-    minQuantity: 20,
-    maxQuantity: 500,
-    quantityStep: 10,
-    tierDiscountText: '50+ pcs: 5% off · 100+ pcs: 10% off · 200+ pcs: 15% off',
     aromaTitle: '3. Signature Aroma:',
     aromaItems: [
       'French Vanilla & Almond (Sweet)',
@@ -360,6 +398,9 @@ export function sanitizeSiteContent(raw: any): SiteContent {
       packagingItems: Array.isArray(raw.favors?.packagingItems) && raw.favors.packagingItems.length > 0 
         ? raw.favors.packagingItems 
         : (DEFAULT_SITE_CONTENT.favors.packagingItems || []),
+      categoryFlows: Array.isArray(raw.favors?.categoryFlows) && raw.favors.categoryFlows.length > 0
+        ? raw.favors.categoryFlows
+        : (DEFAULT_SITE_CONTENT.favors.categoryFlows || []),
     },
     care: {
       ...DEFAULT_SITE_CONTENT.care,

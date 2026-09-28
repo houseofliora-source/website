@@ -468,6 +468,8 @@ export default function App() {
               onAddCustomToCart={handleAddCustomToCart}
               facebookUrl={storeSettings.facebookUrl}
               content={siteContent.favors}
+              categories={siteContent.catalog.categories}
+              products={products}
             />
 
             {/* Candle Care Rituals Guide */}
