@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Truck,
   HeartHandshake,
+  MessageSquare,
   MessageSquareQuote,
   Star,
   Package,
@@ -86,10 +87,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [favorEditTab, setFavorEditTab] = useState<'flows' | 'general' | 'quantity' | 'molds' | 'aromas' | 'ribbons' | 'packaging' | 'quotation'>('flows');
-  const [selectedFlowCategory, setSelectedFlowCategory] = useState<string>('all');
-  const [newQuestionTitle, setNewQuestionTitle] = useState<string>('');
-  const [newQuestionOptions, setNewQuestionOptions] = useState<string>('');
+  const [favorEditTab, setFavorEditTab] = useState<'general' | 'form' | 'pillars'>('general');
   const [scentQuizTab, setScentQuizTab] = useState<'questions' | 'texts' | 'logic'>('questions');
   const [selectedQuizQuestionIndex, setSelectedQuizQuestionIndex] = useState<number>(0);
   const [isTestingQuizLive, setIsTestingQuizLive] = useState<boolean>(false);
@@ -1345,16 +1343,13 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
           </section>
 
-          {/* 3. Bespoke Favors Section with Full Live Matrix & Granular Pencils */}
+          {/* 3. Bespoke Concierge Section with Live Preview & Direct Editor */}
           <CustomFavorBuilder
-            onAddCustomToCart={() => {}}
             facebookUrl={storeSettings.facebookUrl}
+            supportPhone={storeSettings.supportPhone}
             content={content.favors}
-            categories={content.catalog.categories}
-            products={products}
             isEditMode={isEditMode}
-            onEdit={(tab) => {
-              setFavorEditTab((tab as any) || 'flows');
+            onEdit={() => {
               setActiveModal('favors');
             }}
           />
@@ -2559,7 +2554,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
         </div>
       )}
 
-      {/* MODAL 3: Bespoke Favors Comprehensive Editor */}
+      {/* MODAL 3: Bespoke Custom Orders & Concierge Editor */}
       {activeModal === 'favors' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#FAF8F5] text-[#24211D] rounded-xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-[#D8CEBE] overflow-hidden">
@@ -2568,10 +2563,10 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               <div>
                 <h3 className="font-serif text-lg sm:text-xl font-semibold flex items-center gap-2 text-[#24211D]">
                   <HeartHandshake className="w-5 h-5 text-[#8C5E35]" />
-                  <span>Custom Wedding & Event Favors Studio</span>
+                  <span>Custom Orders & Concierge Studio</span>
                 </h3>
                 <p className="text-xs text-[#7A6F62] mt-0.5">
-                  ক্যান্ডেল মোল্ড ফর্ম, কোয়ান্টিটি রেঞ্জ, সেন্ট অ্যারোমা, কার্ড ভিউ বক্স এবং কোটেশন শর্তাবলী এডিট করুন।
+                  কাস্টম অর্ডার সেকশনের টাইটেল, হোয়াটসঅ্যাপ ডিরেক্ট বাটন, ইনকোয়ারি ফর্ম এবং ৩টি ক্রাফট পিলার সম্পূর্ণ এডিট করুন।
                 </p>
               </div>
               <button onClick={() => setActiveModal(null)} className="p-1.5 hover:bg-[#EAE0D5] rounded-full cursor-pointer">
@@ -2580,11 +2575,11 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex overflow-x-auto border-b border-[#EAE0D5] bg-white px-4 py-2 gap-1.5 scrollbar-thin">
+            <div className="flex overflow-x-auto border-b border-[#EAE0D5] bg-white px-4 py-2 gap-2 scrollbar-thin">
               {[
-                { id: 'flows', label: '⚙️ কাস্টম প্রশ্ন ও অপশন (Dynamic Flows)' },
-                { id: 'general', label: '📝 সাধারণ শিরোনাম / General' },
-                { id: 'quantity', label: '🔢 কোয়ান্টিটি ও ডিসকাউন্ট' },
+                { id: 'general', label: '📝 শিরোনাম ও হোয়াটসঅ্যাপ (Titles & WhatsApp)' },
+                { id: 'form', label: '📋 ইনকোয়ারি ফর্ম (Inquiry Form)' },
+                { id: 'pillars', label: '✨ ক্রাফট পিলার ৩টি (Craft Features)' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -2602,173 +2597,11 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
 
             {/* Tab Contents */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
-              {/* TAB 0: Dynamic Category Flows & Questions */}
-              {favorEditTab === 'flows' && (
-                <div className="space-y-5">
-                  <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl space-y-1 text-amber-900">
-                    <p className="font-semibold flex items-center gap-1.5 text-xs">
-                      <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
-                      <span>ডায়নামিক ক্যাটাগরি কোশ্চেন ও অপশন বিল্ডার:</span>
-                    </p>
-                    <p className="text-[11px] text-amber-800 leading-relaxed">
-                      যেকোনো ক্যাটাগরির (যেমন: ক্যান্ডেল, সোপ, সিরামিক ট্রে ইত্যাদি) জন্য আপনি নিজে প্রশ্ন তৈরি করতে পারবেন এবং কি কি অপশন শো করবে তা লিখে দিতে পারবেন। কাস্টমার ওয়েবসাইটে সেই ক্যাটাগরি সিলেক্ট করলে স্বয়ংক্রিয়ভাবে এই প্রশ্নগুলো আসবে।
-                    </p>
-                  </div>
-
-                  {/* Category Selector */}
-                  <div className="p-3 bg-white border border-[#D8CEBE] rounded-xl flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="font-semibold text-xs text-[#24211D] block">Configure Category:</span>
-                      <span className="text-[11px] text-[#7A6F62]">যে ক্যাটাগরির জন্য কাস্টম প্রশ্ন কনফিগার করতে চান তা বেছে নিন:</span>
-                    </div>
-                    <select
-                      value={selectedFlowCategory}
-                      onChange={(e) => setSelectedFlowCategory(e.target.value)}
-                      className="px-3 py-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-xs font-medium text-[#24211D] focus:border-[#8C5E35] cursor-pointer"
-                    >
-                      {(content.catalog.categories || [{ id: 'all', label: 'Artisanal Candles' }]).map(c => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Questions List for Selected Category */}
-                  {(() => {
-                    const flows = content.favors.categoryFlows || DEFAULT_SITE_CONTENT.favors.categoryFlows || [];
-                    const currentFlow = flows.find(f => f.categoryId === selectedFlowCategory) || flows[0];
-                    const currentQuestions = currentFlow?.questions || [];
-
-                    const updateFlowQuestions = (newQuestions: typeof currentQuestions) => {
-                      const updatedFlows = flows.some(f => f.categoryId === selectedFlowCategory)
-                        ? flows.map(f => f.categoryId === selectedFlowCategory ? { ...f, questions: newQuestions } : f)
-                        : [
-                            ...flows,
-                            {
-                              categoryId: selectedFlowCategory,
-                              categoryLabel: content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || selectedFlowCategory,
-                              questions: newQuestions
-                            }
-                          ];
-                      setContent({
-                        ...content,
-                        favors: { ...content.favors, categoryFlows: updatedFlows }
-                      });
-                    };
-
-                    return (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-xs text-[#24211D]">
-                            Questions for {content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || 'Selected Category'}:
-                          </span>
-                          <span className="text-[10px] font-mono text-[#8C5E35] bg-[#FAF8F5] border border-[#D8CEBE] px-2 py-0.5 rounded-full">
-                            {currentQuestions.length} Questions Configured
-                          </span>
-                        </div>
-
-                        {currentQuestions.map((q, qIdx) => (
-                          <div key={q.id || qIdx} className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2.5">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-semibold text-xs text-[#24211D] flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">
-                                  {qIdx + 1}
-                                </span>
-                                <span>{q.title}</span>
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const updated = currentQuestions.filter((_, idx) => idx !== qIdx);
-                                  updateFlowQuestions(updated);
-                                }}
-                                className="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded cursor-pointer"
-                                title="Delete Question"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-
-                            <div>
-                              <span className="text-[11px] text-[#7A6F62] block mb-1">Available Options:</span>
-                              <div className="flex flex-wrap gap-1.5">
-                                {q.options.map((opt, optIdx) => (
-                                  <span key={optIdx} className="px-2.5 py-1 bg-[#FAF8F5] border border-[#D8CEBE] rounded-lg text-[11px] text-[#24211D]">
-                                    {opt}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Add New Question Form */}
-                        <div className="p-4 bg-[#FAF8F5] border border-dashed border-[#8C5E35]/60 rounded-xl space-y-3">
-                          <span className="font-semibold text-xs text-[#8C5E35] block">
-                            + Add New Question to this Category:
-                          </span>
-
-                          <div className="space-y-2">
-                            <div>
-                              <label className="text-[11px] font-medium text-[#5A5248] block mb-0.5">Question Title (প্রশ্ন):</label>
-                              <input
-                                type="text"
-                                value={newQuestionTitle}
-                                onChange={(e) => setNewQuestionTitle(e.target.value)}
-                                placeholder="e.g. Choose Essential Oil Blend, Select Color, etc."
-                                className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="text-[11px] font-medium text-[#5A5248] block mb-0.5">
-                                Options (কমা দিয়ে আলাদা করে লিখুন / Comma-separated options):
-                              </label>
-                              <input
-                                type="text"
-                                value={newQuestionOptions}
-                                onChange={(e) => setNewQuestionOptions(e.target.value)}
-                                placeholder="e.g. French Vanilla, Wild Rose, Amber Sandalwood"
-                                className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                              />
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!newQuestionTitle.trim()) {
-                                  alert('Please enter a question title.');
-                                  return;
-                                }
-                                const opts = newQuestionOptions.split(',').map(s => s.trim()).filter(Boolean);
-                                if (opts.length === 0) {
-                                  alert('Please provide at least one option (comma-separated).');
-                                  return;
-                                }
-                                const newQ = {
-                                  id: 'q_' + Date.now(),
-                                  title: newQuestionTitle.trim(),
-                                  options: opts,
-                                };
-                                updateFlowQuestions([...currentQuestions, newQ]);
-                                setNewQuestionTitle('');
-                                setNewQuestionOptions('');
-                              }}
-                              className="px-4 py-2 bg-[#8C5E35] hover:bg-[#24211D] text-white rounded text-xs font-semibold cursor-pointer transition-colors"
-                            >
-                              + Add Question to {content.catalog.categories?.find(c => c.id === selectedFlowCategory)?.label || 'Category'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-              {/* TAB 1: General Texts */}
+              {/* TAB 1: General Headlines & WhatsApp CTA */}
               {favorEditTab === 'general' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Badge Tagline:</label>
+                    <label className="font-semibold text-[#24211D] block mb-1">Badge Tagline (উপরে গোল্ডেন ব্যাজ):</label>
                     <input
                       type="text"
                       value={content.favors.badge || ''}
@@ -2776,11 +2609,13 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                         ...content,
                         favors: { ...content.favors, badge: e.target.value }
                       })}
+                      placeholder="e.g. Artisanal Bespoke Concierge"
                       className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
                     />
                   </div>
+
                   <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Section Main Title:</label>
+                    <label className="font-semibold text-[#24211D] block mb-1">Section Main Title (মূল শিরোনাম):</label>
                     <input
                       type="text"
                       value={content.favors.title || ''}
@@ -2788,11 +2623,13 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                         ...content,
                         favors: { ...content.favors, title: e.target.value }
                       })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-serif text-sm"
+                      placeholder="e.g. Custom & Bulk Orders Inquiry"
+                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-serif text-sm font-semibold"
                     />
                   </div>
+
                   <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Section Subtitle / Description:</label>
+                    <label className="font-semibold text-[#24211D] block mb-1">Section Subtitle / Description (বিবরণ):</label>
                     <textarea
                       rows={3}
                       value={content.favors.subtitle || ''}
@@ -2800,553 +2637,214 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                         ...content,
                         favors: { ...content.favors, subtitle: e.target.value }
                       })}
+                      placeholder="Enter section description..."
                       className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs leading-relaxed"
                     />
                   </div>
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Facebook Consultation Button Label:</label>
-                    <input
-                      type="text"
-                      value={content.favors.consultationBtn || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, consultationBtn: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-                </div>
-              )}
 
-              {/* TAB 2: Candle Mold Forms */}
-              {favorEditTab === 'molds' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Step 1 Title (Heading):</label>
-                    <input
-                      type="text"
-                      value={content.favors.moldTitle || '1. Select Candle Mold Form:'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, moldTitle: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
+                  <div className="pt-3 border-t border-[#EAE0D5] space-y-3">
+                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
+                      <MessageSquare className="w-4 h-4 text-[#8C5E35]" />
+                      <span>WhatsApp Direct Concierge Button Configuration:</span>
+                    </span>
 
-                  <div className="space-y-2.5 pt-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#24211D]">Available Candle Mold Forms / Categories:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const list = content.favors.moldItems || DEFAULT_SITE_CONTENT.favors.moldItems || [];
-                          const newItem: FavorMoldItem = {
-                            id: 'mold_' + Date.now(),
-                            label: 'New Sculpted Form',
-                            basePrice: 260,
-                          };
-                          setContent({
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-semibold text-[#24211D] block mb-1">WhatsApp Button Text (বাটন টেক্সট):</label>
+                        <input
+                          type="text"
+                          value={content.favors.consultationBtn || ''}
+                          onChange={e => setContent({
                             ...content,
-                            favors: { ...content.favors, moldItems: [...list, newItem] }
-                          });
-                        }}
-                        className="px-2.5 py-1 text-xs bg-[#24211D] hover:bg-[#8C5E35] text-white rounded flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        <span>Add Mold Form</span>
-                      </button>
-                    </div>
+                            favors: { ...content.favors, consultationBtn: e.target.value }
+                          })}
+                          placeholder="e.g. Chat with Atelier on WhatsApp"
+                          className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                        />
+                      </div>
 
-                    <div className="space-y-2">
-                      {(content.favors.moldItems || DEFAULT_SITE_CONTENT.favors.moldItems || []).map((m, idx) => (
-                        <div key={idx} className="p-3 bg-white rounded-lg border border-[#EAE0D5] flex items-center gap-3">
-                          <span className="font-mono text-xs text-[#8C5E35] font-semibold w-5">{idx + 1}.</span>
-                          <div className="flex-1 space-y-1">
-                            <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Mold / Category Name</label>
-                            <input
-                              type="text"
-                              value={m.label}
-                              onChange={e => {
-                                const list = [...(content.favors.moldItems || DEFAULT_SITE_CONTENT.favors.moldItems || [])];
-                                list[idx] = { ...list[idx], label: e.target.value };
-                                setContent({
-                                  ...content,
-                                  favors: { ...content.favors, moldItems: list }
-                                });
-                              }}
-                              className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-medium"
-                            />
-                          </div>
-                          <div className="w-28 space-y-1">
-                            <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Base Price (৳)</label>
-                            <input
-                              type="number"
-                              value={m.basePrice}
-                              onChange={e => {
-                                const list = [...(content.favors.moldItems || DEFAULT_SITE_CONTENT.favors.moldItems || [])];
-                                list[idx] = { ...list[idx], basePrice: Number(e.target.value) };
-                                setContent({
-                                  ...content,
-                                  favors: { ...content.favors, moldItems: list }
-                                });
-                              }}
-                              className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-mono font-medium"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const list = (content.favors.moldItems || DEFAULT_SITE_CONTENT.favors.moldItems || []).filter((_, i) => i !== idx);
-                              setContent({
-                                ...content,
-                                favors: { ...content.favors, moldItems: list }
-                              });
-                            }}
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer self-end"
-                            title="Delete Mold"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: Quantity & Discount */}
-              {favorEditTab === 'quantity' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Step 2 Title (Heading):</label>
-                    <input
-                      type="text"
-                      value={content.favors.quantityTitle || '2. Order Quantity (Pieces):'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, quantityTitle: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Minimum Order (Pieces):</label>
-                      <input
-                        type="number"
-                        value={content.favors.minQuantity ?? 20}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, minQuantity: Number(e.target.value) }
-                        })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Maximum Order (Pieces):</label>
-                      <input
-                        type="number"
-                        value={content.favors.maxQuantity ?? 500}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, maxQuantity: Number(e.target.value) }
-                        })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Slider Step:</label>
-                      <input
-                        type="number"
-                        value={content.favors.quantityStep ?? 10}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, quantityStep: Number(e.target.value) }
-                        })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Volume Tier Discount Note:</label>
-                    <input
-                      type="text"
-                      value={content.favors.tierDiscountText || '50+ pcs: 5% off · 100+ pcs: 10% off · 200+ pcs: 15% off'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, tierDiscountText: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 4: Signature Aromas */}
-              {favorEditTab === 'aromas' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Step 3 Title (Heading):</label>
-                    <input
-                      type="text"
-                      value={content.favors.aromaTitle || '3. Signature Aroma:'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, aromaTitle: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-2.5 pt-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#24211D]">Currently Available Fragrances / Scents:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const list = content.favors.aromaItems || DEFAULT_SITE_CONTENT.favors.aromaItems || [];
-                          setContent({
+                      <div>
+                        <label className="font-semibold text-[#24211D] block mb-1">WhatsApp Phone Number (হোয়াটসঅ্যাপ নম্বর):</label>
+                        <input
+                          type="text"
+                          value={content.favors.whatsappNumber || ''}
+                          onChange={e => setContent({
                             ...content,
-                            favors: { ...content.favors, aromaItems: [...list, 'New Scent Aroma (Fresh)'] }
-                          });
-                        }}
-                        className="px-2.5 py-1 text-xs bg-[#24211D] hover:bg-[#8C5E35] text-white rounded flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        <span>Add Aroma</span>
-                      </button>
+                            favors: { ...content.favors, whatsappNumber: e.target.value }
+                          })}
+                          placeholder="e.g. 01700000000"
+                          className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-mono"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      {(content.favors.aromaItems || DEFAULT_SITE_CONTENT.favors.aromaItems || []).map((a, idx) => (
-                        <div key={idx} className="p-2.5 bg-white rounded border border-[#EAE0D5] flex items-center gap-3">
-                          <span className="font-mono text-xs text-[#8C5E35] font-semibold w-5">{idx + 1}.</span>
-                          <input
-                            type="text"
-                            value={a}
-                            onChange={e => {
-                              const list = [...(content.favors.aromaItems || DEFAULT_SITE_CONTENT.favors.aromaItems || [])];
-                              list[idx] = e.target.value;
-                              setContent({
-                                ...content,
-                                favors: { ...content.favors, aromaItems: list }
-                              });
-                            }}
-                            className="flex-1 p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const list = (content.favors.aromaItems || DEFAULT_SITE_CONTENT.favors.aromaItems || []).filter((_, i) => i !== idx);
-                              setContent({
-                                ...content,
-                                favors: { ...content.favors, aromaItems: list }
-                              });
-                            }}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
-                            title="Delete Aroma"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 5: Ribbons */}
-              {favorEditTab === 'ribbons' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Step 4 Title (Heading):</label>
-                    <input
-                      type="text"
-                      value={content.favors.ribbonTitle || '4. Ribbon Material & Tone:'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, ribbonTitle: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-2.5 pt-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#24211D]">Available Ribbon Materials & Colors:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const list = content.favors.ribbonItems || DEFAULT_SITE_CONTENT.favors.ribbonItems || [];
-                          setContent({
-                            ...content,
-                            favors: { ...content.favors, ribbonItems: [...list, 'New Satin Ribbon Color'] }
-                          });
-                        }}
-                        className="px-2.5 py-1 text-xs bg-[#24211D] hover:bg-[#8C5E35] text-white rounded flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        <span>Add Ribbon</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {(content.favors.ribbonItems || DEFAULT_SITE_CONTENT.favors.ribbonItems || []).map((r, idx) => (
-                        <div key={idx} className="p-2.5 bg-white rounded border border-[#EAE0D5] flex items-center gap-3">
-                          <span className="font-mono text-xs text-[#8C5E35] font-semibold w-5">{idx + 1}.</span>
-                          <input
-                            type="text"
-                            value={r}
-                            onChange={e => {
-                              const list = [...(content.favors.ribbonItems || DEFAULT_SITE_CONTENT.favors.ribbonItems || [])];
-                              list[idx] = e.target.value;
-                              setContent({
-                                ...content,
-                                favors: { ...content.favors, ribbonItems: list }
-                              });
-                            }}
-                            className="flex-1 p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const list = (content.favors.ribbonItems || DEFAULT_SITE_CONTENT.favors.ribbonItems || []).filter((_, i) => i !== idx);
-                              setContent({
-                                ...content,
-                                favors: { ...content.favors, ribbonItems: list }
-                              });
-                            }}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
-                            title="Delete Ribbon"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 6: Card View Box / Packaging */}
-              {favorEditTab === 'packaging' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Step 5 Title (Heading):</label>
-                    <input
-                      type="text"
-                      value={content.favors.packagingTitle || '5. Packaging Style:'}
-                      onChange={e => setContent({
-                        ...content,
-                        favors: { ...content.favors, packagingTitle: e.target.value }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-2.5 pt-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#24211D]">Card View Boxes & Packaging Styles:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const list = content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || [];
-                          const newItem: FavorPackagingItem = {
-                            id: 'pkg_' + Date.now(),
-                            title: 'New Luxury Box',
-                            price: '+৳40/pc',
-                            addonPrice: 40,
-                            desc: 'Custom ribbon and sealed tag',
-                          };
-                          setContent({
-                            ...content,
-                            favors: { ...content.favors, packagingItems: [...list, newItem] }
-                          });
-                        }}
-                        className="px-2.5 py-1 text-xs bg-[#24211D] hover:bg-[#8C5E35] text-white rounded flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        <span>Add Packaging Box</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {(content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || []).map((p, idx) => (
-                        <div key={idx} className="p-3 bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs text-[#8C5E35] font-semibold">Box #{idx + 1}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const list = (content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || []).filter((_, i) => i !== idx);
-                                setContent({
-                                  ...content,
-                                  favors: { ...content.favors, packagingItems: list }
-                                });
-                              }}
-                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer flex items-center gap-1 text-[11px]"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Remove</span>
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div>
-                              <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Box Title</label>
-                              <input
-                                type="text"
-                                value={p.title}
-                                onChange={e => {
-                                  const list = [...(content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || [])];
-                                  list[idx] = { ...list[idx], title: e.target.value };
-                                  setContent({
-                                    ...content,
-                                    favors: { ...content.favors, packagingItems: list }
-                                  });
-                                }}
-                                className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Price Display Tag</label>
-                              <input
-                                type="text"
-                                value={p.price}
-                                onChange={e => {
-                                  const list = [...(content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || [])];
-                                  list[idx] = { ...list[idx], price: e.target.value };
-                                  setContent({
-                                    ...content,
-                                    favors: { ...content.favors, packagingItems: list }
-                                  });
-                                }}
-                                className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-mono"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Addon Price (৳ / pc)</label>
-                              <input
-                                type="number"
-                                value={p.addonPrice}
-                                onChange={e => {
-                                  const list = [...(content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || [])];
-                                  list[idx] = { ...list[idx], addonPrice: Number(e.target.value) };
-                                  setContent({
-                                    ...content,
-                                    favors: { ...content.favors, packagingItems: list }
-                                  });
-                                }}
-                                className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-mono font-medium"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-[#7A6F62] uppercase font-semibold">Box Description</label>
-                            <input
-                              type="text"
-                              value={p.desc}
-                              onChange={e => {
-                                const list = [...(content.favors.packagingItems || DEFAULT_SITE_CONTENT.favors.packagingItems || [])];
-                                list[idx] = { ...list[idx], desc: e.target.value };
-                                setContent({
-                                  ...content,
-                                  favors: { ...content.favors, packagingItems: list }
-                                });
-                              }}
-                              className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 7: Quotation & Terms */}
-              {favorEditTab === 'quotation' && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Card Box Badge:</label>
+                      <label className="font-semibold text-[#24211D] block mb-1">Pre-filled WhatsApp Message (কাস্টমার বাটনে ক্লিক করলে যে মেসেজ তৈরি হবে):</label>
                       <input
                         type="text"
-                        value={content.favors.cardBoxBadge || 'Live Estimate & Terms'}
+                        value={content.favors.whatsappMessage || ''}
                         onChange={e => setContent({
                           ...content,
-                          favors: { ...content.favors, cardBoxBadge: e.target.value }
+                          favors: { ...content.favors, whatsappMessage: e.target.value }
                         })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Card Box Title:</label>
-                      <input
-                        type="text"
-                        value={content.favors.cardBoxTitle || 'Order Quotation'}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, cardBoxTitle: e.target.value }
-                        })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-serif text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Production Lead Time:</label>
-                      <input
-                        type="text"
-                        value={content.favors.leadTimeText || '4–7 Business Days'}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, leadTimeText: e.target.value }
-                        })}
-                        className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-semibold text-[#24211D] block mb-1">Inscription Step Title:</label>
-                      <input
-                        type="text"
-                        value={content.favors.inscriptionTitle || '6. Personalized Inscription:'}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, inscriptionTitle: e.target.value }
-                        })}
+                        placeholder="e.g. Hello House of Líora, I would like to inquire about a custom order."
                         className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TAB 2: Inquiry Form Settings */}
+              {favorEditTab === 'form' && (
+                <div className="space-y-4">
+                  <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-1 text-emerald-900">
+                    <p className="font-semibold flex items-center gap-1.5 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>সরাসরি ইনকোয়ারি ফর্ম ও অটো সেভিং:</span>
+                    </p>
+                    <p className="text-[11px] text-emerald-800 leading-relaxed">
+                      কাস্টমাররা নাম, ফোন নম্বর, ইমেইল এবং বিস্তারিত লিখে মেসেজ সেন্ড করতে পারবেন। সাবমিট করার পর স্বয়ংক্রিয়ভাবে নিশ্চিতকরণ দেখাবে এবং চাইলে সাথে সাথে মেসেজটি এক ক্লিকে হোয়াটসঅ্যাপে ফরোয়ার্ড করার অপশনও পাবে।
+                    </p>
+                  </div>
 
                   <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">Inscription Note / Description:</label>
+                    <label className="font-semibold text-[#24211D] block mb-1">Inquiry Form Title (ফর্মের শিরোনাম):</label>
                     <input
                       type="text"
-                      value={content.favors.inscriptionNote || 'Includes personalized foil-accented card and botanical sprig.'}
+                      value={content.favors.formTitle || ''}
                       onChange={e => setContent({
                         ...content,
-                        favors: { ...content.favors, inscriptionNote: e.target.value }
+                        favors: { ...content.favors, formTitle: e.target.value }
                       })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                      placeholder="e.g. Send a Custom Inquiry"
+                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs font-serif text-sm font-semibold"
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-[#24211D] block mb-1">50% Advance Notice Text:</label>
+                    <label className="font-semibold text-[#24211D] block mb-1">Inquiry Form Subtitle (ফর্মের সাবটাইটেল/নির্দেশনা):</label>
                     <textarea
-                      rows={2}
-                      value={content.favors.advanceNoticeText || 'For customized favor orders, a 50% advance deposit is required via bKash or Nagad. The remaining 50% is payable upon doorstep delivery.'}
+                      rows={3}
+                      value={content.favors.formSubtitle || ''}
                       onChange={e => setContent({
                         ...content,
-                        favors: { ...content.favors, advanceNoticeText: e.target.value }
+                        favors: { ...content.favors, formSubtitle: e.target.value }
                       })}
+                      placeholder="e.g. Leave your details & custom requirements below. Our lead artisan will review your vision and connect back promptly."
                       className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs leading-relaxed"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: 3 Craft Pillars */}
+              {favorEditTab === 'pillars' && (
+                <div className="space-y-4">
+                  <p className="text-xs text-[#7A6F62]">
+                    সেকশনের বাম পাশে শো হওয়া ৩টি প্রধান আর্ট অ্যান্ড ক্রাফট ফিচার হাইলাইট এডিট করুন:
+                  </p>
+
+                  {/* Pillar 1 */}
+                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
+                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                      <span>Feature Pillar 1</span>
+                    </span>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature1Title || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature1Title: e.target.value }
+                        })}
+                        placeholder="e.g. Tailored Artisanal Craft"
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature1Desc || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature1Desc: e.target.value }
+                        })}
+                        placeholder="e.g. Custom scents, colors, vessel styling, and personalized monogram foil tags."
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pillar 2 */}
+                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
+                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                      <span>Feature Pillar 2</span>
+                    </span>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature2Title || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature2Title: e.target.value }
+                        })}
+                        placeholder="e.g. Flexible Batch Quantities"
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature2Desc || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature2Desc: e.target.value }
+                        })}
+                        placeholder="e.g. Boutique intimate batches (20+ pcs) to grand wedding favors and corporate gifts."
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pillar 3 */}
+                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
+                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                      <span>Feature Pillar 3</span>
+                    </span>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature3Title || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature3Title: e.target.value }
+                        })}
+                        placeholder="e.g. Direct Atelier Support"
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
+                      <input
+                        type="text"
+                        value={content.favors.feature3Desc || ''}
+                        onChange={e => setContent({
+                          ...content,
+                          favors: { ...content.favors, feature3Desc: e.target.value }
+                        })}
+                        placeholder="e.g. Dedicated artisan consultation, sample approvals, and safe delivery across Bangladesh."
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -3369,7 +2867,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
           </div>
         </div>
       )}
-
+      
       {/* MODAL 4: Candle Care Ritual Editor */}
       {activeModal === 'care' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">

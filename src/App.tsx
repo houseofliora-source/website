@@ -463,13 +463,11 @@ export default function App() {
               )}
             </section>
 
-            {/* Custom Favor & Wedding Builder Studio */}
+            {/* Bespoke Inquiry & Custom Order Atelier */}
             <CustomFavorBuilder
-              onAddCustomToCart={handleAddCustomToCart}
               facebookUrl={storeSettings.facebookUrl}
+              supportPhone={storeSettings.supportPhone}
               content={siteContent.favors}
-              categories={siteContent.catalog.categories}
-              products={products}
             />
 
             {/* Candle Care Rituals Guide */}
