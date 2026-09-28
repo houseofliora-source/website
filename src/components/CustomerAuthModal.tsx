@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, CheckCircle, Package, LogOut, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Phone, MapPin, Package, LogOut, ShieldCheck } from 'lucide-react';
 import { OrderRecord } from '../types';
 
 export interface CustomerUser {
@@ -83,16 +83,10 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#EAE0D5]/70 flex items-center justify-between">
-          <div className="space-y-0.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 apple-glass-pill text-[10px] font-semibold uppercase tracking-widest text-[#8C5E35]">
-              <User className="w-3.5 h-3.5" />
-              <span>Líora Patron Circle</span>
-            </div>
-            <h3 className="font-serif text-2xl text-[#24211D]">
-              {currentUser ? `Welcome, ${currentUser.name}` : mode === 'signin' ? 'Sign In to Your Account' : 'Create Customer Account'}
-            </h3>
-          </div>
+        <div className="p-5 sm:p-6 border-b border-[#EAE0D5]/70 flex items-center justify-between">
+          <h3 className="font-serif text-2xl text-[#24211D]">
+            {currentUser ? `Welcome, ${currentUser.name}` : mode === 'signin' ? 'Sign In to Your Account' : 'Create Customer Account'}
+          </h3>
 
           <button
             onClick={onClose}
@@ -279,10 +273,9 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3.5 apple-glass-dark text-white font-medium rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-2"
+                className="w-full py-3.5 apple-glass-dark text-white font-medium rounded-full transition-all flex items-center justify-center cursor-pointer shadow-md mt-2"
               >
-                <span>{mode === 'signin' ? 'Sign In to Boutique' : 'Create Customer Account'}</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>{mode === 'signin' ? 'Sign In' : 'Create Account'}</span>
               </button>
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#7A6F62] pt-2">
