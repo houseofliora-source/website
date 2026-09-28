@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { X, Phone, MapPin, Package, LogOut, ShieldCheck } from 'lucide-react';
-import { OrderRecord } from '../types';
-
-export interface CustomerUser {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: 'Inside Dhaka' | 'Outside Dhaka';
-  joinedAt: string;
-}
+import { OrderRecord, CustomerUser } from '../types';
+export type { CustomerUser };
 
 interface CustomerAuthModalProps {
   isOpen: boolean;

@@ -12,10 +12,15 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme } from '../types';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  signOut as firebaseSignOut
+} from 'firebase/auth';
+import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme, CustomerUser } from '../types';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../data/products';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
-import { CustomerUser } from '../components/CustomerAuthModal';
 
 // Firebase configuration from environment variables with House of Líora project defaults
 const firebaseConfig = {
@@ -40,6 +45,31 @@ const app = isFirebaseConfigured
   : null;
 
 export const db = app ? getFirestore(app) : null;
+export const auth = app ? getAuth(app) : null;
+
+/**
+ * Sign in or Sign up with Google via Firebase Auth
+ */
+export async function signInWithGoogleFromFirebase(): Promise<CustomerUser | null> {
+  if (!auth) {
+    return null;
+  }
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+  const customer: CustomerUser = {
+    name: user.displayName || user.email?.split('@')[0] || 'Valued Patron',
+    email: user.email || '',
+    phone: user.phoneNumber || '',
+    address: 'Dhaka, Bangladesh',
+    city: 'Inside Dhaka',
+    joinedAt: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    avatar: user.photoURL || undefined,
+  };
+  await syncCustomerProfileToFirestore(customer);
+  return customer;
+}
 
 /**
  * Fetch all products from Firestore collection 'products'.

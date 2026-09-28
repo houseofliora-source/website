@@ -8,7 +8,8 @@ import { ProductCard } from './components/ProductCard';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { ProductQuickView } from './components/ProductQuickView';
 import { CustomFavorBuilder } from './components/CustomFavorBuilder';
-import { CustomerAuthModal, CustomerUser } from './components/CustomerAuthModal';
+import { CustomerAccountPage } from './components/CustomerAccountPage';
+import { CustomerUser } from './types';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutPage } from './components/CheckoutPage';
 import { CandleCareGuide } from './components/CandleCareGuide';
@@ -52,7 +53,18 @@ export default function App() {
     return window.location.pathname.startsWith('/checkout') || window.location.hash === '#checkout';
   };
 
+  const checkIsAccountRoute = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.location.pathname.startsWith('/account') || 
+      window.location.hash === '#account' ||
+      window.location.pathname.startsWith('/dashboard') ||
+      window.location.hash === '#dashboard'
+    );
+  };
+
   const [isCheckoutRoute, setIsCheckoutRoute] = useState<boolean>(checkIsCheckoutRoute);
+  const [isAccountRoute, setIsAccountRoute] = useState<boolean>(checkIsAccountRoute);
 
   const getProductIdFromUrl = (): string | null => {
     if (typeof window === 'undefined') return null;
@@ -72,6 +84,7 @@ export default function App() {
 
   const navigateToProduct = (productId: string) => {
     window.history.pushState({}, '', `/product/${productId}`);
+    setIsAccountRoute(false);
     setIsCheckoutRoute(false);
     setActiveProductId(productId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -79,6 +92,7 @@ export default function App() {
 
   const navigateToHome = () => {
     window.history.pushState({}, '', '/');
+    setIsAccountRoute(false);
     setIsCheckoutRoute(false);
     setActiveProductId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -86,7 +100,17 @@ export default function App() {
 
   const navigateToCheckout = () => {
     window.history.pushState({}, '', '/checkout');
+    setIsAccountRoute(false);
     setIsCheckoutRoute(true);
+    setActiveProductId(null);
+    setIsCartOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToAccount = () => {
+    window.history.pushState({}, '', '/account');
+    setIsAccountRoute(true);
+    setIsCheckoutRoute(false);
     setActiveProductId(null);
     setIsCartOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -98,12 +122,14 @@ export default function App() {
       if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
         window.history.replaceState({}, '', '/');
         setIsAdminRoute(false);
+        setIsAccountRoute(false);
         setIsCheckoutRoute(false);
         setActiveProductId(null);
         return;
       }
       const isNowAdmin = window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
       setIsAdminRoute(isNowAdmin);
+      setIsAccountRoute(checkIsAccountRoute());
       setIsCheckoutRoute(checkIsCheckoutRoute());
       setActiveProductId(getProductIdFromUrl());
 
@@ -191,7 +217,6 @@ export default function App() {
 
   // Modals & Drawers
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Filters
@@ -318,14 +343,29 @@ export default function App() {
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={navigateToAccount}
         currentUser={currentUser}
         announcementText={storeSettings.announcementText}
         onNavigateHome={navigateToHome}
       />
 
       <main className="flex-1">
-        {isCheckoutRoute ? (
+        {isAccountRoute ? (
+          <CustomerAccountPage
+            currentUser={currentUser}
+            orders={orders}
+            cartCount={totalCartCount}
+            onSignIn={(user) => {
+              setCurrentUser(user);
+              syncCustomerProfileToFirestore(user);
+            }}
+            onSignOut={() => {
+              setCurrentUser(null);
+            }}
+            onNavigateHome={navigateToHome}
+            onOpenCart={() => setIsCartOpen(true)}
+          />
+        ) : isCheckoutRoute ? (
           <CheckoutPage
             items={cartItems}
             customFavors={customFavors}
@@ -337,7 +377,7 @@ export default function App() {
             onClearCart={handleClearCart}
             onOrderPlaced={handleOrderPlaced}
             onNavigateHome={navigateToHome}
-            onOpenAuth={() => setIsAuthOpen(true)}
+            onOpenAuth={navigateToAccount}
             onOpenPolicy={setActivePolicy}
           />
         ) : activeProductId && currentProduct ? (
@@ -481,7 +521,7 @@ export default function App() {
 
       {/* Footer */}
       <Footer
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={navigateToAccount}
         storeSettings={storeSettings}
         content={siteContent.footer}
         onOpenPolicy={setActivePolicy}
@@ -495,21 +535,6 @@ export default function App() {
           handleAddToCart(p, q, s);
           setQuickViewProduct(null);
         }}
-      />
-
-      <CustomerAuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        currentUser={currentUser}
-        onSignIn={(user) => {
-          setCurrentUser(user);
-          syncCustomerProfileToFirestore(user);
-          setIsAuthOpen(false);
-        }}
-        onSignOut={() => {
-          setCurrentUser(null);
-        }}
-        orders={orders}
       />
 
       <CartDrawer

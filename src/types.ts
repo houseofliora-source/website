@@ -85,6 +85,29 @@ export interface CouponItem {
   description?: string;
 }
 
+export interface SavedAddress {
+  id: string;
+  label: 'Home' | 'Office' | 'Other' | string;
+  recipientName: string;
+  phone: string;
+  address: string;
+  district: string;
+  thana: string;
+  isDefault?: boolean;
+}
+
+export interface CustomerUser {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: 'Inside Dhaka' | 'Outside Dhaka';
+  joinedAt: string;
+  avatar?: string;
+  password?: string;
+  addresses?: SavedAddress[];
+}
+
 export interface StorePolicies {
   terms: string;
   privacy: string;
