@@ -203,7 +203,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   },
   favors: {
     badge: 'Bespoke Atelier & Concierge',
-    title: 'Custom & Bulk Orders Inquiry',
+    title: 'Custom Wedding & Event Favors',
     subtitle: 'From intimate wedding celebrations to corporate gifting and personalized handmade collections—consult directly with our atelier for tailored creations.',
     consultationBtn: 'Chat with Artisan on WhatsApp',
     whatsappNumber: '',

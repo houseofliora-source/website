@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   HeartHandshake, 
-  Sparkles, 
-  Package, 
-  ShieldCheck, 
   Send, 
   CheckCircle2, 
   Phone, 
@@ -11,10 +8,13 @@ import {
   User, 
   MessageSquare, 
   ArrowRight, 
+  ChevronLeft, 
+  ChevronRight,
   Edit3 
 } from 'lucide-react';
-import { SiteContent } from '../types';
+import { SiteContent, Product } from '../types';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
+import { INITIAL_PRODUCTS } from '../data/products';
 
 interface CustomFavorBuilderProps {
   facebookUrl?: string;
@@ -22,6 +22,8 @@ interface CustomFavorBuilderProps {
   content?: SiteContent['favors'];
   isEditMode?: boolean;
   onEdit?: (tab?: string) => void;
+  products?: Product[];
+  onSelectProduct?: (productId: string) => void;
 }
 
 export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
@@ -30,30 +32,69 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
   content = DEFAULT_SITE_CONTENT.favors,
   isEditMode = false,
   onEdit,
+  products = [],
+  onSelectProduct,
 }) => {
   // Form fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [category, setCategory] = useState('Artisanal Candles');
   const [message, setMessage] = useState('');
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Slideshow state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const slideProducts = (products && products.length > 0 ? products : INITIAL_PRODUCTS).filter(p => p.image);
+  const totalSlides = slideProducts.length;
+
+  useEffect(() => {
+    if (totalSlides <= 1 || isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % totalSlides);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [totalSlides, isPaused]);
+
+  const activeProduct = totalSlides > 0 ? slideProducts[currentSlide % totalSlides] : null;
+
+  const handlePrevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalSlides > 0) {
+      setCurrentSlide(prev => (prev - 1 + totalSlides) % totalSlides);
+    }
+  };
+
+  const handleNextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalSlides > 0) {
+      setCurrentSlide(prev => (prev + 1) % totalSlides);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (activeProduct && onSelectProduct) {
+      onSelectProduct(activeProduct.id);
+    }
+  };
+
   // WhatsApp link preparation
   const rawPhone = content.whatsappNumber || supportPhone || '01700000000';
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
   const formattedPhone = cleanPhone.startsWith('88') ? cleanPhone : `88${cleanPhone}`;
-  
-  const baseWhatsAppUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(
-    content.whatsappMessage || 'Hello House of Líora, I would like to inquire about a custom order.'
+
+  // WhatsApp formatted inquiry message with user inputs
+  const userWhatsAppUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(
+    `Hello House of Líora, I have submitted a custom order inquiry:\n\n• Name: ${name}\n• Phone: ${phone}\n• Email: ${email}\n• Requirements & Details: ${message}`
   )}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !email || !message) {
+    if (!name.trim() || !phone.trim() || !email.trim() || !message.trim()) {
       alert('Please fill in your name, phone number, email address, and order details.');
       return;
     }
@@ -69,7 +110,6 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
         name,
         phone,
         email,
-        category,
         message,
       };
       localStorage.setItem('liora_custom_inquiries', JSON.stringify([newInquiry, ...existingInquiries]));
@@ -80,11 +120,6 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
       setSubmitted(true);
     }, 600);
   };
-
-  // WhatsApp formatted inquiry message
-  const userWhatsAppUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(
-    `Hello House of Líora, I have submitted a custom order inquiry:\n\n• Name: ${name}\n• Phone: ${phone}\n• Email: ${email}\n• Category: ${category}\n• Details: ${message}`
-  )}`;
 
   return (
     <section id="custom-favors" className="py-16 md:py-24 bg-[#F5F1EB] border-b border-[#EAE0D5] relative group">
@@ -103,97 +138,117 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        {/* SECTION HEADER: Single line title */}
+        <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-14 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
+            <HeartHandshake className="w-4 h-4 text-[#C68B59]" />
+            <span>{content.badge || 'Bespoke Atelier & Concierge'}</span>
+          </div>
+
+          <h2 className="font-serif text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#24211D] font-normal leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+            {content.title || 'Custom Wedding & Event Favors'}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
           {/* ================================================================= */}
-          {/* LEFT COLUMN: Editorial Presentation, Pillars & Direct WhatsApp CTA */}
+          {/* LEFT COLUMN: Dynamic Catalog Product Slideshow Photocard          */}
           {/* ================================================================= */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 apple-glass-pill text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
-                <HeartHandshake className="w-4 h-4 text-[#C68B59]" />
-                <span>{content.badge || 'Bespoke Atelier & Concierge'}</span>
+          <div className="lg:col-span-6 flex flex-col justify-center">
+            <div 
+              onClick={handleCardClick}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              className="apple-glass-card p-2 sm:p-3 rounded-3xl overflow-hidden shadow-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:border-white w-full"
+              title={activeProduct ? `Click to view ${activeProduct.name}` : 'Explore Collection'}
+            >
+              <div className="relative rounded-2xl overflow-hidden bg-[#EAE0D5] aspect-4/3 sm:aspect-16/11 lg:aspect-4/3 w-full">
+                {activeProduct && (
+                  <>
+                    <img
+                      key={activeProduct.id}
+                      src={activeProduct.image}
+                      alt={activeProduct.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 animate-fade-in"
+                    />
+
+                    {/* Subtle Gradient Shadow for Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent pointer-events-none" />
+
+                    {/* Top Floating Category Badge */}
+                    <div className="absolute top-3 left-3 flex items-center gap-2">
+                      <span className="apple-glass-pill px-3 py-1 rounded-full text-white text-[11px] font-medium tracking-wide uppercase shadow-sm">
+                        {activeProduct.category || 'Atelier Collection'}
+                      </span>
+                    </div>
+
+                    {/* Bottom Info Bar: Product Name, Price, and Click Hint */}
+                    <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-2">
+                      <div className="apple-glass-dark px-3.5 py-1.5 rounded-full text-white flex items-center gap-2 max-w-[70%] sm:max-w-[75%] shadow-md">
+                        <span className="font-serif text-xs sm:text-sm font-medium truncate">
+                          {activeProduct.name}
+                        </span>
+                        <span className="font-mono text-xs text-[#E5A97A] font-semibold shrink-0">
+                          ৳{activeProduct.price}
+                        </span>
+                      </div>
+
+                      <div className="apple-glass-pill px-3 py-1.5 rounded-full text-white text-[11px] font-medium flex items-center gap-1 shrink-0 group-hover:bg-white group-hover:text-[#24211D] transition-colors shadow-md">
+                        <span>View Piece</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </div>
+
+                    {/* Prev / Next navigation buttons on hover */}
+                    {totalSlides > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePrevSlide}
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full apple-glass-dark text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
+                          aria-label="Previous slide"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNextSlide}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full apple-glass-dark text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
+                          aria-label="Next slide"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        {/* Dot Indicators */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 apple-glass-dark rounded-full">
+                          {slideProducts.slice(0, 6).map((_, idx) => (
+                            <span
+                              key={idx}
+                              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                                idx === currentSlide % Math.min(totalSlides, 6)
+                                  ? 'bg-amber-400 w-3'
+                                  : 'bg-white/40'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
-
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#24211D] font-normal leading-tight">
-                {content.title || 'Custom & Bulk Orders Inquiry'}
-              </h2>
-
-              <p className="text-sm sm:text-base text-[#5A5248] leading-relaxed max-w-xl font-normal">
-                {content.subtitle || 'From intimate wedding celebrations to corporate gifting and personalized handmade collections—consult directly with our atelier for tailored creations.'}
-              </p>
-            </div>
-
-            {/* 3 Luxury Pillars */}
-            <div className="space-y-3 pt-2">
-              <div className="apple-glass-card rounded-2xl p-4 border border-white/80 flex items-start gap-3.5 shadow-xs">
-                <div className="w-9 h-9 rounded-xl bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-semibold text-[#24211D]">
-                    {content.feature1Title || 'Tailored Artisanal Craft'}
-                  </h4>
-                  <p className="text-xs text-[#5A5248] mt-0.5 leading-relaxed">
-                    {content.feature1Desc || 'Custom fragrance blends, vessel aesthetics, and personalized finishes curated to match your vision.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="apple-glass-card rounded-2xl p-4 border border-white/80 flex items-start gap-3.5 shadow-xs">
-                <div className="w-9 h-9 rounded-xl bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center shrink-0">
-                  <Package className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-semibold text-[#24211D]">
-                    {content.feature2Title || 'Flexible Batch Quantities'}
-                  </h4>
-                  <p className="text-xs text-[#5A5248] mt-0.5 leading-relaxed">
-                    {content.feature2Desc || 'From intimate gatherings of 20 pieces to large-scale wedding and corporate celebrations of 500+ pieces.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="apple-glass-card rounded-2xl p-4 border border-white/80 flex items-start gap-3.5 shadow-xs">
-                <div className="w-9 h-9 rounded-xl bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-semibold text-[#24211D]">
-                    {content.feature3Title || 'Direct Atelier Support'}
-                  </h4>
-                  <p className="text-xs text-[#5A5248] mt-0.5 leading-relaxed">
-                    {content.feature3Desc || 'Direct conversation with our master crafter, fast quotation, and sample guidance before crafting.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Direct WhatsApp Instant Consultation Button */}
-            <div className="pt-2 space-y-2">
-              <a
-                href={baseWhatsAppUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full sm:w-auto px-6 py-3.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase inline-flex items-center justify-center gap-2.5 shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-              >
-                <Phone className="w-4 h-4" />
-                <span>{content.consultationBtn || 'Chat with Artisan on WhatsApp'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </a>
-              <p className="text-[11px] text-[#7A6F62] flex items-center gap-1.5 pl-1">
-                <span>⚡ Instant response · Direct artisan consultation · Custom catalog samples</span>
-              </p>
             </div>
           </div>
 
           {/* ================================================================= */}
           {/* RIGHT COLUMN: Clean Direct Contact & Message Form                 */}
           {/* ================================================================= */}
-          <div className="lg:col-span-6">
-            <div className="apple-glass-card rounded-3xl p-6 sm:p-8 border border-white/90 shadow-xl relative">
+          <div className="lg:col-span-6 flex flex-col justify-center">
+            <div className="apple-glass-card rounded-3xl p-6 sm:p-8 border border-white/90 shadow-xl relative w-full">
               {submitted ? (
                 /* SUCCESS CONFIRMATION STATE */
-                <div className="py-10 text-center space-y-5 animate-fade-in">
+                <div className="py-8 text-center space-y-5 animate-fade-in">
                   <div className="w-16 h-16 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto shadow-sm">
                     <CheckCircle2 className="w-8 h-8 text-emerald-700" />
                   </div>
@@ -206,18 +261,20 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                       Thank You, {name}!
                     </h3>
                     <p className="text-xs text-[#5A5248] max-w-sm mx-auto leading-relaxed">
-                      Your custom order request has been successfully recorded. Our atelier team will review your specifications and contact you via WhatsApp / Phone shortly.
+                      Your custom order request has been successfully recorded. Our atelier team will review your specifications and contact you shortly.
                     </p>
                   </div>
 
-                  <div className="space-y-3 pt-2 max-w-xs mx-auto">
+                  <div className="space-y-3 pt-3 max-w-sm mx-auto">
                     <a
                       href={userWhatsAppUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-full text-xs font-semibold tracking-wider uppercase block shadow-sm transition-all"
+                      className="w-full py-3.5 px-5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase inline-flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-[1.01]"
                     >
-                      Send Directly via WhatsApp Now →
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Send Directly via WhatsApp Now</span>
+                      <ArrowRight className="w-4 h-4" />
                     </a>
 
                     <button
@@ -247,41 +304,39 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     </p>
                   </div>
 
-                  {/* Name & Phone */}
+                  {/* Full Name */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-[#8C5E35]" />
+                      <span>Full Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Tanvir Fahim"
+                      className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl text-xs font-sans focus:border-[#8C5E35]"
+                    />
+                  </div>
+
+                  {/* Phone Number & Email Address (Side by Side on sm+) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-[#8C5E35]" />
-                        <span>Full Name *</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Tanvir Fahim"
-                        className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl text-xs font-sans focus:border-[#8C5E35]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-[#8C5E35]" />
-                        <span>Phone (WhatsApp) *</span>
+                        <span>Phone Number *</span>
                       </label>
                       <input
                         type="tel"
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="017XXXXXXXX"
+                        placeholder="01XXXXXXXXX"
                         className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl text-xs font-sans focus:border-[#8C5E35]"
                       />
                     </div>
-                  </div>
 
-                  {/* Email & Category */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-[#8C5E35]" />
@@ -296,27 +351,9 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                         className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl text-xs font-sans focus:border-[#8C5E35]"
                       />
                     </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
-                        <Package className="w-3.5 h-3.5 text-[#8C5E35]" />
-                        <span>Craft / Event Type</span>
-                      </label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl text-xs font-sans bg-white focus:border-[#8C5E35] cursor-pointer"
-                      >
-                        <option value="Artisanal Candles">Artisanal Candles & Favors</option>
-                        <option value="Botanical Soaps">Botanical Soaps & Bath</option>
-                        <option value="Ceramic & Homeware">Ceramic & Homeware Pieces</option>
-                        <option value="Curated Gift Hampers">Curated Gift Hampers</option>
-                        <option value="Other Custom Craft">Other Custom Project</option>
-                      </select>
-                    </div>
                   </div>
 
-                  {/* Message & Requirements */}
+                  {/* Order Details & Requirements */}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5">
                       <MessageSquare className="w-3.5 h-3.5 text-[#8C5E35]" />
@@ -324,7 +361,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     </label>
                     <textarea
                       required
-                      rows={3}
+                      rows={4}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Please specify estimated quantity (e.g. 50 pcs), event date, preferred scents or styles, or any custom ideas..."

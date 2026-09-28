@@ -86,7 +86,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [favorEditTab, setFavorEditTab] = useState<'general' | 'form' | 'pillars'>('general');
+  const [favorEditTab, setFavorEditTab] = useState<'general' | 'form' | 'slideshow' | 'pillars'>('general');
 
   // Sync external page view or product ID requests
   useEffect(() => {
@@ -1116,6 +1116,11 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             onEdit={() => {
               setActiveModal('favors');
             }}
+            products={products}
+            onSelectProduct={(id) => {
+              setPreviewProductId(id);
+              setActivePageView('product');
+            }}
           />
 
           {/* 4. Candle Care Ritual with Pencil */}
@@ -1701,7 +1706,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               {[
                 { id: 'general', label: '📝 শিরোনাম ও হোয়াটসঅ্যাপ (Titles & WhatsApp)' },
                 { id: 'form', label: '📋 ইনকোয়ারি ফর্ম (Inquiry Form)' },
-                { id: 'pillars', label: '✨ ক্রাফট পিলার ৩টি (Craft Features)' },
+                { id: 'slideshow', label: '🖼️ প্রোডাক্ট স্লাইডশো (Product Slideshow)' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1860,113 +1865,22 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </div>
               )}
 
-              {/* TAB 3: 3 Craft Pillars */}
-              {favorEditTab === 'pillars' && (
+              {/* TAB 3: Product Slideshow Showcase */}
+              {(favorEditTab === 'slideshow' || favorEditTab === 'pillars') && (
                 <div className="space-y-4">
-                  <p className="text-xs text-[#7A6F62]">
-                    সেকশনের বাম পাশে শো হওয়া ৩টি প্রধান আর্ট অ্যান্ড ক্রাফট ফিচার হাইলাইট এডিট করুন:
-                  </p>
-
-                  {/* Pillar 1 */}
-                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
+                  <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-[#24211D]">
                     <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">1</span>
-                      <span>Feature Pillar 1</span>
+                      <Sparkles className="w-4 h-4 text-[#8C5E35]" />
+                      <span>অটোমেটিক প্রোডাক্ট ফটোকার্ড স্লাইডশো:</span>
                     </span>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature1Title || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature1Title: e.target.value }
-                        })}
-                        placeholder="e.g. Tailored Artisanal Craft"
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature1Desc || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature1Desc: e.target.value }
-                        })}
-                        placeholder="e.g. Custom scents, colors, vessel styling, and personalized monogram foil tags."
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Pillar 2 */}
-                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
-                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">2</span>
-                      <span>Feature Pillar 2</span>
-                    </span>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature2Title || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature2Title: e.target.value }
-                        })}
-                        placeholder="e.g. Flexible Batch Quantities"
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature2Desc || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature2Desc: e.target.value }
-                        })}
-                        placeholder="e.g. Boutique intimate batches (20+ pcs) to grand wedding favors and corporate gifts."
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Pillar 3 */}
-                  <div className="p-3.5 bg-white border border-[#D8CEBE] rounded-xl space-y-2">
-                    <span className="font-semibold text-xs text-[#8C5E35] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-[#8C5E35] text-white flex items-center justify-center text-[10px] font-bold">3</span>
-                      <span>Feature Pillar 3</span>
-                    </span>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Title:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature3Title || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature3Title: e.target.value }
-                        })}
-                        placeholder="e.g. Direct Atelier Support"
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6F62] uppercase font-semibold block mb-0.5">Description:</label>
-                      <input
-                        type="text"
-                        value={content.favors.feature3Desc || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          favors: { ...content.favors, feature3Desc: e.target.value }
-                        })}
-                        placeholder="e.g. Dedicated artisan consultation, sample approvals, and safe delivery across Bangladesh."
-                        className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
+                    <p className="text-xs text-[#5A5248] leading-relaxed">
+                      হিরো সেকশনের মতো এই সেকশনের বাম পাশেও আপনার ওয়েবসাইটে বিদ্যমান সকল প্রোডাক্টের মূল ছবি, নাম এবং মূল্য নিয়ে একটি প্রিমিয়াম অটো-স্লাইডশো চলবে।
+                    </p>
+                    <ul className="text-xs text-[#5A5248] space-y-1 list-disc pl-4">
+                      <li>ক্যাটালগে নতুন প্রোডাক্ট যোগ করলে বা ছবি পরিবর্তন করলে এখানেও তা অটোমেটিক আপডেট হয়ে যাবে।</li>
+                      <li>ভিজিটররা যেকোনো প্রোডাক্ট কার্ডে ক্লিক করলে সরাসরি সংশ্লিষ্ট প্রোডাক্টের বিস্তারিত পেজ ওপেন হবে।</li>
+                      <li>বর্তমানে ক্যাটালগে <strong>{products.length}টি</strong> প্রোডাক্ট সক্রিয় রয়েছে।</li>
+                    </ul>
                   </div>
                 </div>
               )}

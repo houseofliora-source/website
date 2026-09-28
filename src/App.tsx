@@ -456,6 +456,8 @@ export default function App() {
               facebookUrl={storeSettings.facebookUrl}
               supportPhone={storeSettings.supportPhone}
               content={siteContent.favors}
+              products={products}
+              onSelectProduct={navigateToProduct}
             />
 
             {/* Candle Care Rituals Guide */}
