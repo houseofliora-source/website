@@ -14,6 +14,7 @@ import { CheckoutPage } from './components/CheckoutPage';
 import { CandleCareGuide } from './components/CandleCareGuide';
 import { ReviewsAndFaq } from './components/ReviewsAndFaq';
 import { Footer } from './components/Footer';
+import { PolicyModal, PolicyType } from './components/PolicyModal';
 import { Sparkles, Flame } from 'lucide-react';
 import { 
   fetchLiveProducts, 
@@ -67,6 +68,7 @@ export default function App() {
   };
 
   const [activeProductId, setActiveProductId] = useState<string | null>(getProductIdFromUrl);
+  const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
 
   const navigateToProduct = (productId: string) => {
     window.history.pushState({}, '', `/product/${productId}`);
@@ -104,6 +106,10 @@ export default function App() {
       setIsAdminRoute(isNowAdmin);
       setIsCheckoutRoute(checkIsCheckoutRoute());
       setActiveProductId(getProductIdFromUrl());
+
+      if (window.location.hash === '#terms') setActivePolicy('terms');
+      if (window.location.hash === '#privacy') setActivePolicy('privacy');
+      if (window.location.hash === '#refund') setActivePolicy('refund');
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -332,6 +338,7 @@ export default function App() {
             onOrderPlaced={handleOrderPlaced}
             onNavigateHome={navigateToHome}
             onOpenAuth={() => setIsAuthOpen(true)}
+            onOpenPolicy={setActivePolicy}
           />
         ) : activeProductId && currentProduct ? (
           <ProductDetailPage
@@ -477,6 +484,7 @@ export default function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         storeSettings={storeSettings}
         content={siteContent.footer}
+        onOpenPolicy={setActivePolicy}
       />
 
       {/* Modals & Overlays */}
@@ -516,6 +524,15 @@ export default function App() {
         onRemoveCustomFavor={handleRemoveCustomFavor}
         onClearCart={handleClearCart}
         onProceedToCheckout={navigateToCheckout}
+      />
+
+      {/* Global Policy Modal */}
+      <PolicyModal
+        isOpen={!!activePolicy}
+        type={activePolicy || 'terms'}
+        onClose={() => setActivePolicy(null)}
+        onSelectType={setActivePolicy}
+        policies={storeSettings.policies}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Product, StoreSettings } from '../types';
+import { Product, StoreSettings, CouponItem, StorePolicies } from '../types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -100,6 +100,77 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 export const PRODUCTS = INITIAL_PRODUCTS;
 
+export const DEFAULT_STORE_POLICIES: StorePolicies = {
+  terms: `Welcome to House of Líora. By accessing our boutique and placing an order, you agree to the following terms:
+
+1. Handcrafted Character
+All our candles and botanical wax pieces are individually hand-poured in small artisanal batches using 100% natural botanical soy wax and fine fragrance oils. Slight variations in finish, frosting, or hue are authentic hallmarks of organic soy wax.
+
+2. Order Confirmation & Fulfillment
+All orders placed on the website are verified by our atelier. For bKash / Nagad payments, orders are processed upon confirmation of your Transaction ID (TrxID). Custom favor batches require a minimum 50% advance before crafting commences.
+
+3. Nationwide Courier Transit
+We fulfill orders across all 64 districts in Bangladesh. Standard delivery is 24–48 hours inside Dhaka and 2–4 business days outside Dhaka.
+
+4. Pricing & Promotional Codes
+Prices are stated in Bangladeshi Taka (BDT). Legitimate coupon codes must be entered and applied during checkout prior to placing the order.`,
+
+  privacy: `House of Líora values your privacy and ensures your personal information is protected with the highest care:
+
+1. Information We Collect
+We collect necessary details including your name, contact phone number, delivery district, thana/upazila, full address, and optional email when you place an order or send an inquiry.
+
+2. How Your Data Is Used
+Your information is strictly used for preparing and delivering your order, sending courier tracking updates via SMS/Phone/WhatsApp, and addressing any questions about your pieces.
+
+3. Protection & Privacy Guarantee
+We do not sell, rent, or distribute customer details to third-party advertisers or external platforms. Payment verification details are stored securely.
+
+4. Your Rights
+You can request review or deletion of your customer order record at any time by contacting our support team via phone or email.`,
+
+  refund: `At House of Líora, every candle is crafted with love and shipped in multi-layer protective packaging:
+
+1. Transit Damage or Breakage
+If your candle arrives broken or damaged due to courier mishandling, please reach out to us within 24 hours of delivery with photos or video of the parcel. We will immediately arrange a free replacement or complete refund.
+
+2. Change of Mind Policy
+Due to the fragile and personal olfactory nature of hand-poured soy candles, we do not accept returns or refunds for change of mind once an undamaged order has been delivered.
+
+3. Refund Timeline
+Verified refunds are disbursed via bKash or Nagad within 2 to 4 business days.
+
+4. Custom & Personalized Pieces
+Bespoke favor orders with personalized names or tailored notes cannot be cancelled or refunded once production has begun, except in case of transit damage.`
+};
+
+export const DEFAULT_COUPONS: CouponItem[] = [
+  {
+    id: 'coupon-1',
+    code: 'LIORA10',
+    discount: 10,
+    type: 'percent',
+    active: true,
+    description: 'Welcome 10% discount on entire cart',
+  },
+  {
+    id: 'coupon-2',
+    code: 'EID20',
+    discount: 20,
+    type: 'percent',
+    active: true,
+    description: 'Special 20% seasonal celebration offer',
+  },
+  {
+    id: 'coupon-3',
+    code: 'MR30',
+    discount: 30,
+    type: 'percent',
+    active: true,
+    description: 'VIP Patron 30% discount',
+  }
+];
+
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   adminPasscode: 'liora2026',
   faviconUrl: '/favicon.svg',
@@ -113,6 +184,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   supportEmail: 'info.houseofliora@gmail.com',
   facebookUrl: 'https://www.facebook.com/houseofliorabd',
   instagramUrl: 'https://www.instagram.com/_liora.bd_',
+  coupons: DEFAULT_COUPONS,
+  policies: DEFAULT_STORE_POLICIES,
 };
 
 export const INITIAL_SAMPLE_ORDERS = [

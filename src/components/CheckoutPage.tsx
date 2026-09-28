@@ -20,6 +20,10 @@ import {
   FileText
 } from 'lucide-react';
 
+import { BANGLADESH_DISTRICTS, DISTRICT_THANAS } from '../data/bangladeshGeo';
+import { PolicyModal, PolicyType } from './PolicyModal';
+import { DEFAULT_COUPONS } from '../data/products';
+
 interface CheckoutPageProps {
   items: CartItem[];
   customFavors: CustomFavorItem[];
@@ -32,9 +36,8 @@ interface CheckoutPageProps {
   onOrderPlaced: (newOrder: OrderRecord) => void;
   onNavigateHome: () => void;
   onOpenAuth: () => void;
+  onOpenPolicy?: (type: 'terms' | 'privacy' | 'refund') => void;
 }
-
-import { BANGLADESH_DISTRICTS, DISTRICT_THANAS } from '../data/bangladeshGeo';
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   items,
@@ -48,7 +51,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onOrderPlaced,
   onNavigateHome,
   onOpenAuth,
+  onOpenPolicy,
 }) => {
+  const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   // Form fields
   const [customerName, setCustomerName] = useState(currentUser?.name || '');
   const [customerPhone, setCustomerPhone] = useState(currentUser?.phone || '');
@@ -132,17 +137,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setCouponError('');
     if (!code) return;
 
-    if (code === 'LIORA10' || code === 'WELCOME10') {
-      setAppliedCoupon({ code, discount: 10, type: 'percent' });
-      setCouponInput('');
-    } else if (code === 'MR30') {
-      setAppliedCoupon({ code, discount: 10, type: 'percent' });
-      setCouponInput('');
-    } else if (code === 'CANDLE50') {
-      setAppliedCoupon({ code, discount: 50, type: 'flat' });
+    const availableCoupons = (storeSettings.coupons && storeSettings.coupons.length > 0)
+      ? storeSettings.coupons
+      : DEFAULT_COUPONS;
+
+    const matched = availableCoupons.find(
+      c => c.code.trim().toUpperCase() === code && c.active !== false
+    );
+
+    if (matched) {
+      if (matched.minOrder && totalSubtotal < matched.minOrder) {
+        setCouponError(`This coupon requires a minimum order of ৳${matched.minOrder}.`);
+        return;
+      }
+      setAppliedCoupon({ 
+        code: matched.code, 
+        discount: matched.discount, 
+        type: matched.type 
+      });
       setCouponInput('');
     } else {
-      setCouponError('Invalid coupon code. Try LIORA10 or MR30');
+      setCouponError('Invalid coupon code. Please enter a valid coupon.');
     }
   };
 
@@ -556,12 +571,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     onChange={(e) => handleDistrictChange(e.target.value)}
                     className="w-full px-3.5 py-2.5 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-sans bg-white cursor-pointer"
                   >
-                    <option value="Dhaka">
-                      Dhaka (Inside Dhaka - ৳{storeSettings.deliveryFeeDhaka})
-                    </option>
+                    <option value="Dhaka">Dhaka</option>
                     {BANGLADESH_DISTRICTS.filter(d => d !== 'Dhaka').map((dist) => (
                       <option key={dist} value={dist}>
-                        {dist} (Outside Dhaka - ৳{storeSettings.deliveryFeeOutside})
+                        {dist}
                       </option>
                     ))}
                   </select>
@@ -783,19 +796,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </button>
               </div>
             )}
-
-            {/* Demo Eligible Promo Codes pill (Matching Demo Image 3) */}
-            <div className="pt-1">
-              <span className="text-[11px] text-[#7A6F62] block mb-1.5 font-medium">Eligible promo codes:</span>
-              <button
-                type="button"
-                onClick={() => handleApplyCoupon('LIORA10')}
-                className="px-3 py-1.5 border border-dashed border-[#8C5E35] bg-[#FAF8F5] hover:bg-[#EAE0D5]/50 rounded-lg text-left transition-colors cursor-pointer group"
-              >
-                <span className="font-mono text-xs font-bold text-[#8C5E35] block">LIORA10</span>
-                <span className="text-[10px] text-[#5A5248]">Flat 10% OFF</span>
-              </button>
-            </div>
           </div>
 
           {/* 7. COST SUMMARY TOTALS (Matching Demo Section 7) */}
@@ -857,9 +857,45 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               />
               <span className="leading-snug">
                 I have read and agree to the{' '}
-                <span className="text-[#8C5E35] underline font-medium">Terms and Conditions</span>,{' '}
-                <span className="text-[#8C5E35] underline font-medium">Privacy Policy</span> &amp;{' '}
-                <span className="text-[#8C5E35] underline font-medium">Refund and Return Policy</span>.
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onOpenPolicy) onOpenPolicy('terms');
+                    else setActivePolicy('terms');
+                  }}
+                  className="text-[#8C5E35] underline font-medium hover:text-[#24211D] cursor-pointer"
+                >
+                  Terms and Conditions
+                </button>
+                ,{' '}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onOpenPolicy) onOpenPolicy('privacy');
+                    else setActivePolicy('privacy');
+                  }}
+                  className="text-[#8C5E35] underline font-medium hover:text-[#24211D] cursor-pointer"
+                >
+                  Privacy Policy
+                </button>{' '}
+                &amp;{' '}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onOpenPolicy) onOpenPolicy('refund');
+                    else setActivePolicy('refund');
+                  }}
+                  className="text-[#8C5E35] underline font-medium hover:text-[#24211D] cursor-pointer"
+                >
+                  Refund and Return Policy
+                </button>
+                .
               </span>
             </label>
 
@@ -882,6 +918,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         </div>
       </form>
+
+      {/* Policy Modal fallback if opened directly inside Checkout */}
+      {activePolicy && (
+        <PolicyModal
+          isOpen={!!activePolicy}
+          type={activePolicy}
+          onClose={() => setActivePolicy(null)}
+          onSelectType={setActivePolicy}
+          policies={storeSettings.policies}
+        />
+      )}
     </div>
   );
 };

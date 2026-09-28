@@ -29,9 +29,13 @@ import {
   RefreshCw,
   Flame,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Tag,
+  FileText,
+  RotateCcw,
+  ShieldCheck
 } from 'lucide-react';
-import { Product, OrderRecord, StoreSettings, SiteContent } from '../../types';
+import { Product, OrderRecord, StoreSettings, SiteContent, CouponItem, StorePolicies } from '../../types';
 import { CustomerUser } from '../CustomerAuthModal';
 import { 
   saveProductToFirestore, 
@@ -47,7 +51,7 @@ import {
   updateSiteContentInFirestore,
   subscribeToSiteContent
 } from '../../services/firebase';
-import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../../data/products';
+import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS, DEFAULT_COUPONS, DEFAULT_STORE_POLICIES } from '../../data/products';
 import { DEFAULT_SITE_CONTENT, sanitizeSiteContent } from '../../data/defaultContent';
 import { VisualSiteEditor } from './VisualSiteEditor';
 
@@ -72,8 +76,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   const [rememberDevice, setRememberDevice] = useState<boolean>(true);
   const [showPasscode, setShowPasscode] = useState<boolean>(false);
   const [passcode, setPasscode] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [openSection, setOpenSection] = useState<'products' | 'orders' | 'customers' | 'settings' | null>(null);
+  const [openSection, setOpenSection] = useState<'products' | 'orders' | 'customers' | 'coupons' | 'policies' | 'settings' | null>(null);
+  const [newCouponCode, setNewCouponCode] = useState('');
+  const [newCouponDiscount, setNewCouponDiscount] = useState<number>(10);
+  const [newCouponType, setNewCouponType] = useState<'percent' | 'flat'>('percent');
+  const [newCouponMinOrder, setNewCouponMinOrder] = useState<number>(0);
+  const [newCouponDesc, setNewCouponDesc] = useState('');
+  const [policyTab, setPolicyTab] = useState<'terms' | 'privacy' | 'refund'>('terms');
   const [editorPageView, setEditorPageView] = useState<'home' | 'product'>('home');
   const [editorProductId, setEditorProductId] = useState<string>('');
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -483,6 +492,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
       flash('Store branding, fees, and favicon saved to Cloud successfully!');
     } else {
       flash('Failed to update store settings.', 'error');
+    }
+  };
+
+  // Coupon Management Handlers
+  const handleAddCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCouponCode.trim() || newCouponDiscount <= 0) {
+      flash('Please provide a valid coupon code and discount amount.', 'error');
+      return;
+    }
+    const cleanCode = newCouponCode.trim().toUpperCase();
+    const existing = settingsForm.coupons || DEFAULT_COUPONS;
+    if (existing.some(c => c.code.toUpperCase() === cleanCode)) {
+      flash(`Coupon ${cleanCode} already exists!`, 'error');
+      return;
+    }
+    const newItem: CouponItem = {
+      id: `coupon-${Date.now()}`,
+      code: cleanCode,
+      discount: Number(newCouponDiscount),
+      type: newCouponType,
+      active: true,
+      minOrder: newCouponMinOrder > 0 ? Number(newCouponMinOrder) : undefined,
+      description: newCouponDesc.trim() || undefined,
+    };
+    const updated = [newItem, ...existing];
+    setSettingsForm(prev => ({ ...prev, coupons: updated }));
+    setNewCouponCode('');
+    setNewCouponDesc('');
+    flash(`Coupon ${cleanCode} added to list! Remember to click "Save Coupons to Cloud".`);
+  };
+
+  const handleDeleteCoupon = (couponId: string) => {
+    const existing = settingsForm.coupons || DEFAULT_COUPONS;
+    const updated = existing.filter(c => c.id !== couponId);
+    setSettingsForm(prev => ({ ...prev, coupons: updated }));
+    flash('Coupon removed from list.');
+  };
+
+  const handleToggleCoupon = (couponId: string) => {
+    const existing = settingsForm.coupons || DEFAULT_COUPONS;
+    const updated = existing.map(c => c.id === couponId ? { ...c, active: !c.active } : c);
+    setSettingsForm(prev => ({ ...prev, coupons: updated }));
+  };
+
+  const handleSaveCoupons = async () => {
+    setLoading(true);
+    const success = await updateStoreSettingsInFirestore(settingsForm);
+    setLoading(false);
+    if (success) {
+      setSettings(settingsForm);
+      flash('Coupons & discount rules saved to Cloud successfully!');
+    } else {
+      flash('Failed to save coupons.', 'error');
+    }
+  };
+
+  const handleSavePolicies = async () => {
+    setLoading(true);
+    const success = await updateStoreSettingsInFirestore(settingsForm);
+    setLoading(false);
+    if (success) {
+      setSettings(settingsForm);
+      flash('Legal policies updated and saved to Cloud successfully!');
+    } else {
+      flash('Failed to save policies.', 'error');
     }
   };
 
@@ -1042,6 +1117,257 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          {/* ── Coupons & Promo Codes accordion item ── */}
+          <div className="border-b border-[#EAE0D5]">
+            <button
+              onClick={() => setOpenSection(openSection === 'coupons' ? null : 'coupons')}
+              className="w-full px-4 py-3 flex items-center justify-between text-xs font-medium text-[#24211D] hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-[#8C5E35]" />
+                Coupons &amp; Discount Vouchers
+                <span className="text-[#7A6F62]">({(settingsForm.coupons || DEFAULT_COUPONS).length})</span>
+              </span>
+              <ChevronDown className={`w-4 h-4 text-[#8C5E35] transition-transform ${openSection === 'coupons' ? 'rotate-180' : ''}`} />
+            </button>
+            {openSection === 'coupons' && (
+              <div className="border-t border-[#EAE0D5] p-4 sm:p-6 space-y-6">
+                <div>
+                  <h4 className="font-serif text-sm font-semibold text-[#24211D]">
+                    Manage Store Discount Coupons
+                  </h4>
+                  <p className="text-xs text-[#7A6F62] mt-0.5">
+                    এখানে আপনি আপনার ইচ্ছামতো প্রমো কোড তৈরি করতে পারবেন। কাস্টমাররা চেকআউট পেজে কোডটি বসালে সরাসরি এই ডিসকাউন্টটি পাবে।
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Create New Coupon Form */}
+                  <div className="lg:col-span-5 p-4 bg-[#FAF8F5] rounded-xl border border-[#EAE0D5] space-y-3.5">
+                    <span className="text-xs font-semibold text-[#24211D] flex items-center gap-1.5 uppercase tracking-wide">
+                      <Plus className="w-3.5 h-3.5 text-[#8C5E35]" />
+                      <span>Create New Coupon</span>
+                    </span>
+
+                    <form onSubmit={handleAddCoupon} className="space-y-3 text-xs">
+                      <div>
+                        <label className="font-medium text-[#24211D] block mb-1">Coupon Code (কুপন কোড) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newCouponCode}
+                          onChange={(e) => setNewCouponCode(e.target.value.toUpperCase())}
+                          placeholder="e.g. SUMMER15"
+                          className="w-full px-3 py-2 bg-white border border-[#D8CEBE] rounded-md uppercase font-mono font-semibold focus:border-[#8C5E35]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="font-medium text-[#24211D] block mb-1">Discount *</label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            value={newCouponDiscount}
+                            onChange={(e) => setNewCouponDiscount(Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-white border border-[#D8CEBE] rounded-md font-mono focus:border-[#8C5E35]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-medium text-[#24211D] block mb-1">Discount Type *</label>
+                          <select
+                            value={newCouponType}
+                            onChange={(e) => setNewCouponType(e.target.value as 'percent' | 'flat')}
+                            className="w-full px-3 py-2 bg-white border border-[#D8CEBE] rounded-md cursor-pointer focus:border-[#8C5E35]"
+                          >
+                            <option value="percent">Percentage (%) Off</option>
+                            <option value="flat">Flat Amount (৳) Off</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-medium text-[#24211D] block mb-1">Minimum Order Amount (৳, Optional)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={newCouponMinOrder || ''}
+                          onChange={(e) => setNewCouponMinOrder(Number(e.target.value))}
+                          placeholder="e.g. 500"
+                          className="w-full px-3 py-2 bg-white border border-[#D8CEBE] rounded-md font-mono focus:border-[#8C5E35]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-medium text-[#24211D] block mb-1">Note / Description (Optional)</label>
+                        <input
+                          type="text"
+                          value={newCouponDesc}
+                          onChange={(e) => setNewCouponDesc(e.target.value)}
+                          placeholder="e.g. Special Eid celebration discount"
+                          className="w-full px-3 py-2 bg-white border border-[#D8CEBE] rounded-md focus:border-[#8C5E35]"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 bg-[#8C5E35] hover:bg-[#734A26] text-white rounded-md font-semibold cursor-pointer shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Coupon to List</span>
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Existing Coupons List */}
+                  <div className="lg:col-span-7 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[#24211D] uppercase tracking-wide">
+                        Active &amp; Configured Coupons ({(settingsForm.coupons || DEFAULT_COUPONS).length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSaveCoupons}
+                        disabled={loading}
+                        className="px-4 py-1.5 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                      >
+                        {loading ? 'Saving...' : 'Save Coupons to Cloud'}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {(settingsForm.coupons || DEFAULT_COUPONS).map((coupon) => (
+                        <div
+                          key={coupon.id}
+                          className="p-3 bg-white rounded-xl border border-[#EAE0D5] flex items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-bold text-[#8C5E35] px-2.5 py-0.5 bg-[#FAF8F5] border border-[#EAE0D5] rounded-md">
+                                {coupon.code}
+                              </span>
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                {coupon.type === 'percent' ? `${coupon.discount}% OFF` : `৳${coupon.discount} FLAT OFF`}
+                              </span>
+                              {coupon.minOrder ? (
+                                <span className="text-[10px] text-[#7A6F62] bg-gray-100 px-1.5 py-0.5 rounded">
+                                  Min ৳{coupon.minOrder}
+                                </span>
+                              ) : null}
+                            </div>
+                            {coupon.description && (
+                              <p className="text-[11px] text-[#5A5248] pl-0.5">{coupon.description}</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCoupon(coupon.id)}
+                              className={`px-2.5 py-1 rounded text-[11px] font-semibold cursor-pointer transition-colors ${
+                                coupon.active !== false
+                                  ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {coupon.active !== false ? 'Active' : 'Disabled'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded cursor-pointer transition-colors"
+                              title="Delete Coupon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Policies accordion item ── */}
+          <div className="border-b border-[#EAE0D5]">
+            <button
+              onClick={() => setOpenSection(openSection === 'policies' ? null : 'policies')}
+              className="w-full px-4 py-3 flex items-center justify-between text-xs font-medium text-[#24211D] hover:bg-[#FAF8F5] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#8C5E35]" />
+                Store Legal Policies &amp; Terms
+                <span className="text-[#7A6F62]">(Terms · Privacy · Refund)</span>
+              </span>
+              <ChevronDown className={`w-4 h-4 text-[#8C5E35] transition-transform ${openSection === 'policies' ? 'rotate-180' : ''}`} />
+            </button>
+            {openSection === 'policies' && (
+              <div className="border-t border-[#EAE0D5] p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-serif text-sm font-semibold text-[#24211D]">
+                      Store Legal Policies &amp; Customer Agreement
+                    </h4>
+                    <p className="text-xs text-[#7A6F62] mt-0.5">
+                      চেকআউট পেজে ও ফুটারে এই পলিসিগুলোর লিংক রয়েছে। এখান থেকে আপনি নিজের মতো করে সম্পূর্ণ টেক্সট এডিট করতে পারবেন।
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSavePolicies}
+                    disabled={loading}
+                    className="px-4 py-2 bg-[#24211D] hover:bg-[#3D3730] text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs transition-colors shrink-0"
+                  >
+                    {loading ? 'Saving...' : 'Save Policies to Cloud'}
+                  </button>
+                </div>
+
+                {/* Policy Tabs */}
+                <div className="flex border-b border-[#EAE0D5] gap-2 pt-2">
+                  {[
+                    { id: 'terms' as const, label: '📜 Terms and Conditions (শর্তাবলী)' },
+                    { id: 'privacy' as const, label: '🛡️ Privacy Policy (গোপনীয়তা)' },
+                    { id: 'refund' as const, label: '🔄 Refund & Return Policy (রিফান্ড)' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setPolicyTab(tab.id)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-t-md transition-colors cursor-pointer ${
+                        policyTab === tab.id
+                          ? 'bg-[#24211D] text-white shadow-xs'
+                          : 'text-[#5A5248] hover:bg-[#FAF8F5]'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Policy Editor Textarea */}
+                <div>
+                  <textarea
+                    rows={12}
+                    value={settingsForm.policies?.[policyTab] ?? DEFAULT_STORE_POLICIES[policyTab]}
+                    onChange={(e) => {
+                      const updatedPolicies = {
+                        ...(settingsForm.policies || DEFAULT_STORE_POLICIES),
+                        [policyTab]: e.target.value,
+                      };
+                      setSettingsForm({ ...settingsForm, policies: updatedPolicies });
+                    }}
+                    placeholder={`Write your ${policyTab} policy here...`}
+                    className="w-full p-4 bg-white border border-[#D8CEBE] rounded-xl text-xs sm:text-sm font-sans leading-relaxed focus:outline-none focus:border-[#8C5E35]"
+                  />
+                </div>
               </div>
             )}
           </div>

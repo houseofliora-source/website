@@ -75,6 +75,22 @@ export interface OrderRecord {
   discountAmount?: number;
 }
 
+export interface CouponItem {
+  id: string;
+  code: string;
+  discount: number;
+  type: 'percent' | 'flat';
+  active: boolean;
+  minOrder?: number;
+  description?: string;
+}
+
+export interface StorePolicies {
+  terms: string;
+  privacy: string;
+  refund: string;
+}
+
 export interface StoreSettings {
   adminPasscode?: string;
   faviconUrl?: string;
@@ -88,6 +104,8 @@ export interface StoreSettings {
   supportEmail: string;
   facebookUrl: string;
   instagramUrl: string;
+  coupons?: CouponItem[];
+  policies?: StorePolicies;
 }
 
 export interface SiteTheme {

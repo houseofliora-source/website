@@ -9,6 +9,7 @@ interface FooterProps {
   content?: SiteContent['footer'];
   isEditMode?: boolean;
   onEdit?: () => void;
+  onOpenPolicy?: (type: 'terms' | 'privacy' | 'refund') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -17,6 +18,7 @@ export const Footer: React.FC<FooterProps> = ({
   content = DEFAULT_SITE_CONTENT.footer,
   isEditMode = false,
   onEdit,
+  onOpenPolicy,
 }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -117,13 +119,47 @@ export const Footer: React.FC<FooterProps> = ({
               <p>{content.paymentPolicy}</p>
               <p>✨ Minimum Order: ৳{storeSettings.minimumOrder} · Custom Orders: 50% Advance</p>
               <p>✉️ Inquiries: {storeSettings.supportEmail}</p>
+              <div className="pt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#C68B59]">
+                <button
+                  type="button"
+                  onClick={() => onOpenPolicy?.('terms')}
+                  className="hover:text-white underline cursor-pointer transition-colors"
+                >
+                  Terms &amp; Conditions
+                </button>
+                <span className="text-[#5A5248]">·</span>
+                <button
+                  type="button"
+                  onClick={() => onOpenPolicy?.('privacy')}
+                  className="hover:text-white underline cursor-pointer transition-colors"
+                >
+                  Privacy Policy
+                </button>
+                <span className="text-[#5A5248]">·</span>
+                <button
+                  type="button"
+                  onClick={() => onOpenPolicy?.('refund')}
+                  className="hover:text-white underline cursor-pointer transition-colors"
+                >
+                  Refund &amp; Return Policy
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-[#38322B] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#877E71]">
-          <p>© {new Date().getFullYear()} {content.copyright}</p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <p>© {new Date().getFullYear()} {content.copyright}</p>
+            <div className="flex items-center gap-2 text-[11px] text-[#A89E90]">
+              <button type="button" onClick={() => onOpenPolicy?.('terms')} className="hover:text-white underline cursor-pointer">Terms</button>
+              <span>·</span>
+              <button type="button" onClick={() => onOpenPolicy?.('privacy')} className="hover:text-white underline cursor-pointer">Privacy</button>
+              <span>·</span>
+              <button type="button" onClick={() => onOpenPolicy?.('refund')} className="hover:text-white underline cursor-pointer">Refund &amp; Returns</button>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <button
