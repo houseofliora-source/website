@@ -1,12 +1,14 @@
-import React from 'react';
-import { ArrowRight, Flame, ShieldCheck, Truck, Sparkles, Edit3 } from 'lucide-react';
-import { SiteContent } from '../types';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Flame, ShieldCheck, Truck, Sparkles, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SiteContent, Product } from '../types';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
 interface HeroProps {
   onExplore: () => void;
   onOpenCustomFavors: () => void;
   content?: SiteContent['hero'];
+  products?: Product[];
+  onSelectProduct?: (productId: string) => void;
   isEditMode?: boolean;
   onEdit?: (sectionKey: string) => void;
 }
@@ -15,9 +17,50 @@ export const Hero: React.FC<HeroProps> = ({
   onExplore,
   onOpenCustomFavors,
   content = DEFAULT_SITE_CONTENT.hero,
+  products = [],
+  onSelectProduct,
   isEditMode = false,
   onEdit,
 }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Products with valid images
+  const slideProducts = products.filter(p => p.image);
+  const totalSlides = slideProducts.length;
+
+  useEffect(() => {
+    if (totalSlides <= 1 || isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % totalSlides);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [totalSlides, isPaused]);
+
+  const activeProduct = totalSlides > 0 ? slideProducts[currentSlide % totalSlides] : null;
+
+  const handlePrevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalSlides > 0) {
+      setCurrentSlide(prev => (prev - 1 + totalSlides) % totalSlides);
+    }
+  };
+
+  const handleNextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalSlides > 0) {
+      setCurrentSlide(prev => (prev + 1) % totalSlides);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (activeProduct && onSelectProduct) {
+      onSelectProduct(activeProduct.id);
+    } else {
+      onExplore();
+    }
+  };
+
   return (
     <section className="relative overflow-hidden border-b border-[#EAE0D5]/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 md:py-20 lg:py-24">
@@ -67,45 +110,98 @@ export const Hero: React.FC<HeroProps> = ({
                 <span>{content.btnSecondary}</span>
               </button>
             </div>
-
-            {/* Quiet Editorial Proof adjacency - Apple Liquid Cards */}
-            <div className="pt-4 border-t border-[#EAE0D5]/70 grid grid-cols-3 gap-2 sm:gap-3 text-[#5A5248]">
-              <div className="min-w-0 apple-glass-card rounded-xl p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] sm:text-[11px] uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge1Label}</p>
-                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate mt-0.5">{content.badge1Value}</p>
-              </div>
-              <div className="min-w-0 apple-glass-card rounded-xl p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] sm:text-[11px] uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge2Label}</p>
-                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate mt-0.5">{content.badge2Value}</p>
-              </div>
-              <div className="min-w-0 apple-glass-card rounded-xl p-2.5 sm:p-3 text-center">
-                <p className="text-[10px] sm:text-[11px] uppercase text-[#8C5E35] font-semibold tracking-wider truncate">{content.badge3Label}</p>
-                <p className="text-xs sm:text-sm font-medium text-[#24211D] truncate mt-0.5">{content.badge3Value}</p>
-              </div>
-            </div>
           </div>
 
-          {/* Right Column: Hero Visual Display */}
+          {/* Right Column: Dynamic Catalog Product Slideshow */}
           <div className="lg:col-span-6 relative">
-            <div className="apple-glass-card p-1.5 sm:p-2 rounded-2xl overflow-hidden shadow-xl">
-              <div className="relative rounded-xl overflow-hidden bg-[#EAE0D5]">
-                <img
-                  src={content.heroImage || '/images/hero_artisan_candles_1790333552254.jpg'}
-                  alt="House of Líora artisanal soy wax candles studio collection"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-auto aspect-16/9 sm:aspect-4/3 object-cover hover:scale-[1.01] transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
+            <div 
+              onClick={handleCardClick}
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              className="apple-glass-card p-2 sm:p-2.5 rounded-3xl overflow-hidden shadow-xl cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:border-white"
+              title={activeProduct ? `Click to view ${activeProduct.name}` : 'Explore Collection'}
+            >
+              <div className="relative rounded-2xl overflow-hidden bg-[#EAE0D5] aspect-16/10 sm:aspect-4/3">
+                {activeProduct ? (
+                  <>
+                    <img
+                      key={activeProduct.id}
+                      src={activeProduct.image}
+                      alt={activeProduct.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 animate-fade-in"
+                    />
 
-                {/* Apple Liquid Glass Overlay Labels */}
-                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between text-white text-xs">
-                  <span className="font-serif italic text-sm sm:text-base drop-shadow-sm px-3 py-1 apple-glass-dark rounded-full">
-                    {content.floatingTitle}
-                  </span>
-                  <span className="apple-glass-pill text-white px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-sans font-medium">
-                    {content.floatingTag}
-                  </span>
-                </div>
+                    {/* Subtle Gradient Shadow for Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+
+                    {/* Bottom Info Bar: Product Name, Price, and Click Hint */}
+                    <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-2">
+                      <div className="apple-glass-dark px-3.5 py-1.5 rounded-full text-white flex items-center gap-2 max-w-[75%] shadow-md">
+                        <span className="font-serif text-xs sm:text-sm font-medium truncate">
+                          {activeProduct.name}
+                        </span>
+                        <span className="font-mono text-xs text-[#E5A97A] font-semibold shrink-0">
+                          ৳{activeProduct.price}
+                        </span>
+                      </div>
+
+                      <div className="apple-glass-pill px-3 py-1.5 rounded-full text-white text-[11px] font-medium flex items-center gap-1 shrink-0 group-hover:bg-white group-hover:text-[#24211D] transition-colors shadow-md">
+                        <span>View Piece</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </div>
+
+                    {/* Controls (visible on hover) */}
+                    {totalSlides > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePrevSlide}
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full apple-glass-dark text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer shadow-md hover:scale-110"
+                          aria-label="Previous candle"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleNextSlide}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full apple-glass-dark text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer shadow-md hover:scale-110"
+                          aria-label="Next candle"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        {/* Slide Indicators Dots */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 apple-glass-dark px-2.5 py-1 rounded-full shadow-xs">
+                          {slideProducts.map((_, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentSlide(idx);
+                              }}
+                              className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                (currentSlide % totalSlides) === idx
+                                  ? 'w-4 bg-white'
+                                  : 'w-1.5 bg-white/40 hover:bg-white/70'
+                              }`}
+                              aria-label={`Go to slide ${idx + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <img
+                    src={content.heroImage || '/images/hero_artisan_candles_1790333552254.jpg'}
+                    alt="House of Líora artisanal soy wax candles"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -913,60 +913,32 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                     <span>{content.hero.btnSecondary}</span>
                   </button>
                 </div>
-
-                {/* Proof badges */}
-                <div className="pt-3 border-t border-[#EAE0D5] grid grid-cols-3 gap-2 text-[#5A5248]">
-                  <div>
-                    <p className="text-[10px] uppercase text-[#8C5E35] font-semibold">{content.hero.badge1Label}</p>
-                    <p className="text-xs font-medium text-[#24211D]">{content.hero.badge1Value}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase text-[#8C5E35] font-semibold">{content.hero.badge2Label}</p>
-                    <p className="text-xs font-medium text-[#24211D]">{content.hero.badge2Value}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase text-[#8C5E35] font-semibold">{content.hero.badge3Label}</p>
-                    <p className="text-xs font-medium text-[#24211D]">{content.hero.badge3Value}</p>
-                  </div>
-                </div>
               </div>
 
-              {/* Right Column: Hero Photo */}
-              <div className="lg:col-span-5 relative group border-2 border-dashed border-amber-600/30 hover:border-amber-600 p-2 rounded-lg transition-all">
-                {isEditMode && (
-                  <button
-                    onClick={() => heroImageInputRef.current?.click()}
-                    className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-[#8C5E35] hover:bg-[#24211D] text-white text-xs rounded-full flex items-center gap-1.5 shadow-md cursor-pointer border border-white/40"
-                  >
-                    <Upload className="w-3 h-3" />
-                    <span>Change Photo</span>
-                  </button>
-                )}
-                <input
-                  ref={heroImageInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleHeroImageUpload}
-                  className="hidden"
-                />
-
-                <div className="rounded-lg overflow-hidden border border-[#EAE0D5] relative aspect-4/3 bg-[#EAE0D5]">
+              {/* Right Column: Dynamic Live Product Slideshow Preview */}
+              <div className="lg:col-span-5 relative group border-2 border-dashed border-[#8C5E35]/40 hover:border-[#8C5E35] p-2 rounded-2xl transition-all bg-white/30">
+                <div className="rounded-xl overflow-hidden border border-[#EAE0D5] relative aspect-4/3 bg-[#EAE0D5]">
                   <img
-                    src={content.hero.heroImage || '/images/hero_artisan_candles_1790333552254.jpg'}
-                    alt="Hero Studio Banner"
+                    src={products[0]?.image || content.hero.heroImage || '/images/hero_artisan_candles_1790333552254.jpg'}
+                    alt="Hero Dynamic Slideshow Preview"
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                  {/* Dynamic Product Indicator Bar */}
                   <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs drop-shadow-md">
-                    <span 
-                      className="italic text-sm"
-                      style={{ fontFamily: `'${content.theme.headingFont || 'Cormorant Garamond'}', serif` }}
-                    >
-                      {content.hero.floatingTitle}
+                    <span className="font-serif italic text-sm truncate max-w-[70%] bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                      {products[0]?.name || 'Live Catalog Piece'} · ৳{products[0]?.price || 320}
                     </span>
-                    <span className="bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded text-[10px]">
-                      {content.hero.floatingTag}
+                    <span className="bg-[#8C5E35] text-white px-2.5 py-1 rounded-full text-[10px] font-medium shadow-xs">
+                      View Piece →
                     </span>
                   </div>
+
+                  <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-sans flex items-center gap-1.5 border border-white/20">
+                    <Sparkles className="w-3 h-3 text-[#E5A97A]" />
+                    <span>Auto-Slideshow ({products.length} Products)</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -1660,44 +1632,15 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </div>
               </div>
 
-              {/* Badges */}
-              <div className="pt-2 border-t border-[#EAE0D5] grid grid-cols-3 gap-2">
-                <div>
-                  <label className="font-medium text-[#7A6F62] block mb-1 text-[11px]">Badge 1 Value:</label>
-                  <input
-                    type="text"
-                    value={content.hero.badge1Value}
-                    onChange={e => setContent({
-                      ...content,
-                      hero: { ...content.hero, badge1Value: e.target.value }
-                    })}
-                    className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="font-medium text-[#7A6F62] block mb-1 text-[11px]">Badge 2 Value:</label>
-                  <input
-                    type="text"
-                    value={content.hero.badge2Value}
-                    onChange={e => setContent({
-                      ...content,
-                      hero: { ...content.hero, badge2Value: e.target.value }
-                    })}
-                    className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="font-medium text-[#7A6F62] block mb-1 text-[11px]">Badge 3 Value:</label>
-                  <input
-                    type="text"
-                    value={content.hero.badge3Value}
-                    onChange={e => setContent({
-                      ...content,
-                      hero: { ...content.hero, badge3Value: e.target.value }
-                    })}
-                    className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                  />
-                </div>
+              {/* Dynamic Slideshow Notice */}
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
+                  <span>লাইভ প্রোডাক্ট স্লাইডশো সিস্টেম:</span>
+                </p>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  হিরো সেকশনের ফটোটি এখন স্বয়ংক্রিয়ভাবে আপনার ক্যাটালগের সব প্রোডাক্টের ছবি একটার পর একটা স্লাইডশো আকারে প্রদর্শন করে। কোনো ভিজিটর ছবিতে ক্লিক করলেই সরাসরি সেই নির্দিষ্ট প্রোডাক্টের পেজে নিয়ে যায়।
+                </p>
               </div>
 
               {/* Trust Ribbon (Image 3 bar under hero) */}

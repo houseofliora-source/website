@@ -375,6 +375,8 @@ export default function App() {
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
               content={siteContent.hero}
+              products={products}
+              onSelectProduct={navigateToProduct}
             />
 
             {/* Featured Collection Section */}
