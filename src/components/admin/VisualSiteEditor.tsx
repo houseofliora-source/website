@@ -79,7 +79,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [activePageView, setActivePageView] = useState<'home' | 'product'>(initialPageView || 'home');
   const [previewProductId, setPreviewProductId] = useState<string>(() => initialProductId || products[0]?.id || '');
-  const [productPageEditTab, setProductPageEditTab] = useState<'guarantees' | 'tabs' | 'story' | 'rituals' | 'suggestions'>('guarantees');
+  const [productPageEditTab, setProductPageEditTab] = useState<'details' | 'suggestions'>('details');
   const [isEditMode, setIsEditMode] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -740,7 +740,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 className="px-3 py-1.5 bg-[#38322B] hover:bg-[#473F37] text-white border border-[#4D453C] rounded text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Settings className="w-3.5 h-3.5 text-[#E5A97A]" />
-                <span>Edit Guarantees & Tabs</span>
+                <span>Product Page Settings</span>
               </button>
 
               <button
@@ -3782,10 +3782,10 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               <div>
                 <h3 className="font-serif text-xl text-[#24211D] flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-[#8C5E35]" />
-                  <span>Product Detail Page Template & Guarantees</span>
+                  <span>Product Detail Page Settings</span>
                 </h3>
                 <p className="text-xs text-[#7A6F62]">
-                  প্রোডাক্ট ডিটেইল পেজের পলিসি, ডেলিভারি গ্যারান্টি, বিস্তারিত ট্যাব ও কেয়ার রিচুয়াল টেক্সট এডিট করুন।
+                  প্রোডাক্ট পেজের 'Product Details' সেকশন শিরোনাম এবং পেয়ারিংস / সাজেশন্স টেক্সট এডিট করুন।
                 </p>
               </div>
               <button
@@ -3799,11 +3799,8 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             {/* Sub-tabs inside modal */}
             <div className="flex border-b border-[#EAE0D5] bg-white px-4 pt-2 gap-2 overflow-x-auto">
               {[
-                { id: 'guarantees', label: '1. Service Guarantees' },
-                { id: 'tabs', label: '2. Tab Titles' },
-                { id: 'story', label: '3. Story & Philosophy' },
-                { id: 'rituals', label: '4. Care Rituals (1-4)' },
-                { id: 'suggestions', label: '5. Suggestions Rail' },
+                { id: 'details', label: '1. Product Details Section' },
+                { id: 'suggestions', label: '2. Pairings & Suggestions' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -3821,335 +3818,34 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              {/* Tab 1: Guarantees */}
-              {productPageEditTab === 'guarantees' && (
+              {/* Tab 1: Product Details Section */}
+              {productPageEditTab === 'details' && (
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="font-medium text-[#24211D] flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5 text-[#8C5E35]" />
-                      <span>Nationwide Courier Delivery Promise:</span>
+                    <label className="font-medium text-[#24211D] block">
+                      Product Details Section Heading:
                     </label>
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.courierGuarantee || ''}
+                    <input
+                      type="text"
+                      value={content.productPage?.detailsHeading || 'Product Details'}
                       onChange={e => setContent({
                         ...content,
                         productPage: {
                           ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          courierGuarantee: e.target.value
+                          detailsHeading: e.target.value
                         }
                       })}
                       className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs focus:outline-none focus:border-[#8C5E35]"
-                      placeholder="e.g. Nationwide Courier: Dhaka ৳70 (24-48 hrs), Outside Dhaka ৳130 (2-4 days)."
+                      placeholder="Product Details"
                     />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-medium text-[#24211D] flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#8C5E35]" />
-                      <span>Payment Security & Methods Promise:</span>
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.paymentGuarantee || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          paymentGuarantee: e.target.value
-                        }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs focus:outline-none focus:border-[#8C5E35]"
-                      placeholder="e.g. Payment Security: Cash on Delivery (COD) & Verified bKash/Nagad available."
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-medium text-[#24211D] flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5 text-[#8C5E35]" />
-                      <span>Pure Craftsmanship & Wax Formulation Promise:</span>
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.craftGuarantee || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          craftGuarantee: e.target.value
-                        }
-                      })}
-                      className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs focus:outline-none focus:border-[#8C5E35]"
-                      placeholder="e.g. Pure Craftsmanship: 100% botanical soy wax, no petroleum paraffin, soot-free burn."
-                    />
+                    <p className="text-[11px] text-[#7A6F62]">
+                      ক্যান্ডেল পেজের নিচের ডিটেইলস সেকশনের মূল শিরোনাম (ডিফল্ট: Product Details)।
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Tab 2: Tab Titles */}
-              {productPageEditTab === 'tabs' && (
-                <div className="space-y-3">
-                  <p className="text-[11px] text-[#7A6F62]">
-                    প্রোডাক্ট পেজের নিচে থাকা ৪টি প্রধান ট্যাবের শিরোনাম:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-medium text-[#24211D] block mb-1">Tab 1 Label (Story):</label>
-                      <input
-                        type="text"
-                        value={content.productPage?.tab1Label || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          productPage: {
-                            ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                            tab1Label: e.target.value
-                          }
-                        })}
-                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-medium text-[#24211D] block mb-1">Tab 2 Label (Fragrance):</label>
-                      <input
-                        type="text"
-                        value={content.productPage?.tab2Label || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          productPage: {
-                            ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                            tab2Label: e.target.value
-                          }
-                        })}
-                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-medium text-[#24211D] block mb-1">Tab 3 Label (Rituals):</label>
-                      <input
-                        type="text"
-                        value={content.productPage?.tab3Label || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          productPage: {
-                            ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                            tab3Label: e.target.value
-                          }
-                        })}
-                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-medium text-[#24211D] block mb-1">Tab 4 Label (Specifications):</label>
-                      <input
-                        type="text"
-                        value={content.productPage?.tab4Label || ''}
-                        onChange={e => setContent({
-                          ...content,
-                          productPage: {
-                            ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                            tab4Label: e.target.value
-                          }
-                        })}
-                        className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 3: Story & Philosophy */}
-              {productPageEditTab === 'story' && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="font-medium text-[#24211D] block mb-1">
-                      Philosophy Section Heading (Use {'{name}'} for candle name):
-                    </label>
-                    <input
-                      type="text"
-                      value={content.productPage?.philosophyTitle || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          philosophyTitle: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      placeholder="The Philosophy Behind {name}"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[#24211D] block mb-1">Brand Craft Story Paragraph 1:</label>
-                    <textarea
-                      rows={3}
-                      value={content.productPage?.philosophyStory1 || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          philosophyStory1: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[#24211D] block mb-1">Wax & Pure Fragrance Story Paragraph 2:</label>
-                    <textarea
-                      rows={3}
-                      value={content.productPage?.philosophyStory2 || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          philosophyStory2: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[#24211D] block mb-1">Olfactory Pyramid Subtitle:</label>
-                    <input
-                      type="text"
-                      value={content.productPage?.olfactorySubtitle || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          olfactorySubtitle: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 4: Candle Care Rituals (1-4) */}
-              {productPageEditTab === 'rituals' && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="font-medium text-[#24211D] block mb-1">Rituals Section Title:</label>
-                    <input
-                      type="text"
-                      value={content.productPage?.careRitualsTitle || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: {
-                          ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT),
-                          careRitualsTitle: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs font-semibold"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                    <span className="text-[11px] font-semibold text-[#8C5E35]">Step 1 (First Burn):</span>
-                    <input
-                      type="text"
-                      value={content.productPage?.ritual1Title || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual1Title: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-medium"
-                      placeholder="Title"
-                    />
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.ritual1Text || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual1Text: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                      placeholder="Instructions"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                    <span className="text-[11px] font-semibold text-[#8C5E35]">Step 2 (Trim the Wick):</span>
-                    <input
-                      type="text"
-                      value={content.productPage?.ritual2Title || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual2Title: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-medium"
-                      placeholder="Title"
-                    />
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.ritual2Text || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual2Text: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                      placeholder="Instructions"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                    <span className="text-[11px] font-semibold text-[#8C5E35]">Step 3 (Sculptural Placement):</span>
-                    <input
-                      type="text"
-                      value={content.productPage?.ritual3Title || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual3Title: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-medium"
-                      placeholder="Title"
-                    />
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.ritual3Text || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual3Text: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                      placeholder="Instructions"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg border border-[#EAE0D5] space-y-2">
-                    <span className="text-[11px] font-semibold text-[#8C5E35]">Step 4 (Extinguish with Grace):</span>
-                    <input
-                      type="text"
-                      value={content.productPage?.ritual4Title || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual4Title: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs font-medium"
-                      placeholder="Title"
-                    />
-                    <textarea
-                      rows={2}
-                      value={content.productPage?.ritual4Text || ''}
-                      onChange={e => setContent({
-                        ...content,
-                        productPage: { ...(content.productPage || DEFAULT_PRODUCT_PAGE_CONTENT), ritual4Text: e.target.value }
-                      })}
-                      className="w-full p-1.5 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                      placeholder="Instructions"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 5: Suggestions Rail */}
+              {/* Tab 2: Suggestions Rail */}
               {productPageEditTab === 'suggestions' && (
                 <div className="space-y-3">
                   <div>
@@ -4165,7 +3861,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                         }
                       })}
                       className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs font-semibold"
-                      placeholder="You May Also Adore"
+                      placeholder="Complete Your Living Sanctuary"
                     />
                   </div>
 
@@ -4182,7 +3878,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                         }
                       })}
                       className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs leading-relaxed"
-                      placeholder="Handcrafted artisanal pieces curated to complement your olfactory sanctuary."
+                      placeholder="Complementary artisanal silhouettes and botanical aromas hand-poured in micro-batches."
                     />
                   </div>
                 </div>

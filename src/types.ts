@@ -195,6 +195,7 @@ export interface ProductPageContent {
   ritual3Text: string;
   ritual4Title: string;
   ritual4Text: string;
+  detailsHeading?: string;
   relatedHeading: string;
   relatedSubtitle: string;
 }

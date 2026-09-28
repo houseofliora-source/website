@@ -21,6 +21,7 @@ export const DEFAULT_PRODUCT_PAGE_CONTENT: ProductPageContent = {
   ritual3Text: 'For pillar & bubble shapes, place on a heat-resistant tray or ceramic dish to collect natural wax teardrops.',
   ritual4Title: 'Extinguish with Grace',
   ritual4Text: 'Use a candle snuffer or gently dip the wick into the wax pool to prevent lingering smoke.',
+  detailsHeading: 'Product Details',
   relatedHeading: 'Complete Your Living Sanctuary',
   relatedSubtitle: 'Complementary artisanal silhouettes and botanical aromas hand-poured in micro-batches.',
 };

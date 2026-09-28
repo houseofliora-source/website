@@ -4,17 +4,11 @@ import { DEFAULT_PRODUCT_PAGE_CONTENT } from '../data/defaultContent';
 import { 
   ArrowLeft, 
   ShoppingBag, 
-  Flame, 
-  Clock, 
   Sparkles, 
-  ShieldCheck, 
-  Truck, 
   Check, 
   ChevronRight,
   Heart,
   Share2,
-  Droplets,
-  Wind,
   Edit3
 } from 'lucide-react';
 
@@ -50,7 +44,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   );
   const [added, setAdded] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [activeTab, setActiveTab] = useState<'description' | 'notes' | 'rituals' | 'specs'>('description');
 
   // Scroll to top whenever the product changes
   useEffect(() => {
@@ -158,40 +151,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </span>
             )}
           </div>
-
-          {/* Quick Specifications Pods */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-[#5A5248]">
-            <div className="apple-glass-card rounded-xl p-3 flex flex-col items-center text-center gap-1">
-              <Flame className="w-4 h-4 text-[#8C5E35]" />
-              <span className="text-[10px] uppercase tracking-wider text-[#7A6F62]">Burn Time</span>
-              <span className="font-semibold text-[#24211D] text-[11px] truncate">{product.burnTime || '20-25 Hours'}</span>
-            </div>
-            <div className="apple-glass-card rounded-xl p-3 flex flex-col items-center text-center gap-1">
-              <Clock className="w-4 h-4 text-[#8C5E35]" />
-              <span className="text-[10px] uppercase tracking-wider text-[#7A6F62]">Dimensions</span>
-              <span className="font-semibold text-[#24211D] text-[11px] truncate">{product.dimensions || 'Handcrafted'}</span>
-            </div>
-            <div className="apple-glass-card rounded-xl p-3 flex flex-col items-center text-center gap-1">
-              <Droplets className="w-4 h-4 text-[#8C5E35]" />
-              <span className="text-[10px] uppercase tracking-wider text-[#7A6F62]">Wax Formulation</span>
-              <span className="font-semibold text-[#24211D] text-[11px] truncate">100% Botanical Soy</span>
-            </div>
-            <div className="apple-glass-card rounded-xl p-3 flex flex-col items-center text-center gap-1">
-              <Wind className="w-4 h-4 text-[#8C5E35]" />
-              <span className="text-[10px] uppercase tracking-wider text-[#7A6F62]">Braided Wick</span>
-              <span className="font-semibold text-[#24211D] text-[11px] truncate">Lead-Free Cotton</span>
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Title, Price, Variants, and Purchase Controls (6-7 cols) */}
         <div className="lg:col-span-6 space-y-6">
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="apple-glass-pill px-3 py-1 text-[10px] tracking-[0.25em] font-sans uppercase text-[#8C5E35] font-semibold inline-block">
-                {product.category} COLLECTION
-              </span>
-              {isEditMode && onEditProduct && (
+            {isEditMode && onEditProduct && (
+              <div className="flex justify-end pb-1">
                 <button
                   type="button"
                   onClick={() => onEditProduct(product)}
@@ -201,8 +167,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit Candle Info</span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-[#24211D] leading-tight">
               {product.name}
@@ -224,14 +190,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               )}
             </div>
-
-            {/* Stock Indicator */}
-            <div className="flex items-center gap-2 pt-1 text-xs">
-              <span className={`w-2.5 h-2.5 rounded-full ${isOutOfStock ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
-              <span className={`font-medium ${isOutOfStock ? 'text-red-700' : 'text-emerald-800'}`}>
-                {isOutOfStock ? 'Currently Sold Out · Back-orders on request' : 'In Stock · Handcrafted in Dhaka'}
-              </span>
-            </div>
           </div>
 
           <div className="h-px bg-[#EAE0D5]/80" />
@@ -244,11 +202,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* Fragrance / Scent Notes Selection */}
           {product.scentNotes && product.scentNotes.length > 0 && (
             <div className="space-y-2.5 pt-2">
-              <div className="flex items-center justify-between text-xs">
+              <div className="text-xs">
                 <label className="font-semibold text-[#24211D] uppercase tracking-wider">
                   Select Fragrance Note / Aroma Profile:
                 </label>
-                <span className="text-[#8C5E35] font-serif italic text-sm">{selectedNote}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {product.scentNotes.map((note) => (
@@ -336,168 +293,60 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </button>
             )}
           </div>
-
-          {/* Artisanal Service Guarantees */}
-          <div className="apple-glass-card rounded-2xl p-4 sm:p-5 space-y-3 text-xs text-[#5A5248] relative group">
-            {isEditMode && onEditPageSettings && (
-              <button
-                type="button"
-                onClick={onEditPageSettings}
-                className="absolute top-3 right-3 px-2.5 py-1 bg-[#8C5E35] hover:bg-[#A36E3F] text-white rounded-md text-[11px] font-medium flex items-center gap-1 cursor-pointer shadow-xs transition-colors"
-                title="Edit Product Page Guarantees"
-              >
-                <Edit3 className="w-3 h-3" />
-                <span>Edit Guarantees</span>
-              </button>
-            )}
-            <div className="flex items-center gap-3 pr-24 sm:pr-0">
-              <Truck className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span>{content.courierGuarantee}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span>{content.paymentGuarantee}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Flame className="w-4 h-4 text-[#8C5E35] shrink-0" />
-              <span>{content.craftGuarantee}</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Structured Details & Candle Rituals Section */}
+      {/* Product Details Section */}
       <div className="space-y-6 pt-8 border-t border-[#EAE0D5]/80">
-        {/* Tab Headers */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE0D5] pb-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { id: 'description', label: content.tab1Label || 'Artisanal Story & Details' },
-              { id: 'notes', label: content.tab2Label || 'Fragrance Architecture' },
-              { id: 'rituals', label: content.tab3Label || 'Burn Rituals & Care' },
-              { id: 'specs', label: content.tab4Label || 'Craft Specifications' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'apple-glass-dark text-white shadow-xs'
-                    : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#24211D]">
+            {content.detailsHeading || 'Product Details'}
+          </h2>
           {isEditMode && onEditPageSettings && (
             <button
               type="button"
               onClick={onEditPageSettings}
-              className="px-3 py-1.5 bg-[#8C5E35] hover:bg-[#A36E3F] text-white rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              className="apple-glass-pill px-3 py-1 text-xs text-[#8C5E35] font-semibold hover:bg-white inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-all border border-[#8C5E35]/40"
+              title="Edit Product Page Settings"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Tabs & Rituals</span>
+              <span>Edit Details Settings</span>
             </button>
           )}
         </div>
 
-        {/* Tab Content Panes */}
-        <div className="apple-glass-card rounded-3xl p-6 sm:p-8 text-sm leading-relaxed text-[#5A5248]">
-          {activeTab === 'description' && (
-            <div className="space-y-4 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">
-                {(content.philosophyTitle || 'The Philosophy Behind {name}').replace('{name}', product.name)}
+        <div className="apple-glass-card rounded-3xl p-6 sm:p-8 space-y-6 text-[#5A5248]">
+          {/* Main Description */}
+          {product.description && (
+            <div className="space-y-2 max-w-3xl">
+              <h3 className="font-serif text-xl sm:text-2xl text-[#24211D]">
+                {product.name}
               </h3>
-              <p>
-                {content.philosophyStory1}
-              </p>
-              <p>
-                {content.philosophyStory2}
+              <p className="text-sm sm:text-base leading-relaxed text-[#5A5248]">
+                {product.description}
               </p>
             </div>
           )}
 
-          {activeTab === 'notes' && (
-            <div className="space-y-6 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">{content.tab2Label || 'Fragrance Architecture'}</h3>
-              <p className="text-xs text-[#7A6F62]">
-                {content.olfactorySubtitle}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1.5">
-                  <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest">Top Notes</span>
-                  <p className="font-serif text-base text-[#24211D]">Immediate Impression</p>
-                  <p className="text-xs text-[#5A5248]">
-                    {product.scentNotes?.[0] || 'Fresh Bergamot & Botanical Blossom'}
-                  </p>
-                </div>
-                <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1.5">
-                  <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest">Heart Notes</span>
-                  <p className="font-serif text-base text-[#24211D]">Core Personality</p>
-                  <p className="text-xs text-[#5A5248]">
-                    {product.scentNotes?.[1] || 'Velvet Rose, Peony & Creamy Jasmine'}
-                  </p>
-                </div>
-                <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1.5">
-                  <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest">Base Notes</span>
-                  <p className="font-serif text-base text-[#24211D]">Lingering Warmth</p>
-                  <p className="text-xs text-[#5A5248]">
-                    {product.scentNotes?.[2] || 'Golden Amber, Vanilla Bean & Soft Cedar'}
-                  </p>
-                </div>
-              </div>
+          {/* Clean Key Specifications */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#EAE0D5]/80 text-xs sm:text-sm">
+            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
+              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Wax Formulation</span>
+              <p className="font-medium text-[#24211D]">{product.waxType || '100% Pure Botanical Soy Wax'}</p>
             </div>
-          )}
-
-          {activeTab === 'rituals' && (
-            <div className="space-y-4 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">{content.careRitualsTitle}</h3>
-              <ul className="space-y-3 text-xs sm:text-sm">
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">1</span>
-                  <span><strong>{content.ritual1Title}:</strong> {content.ritual1Text}</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">2</span>
-                  <span><strong>{content.ritual2Title}:</strong> {content.ritual2Text}</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">3</span>
-                  <span><strong>{content.ritual3Title}:</strong> {content.ritual3Text}</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#8C5E35]/15 text-[#8C5E35] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">4</span>
-                  <span><strong>{content.ritual4Title}:</strong> {content.ritual4Text}</span>
-                </li>
-              </ul>
+            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
+              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Burn Time</span>
+              <p className="font-medium text-[#24211D]">{product.burnTime || '20-25 Hours'}</p>
             </div>
-          )}
-
-          {activeTab === 'specs' && (
-            <div className="space-y-4 max-w-3xl">
-              <h3 className="font-serif text-2xl text-[#24211D]">Craft & Formulation Specifications</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-white/70 rounded-xl border border-[#EAE0D5]">
-                  <span className="text-[#7A6F62] block">Wax Composition:</span>
-                  <span className="font-semibold text-[#24211D] text-sm">{product.waxType || '100% Pure Plant Soy Wax'}</span>
-                </div>
-                <div className="p-3 bg-white/70 rounded-xl border border-[#EAE0D5]">
-                  <span className="text-[#7A6F62] block">Burn Duration:</span>
-                  <span className="font-semibold text-[#24211D] text-sm">{product.burnTime || '20-25 Hours'}</span>
-                </div>
-                <div className="p-3 bg-white/70 rounded-xl border border-[#EAE0D5]">
-                  <span className="text-[#7A6F62] block">Dimensions:</span>
-                  <span className="font-semibold text-[#24211D] text-sm">{product.dimensions || 'Handcrafted Small Batch'}</span>
-                </div>
-                <div className="p-3 bg-white/70 rounded-xl border border-[#EAE0D5]">
-                  <span className="text-[#7A6F62] block">Origin:</span>
-                  <span className="font-semibold text-[#24211D] text-sm">Artisanal Studio, Dhaka, Bangladesh</span>
-                </div>
-              </div>
+            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
+              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Dimensions</span>
+              <p className="font-medium text-[#24211D]">{product.dimensions || 'Handcrafted Small Batch'}</p>
             </div>
-          )}
+            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
+              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Fragrance Notes</span>
+              <p className="font-medium text-[#24211D]">{product.scentNotes && product.scentNotes.length > 0 ? product.scentNotes.join(' · ') : 'Pure Botanical Essential Oils'}</p>
+            </div>
+          </div>
         </div>
       </div>
 
