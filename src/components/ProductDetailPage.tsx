@@ -286,10 +286,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <button
                 type="button"
                 onClick={handleInstantBuy}
-                className="w-full py-3.5 px-6 text-xs sm:text-sm font-semibold rounded-full apple-glass-pill text-[#24211D] hover:bg-white/90 hover:text-[#8C5E35] border border-[#8C5E35]/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs tracking-wider uppercase"
+                className="w-full py-3.5 px-6 text-xs sm:text-sm font-semibold rounded-full apple-glass-pill text-[#24211D] hover:bg-white/90 hover:text-[#8C5E35] border border-[#8C5E35]/40 transition-all flex items-center justify-center cursor-pointer shadow-xs tracking-wider"
               >
-                <Sparkles className="w-4 h-4 text-[#8C5E35]" />
-                <span>Instant Checkout / Buy Now</span>
+                <span>Buy Now</span>
               </button>
             )}
           </div>
