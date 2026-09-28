@@ -68,6 +68,11 @@ export interface OrderRecord {
   grandTotal: number;
   advanceRequired: number;
   status: 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  customerEmail?: string;
+  district?: string;
+  specialNotes?: string;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 export interface StoreSettings {

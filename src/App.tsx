@@ -11,6 +11,7 @@ import { ScentQuiz } from './components/ScentQuiz';
 import { CustomFavorBuilder } from './components/CustomFavorBuilder';
 import { CustomerAuthModal, CustomerUser } from './components/CustomerAuthModal';
 import { CartDrawer } from './components/CartDrawer';
+import { CheckoutPage } from './components/CheckoutPage';
 import { CandleCareGuide } from './components/CandleCareGuide';
 import { ReviewsAndFaq } from './components/ReviewsAndFaq';
 import { Footer } from './components/Footer';
@@ -46,6 +47,13 @@ export default function App() {
     return window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
   });
 
+  const checkIsCheckoutRoute = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname.startsWith('/checkout') || window.location.hash === '#checkout';
+  };
+
+  const [isCheckoutRoute, setIsCheckoutRoute] = useState<boolean>(checkIsCheckoutRoute);
+
   const getProductIdFromUrl = (): string | null => {
     if (typeof window === 'undefined') return null;
     const path = window.location.pathname;
@@ -63,13 +71,23 @@ export default function App() {
 
   const navigateToProduct = (productId: string) => {
     window.history.pushState({}, '', `/product/${productId}`);
+    setIsCheckoutRoute(false);
     setActiveProductId(productId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToHome = () => {
     window.history.pushState({}, '', '/');
+    setIsCheckoutRoute(false);
     setActiveProductId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToCheckout = () => {
+    window.history.pushState({}, '', '/checkout');
+    setIsCheckoutRoute(true);
+    setActiveProductId(null);
+    setIsCartOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -79,11 +97,13 @@ export default function App() {
       if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
         window.history.replaceState({}, '', '/');
         setIsAdminRoute(false);
+        setIsCheckoutRoute(false);
         setActiveProductId(null);
         return;
       }
       const isNowAdmin = window.location.pathname.startsWith('/studioadmin') || window.location.hash === '#studioadmin';
       setIsAdminRoute(isNowAdmin);
+      setIsCheckoutRoute(checkIsCheckoutRoute());
       setActiveProductId(getProductIdFromUrl());
     };
 
@@ -302,7 +322,21 @@ export default function App() {
       />
 
       <main className="flex-1">
-        {activeProductId && currentProduct ? (
+        {isCheckoutRoute ? (
+          <CheckoutPage
+            items={cartItems}
+            customFavors={customFavors}
+            storeSettings={storeSettings}
+            currentUser={currentUser}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onRemoveCustomFavor={handleRemoveCustomFavor}
+            onClearCart={handleClearCart}
+            onOrderPlaced={handleOrderPlaced}
+            onNavigateHome={navigateToHome}
+            onOpenAuth={() => setIsAuthOpen(true)}
+          />
+        ) : activeProductId && currentProduct ? (
           <ProductDetailPage
             product={currentProduct}
             allProducts={products}
@@ -314,7 +348,7 @@ export default function App() {
             }}
             onBuyNow={(p, q, s) => {
               handleAddToCart(p, q, s);
-              setIsCartOpen(true);
+              navigateToCheckout();
             }}
           />
         ) : activeProductId ? (
@@ -499,7 +533,7 @@ export default function App() {
         onRemoveItem={handleRemoveItem}
         onRemoveCustomFavor={handleRemoveCustomFavor}
         onClearCart={handleClearCart}
-        onOrderPlaced={handleOrderPlaced}
+        onProceedToCheckout={navigateToCheckout}
       />
     </div>
   );

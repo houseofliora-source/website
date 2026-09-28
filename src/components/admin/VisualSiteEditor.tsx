@@ -34,14 +34,16 @@ import {
   Layout,
   ShoppingBag,
   Eye,
-  Settings
+  Settings,
+  CreditCard
 } from 'lucide-react';
-import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, ScentQuizContent, ScentQuizOption, ScentQuizQuestion } from '../../types';
+import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, ScentQuizContent, ScentQuizOption, ScentQuizQuestion, CartItem } from '../../types';
 import { DEFAULT_SITE_CONTENT, DEFAULT_PRODUCT_PAGE_CONTENT, sanitizeSiteContent } from '../../data/defaultContent';
 import { applySiteThemeToDOM } from '../../services/firebase';
 import { CustomFavorBuilder } from '../CustomFavorBuilder';
 import { ScentQuiz } from '../ScentQuiz';
 import { ProductDetailPage } from '../ProductDetailPage';
+import { CheckoutPage } from '../CheckoutPage';
 
 interface VisualSiteEditorProps {
   initialContent: SiteContent;
@@ -51,7 +53,7 @@ interface VisualSiteEditorProps {
   onBackToAdmin?: () => void;
   /** When true, renders without its own standalone dark header — embeds inside parent layout */
   embedded?: boolean;
-  initialPageView?: 'home' | 'product';
+  initialPageView?: 'home' | 'product' | 'checkout';
   initialProductId?: string;
   onCreateProduct?: () => void;
   onEditProduct?: (product: Product) => void;
@@ -77,7 +79,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
     return sanitizeSiteContent(initialContent);
   });
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [activePageView, setActivePageView] = useState<'home' | 'product'>(initialPageView || 'home');
+  const [activePageView, setActivePageView] = useState<'home' | 'product' | 'checkout'>(initialPageView || 'home');
   const [previewProductId, setPreviewProductId] = useState<string>(() => initialProductId || products[0]?.id || '');
   const [productPageEditTab, setProductPageEditTab] = useState<'details' | 'suggestions'>('details');
   const [isEditMode, setIsEditMode] = useState<boolean>(true);
@@ -382,7 +384,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 title="Storefront Home View"
               >
                 <Layout className="w-3.5 h-3.5" />
-                <span>Home Page</span>
+                <span>Home</span>
               </button>
               <button
                 type="button"
@@ -393,7 +395,18 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 title="Full Product Detail Page View"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
-                <span>Product Page</span>
+                <span>Product</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePageView('checkout')}
+                className={`px-2.5 py-1 text-[11px] rounded flex items-center gap-1 transition-colors cursor-pointer ${
+                  activePageView === 'checkout' ? 'bg-[#8C5E35] text-white font-medium shadow-xs' : 'text-[#A89E90] hover:text-white'
+                }`}
+                title="Checkout Page Preview"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Checkout</span>
               </button>
             </div>
 
@@ -551,6 +564,16 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>Product Page</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setActivePageView('checkout')}
+              className={`px-3 py-1 text-xs rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
+                activePageView === 'checkout' ? 'bg-[#8C5E35] text-white font-medium shadow-xs' : 'text-[#A89E90] hover:text-white'
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Checkout Page</span>
+            </button>
           </div>
 
           {/* Product Selector Dropdown */}
@@ -679,6 +702,47 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   // PREVIEW CONTENT HELPER
   // -------------------------------------------------------------------------
   function renderPreviewContent() {
+    if (activePageView === 'checkout') {
+      const demoItems: CartItem[] = products.length > 0 ? [
+        {
+          product: products[0],
+          quantity: 2,
+          selectedScent: products[0].scentNotes?.[0] || 'French Vanilla'
+        }
+      ] : [];
+
+      return (
+        <div className="relative bg-[#FAF8F5] min-h-[700px] p-4 sm:p-6">
+          <div className="bg-[#24211D] text-white px-4 py-3 border-b border-[#3D3730] flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-md rounded-2xl mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#8C5E35]/30 text-[#E5A97A] border border-[#8C5E35]/50 flex items-center justify-center font-bold text-xs">
+                💳
+              </div>
+              <div>
+                <span className="font-semibold text-xs text-white">Live Checkout Page Preview</span>
+                <p className="text-[11px] text-[#A89E90]">
+                  কাস্টমার চেকআউট পেজের লাইভ ডেমো ও ডিজাইন প্রিভিউ।
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <CheckoutPage
+            items={demoItems}
+            customFavors={[]}
+            storeSettings={storeSettings}
+            onUpdateQuantity={() => {}}
+            onRemoveItem={() => {}}
+            onRemoveCustomFavor={() => {}}
+            onClearCart={() => {}}
+            onOrderPlaced={() => {}}
+            onNavigateHome={() => setActivePageView('home')}
+            onOpenAuth={() => {}}
+          />
+        </div>
+      );
+    }
+
     if (activePageView === 'product') {
       const selectedProduct = products.find(p => p.id === previewProductId) || products[0];
 
