@@ -1,11 +1,11 @@
 import React from 'react';
-import { ShoppingBag, Sparkles, User } from 'lucide-react';
+import { ShoppingBag, User } from 'lucide-react';
 import { CustomerUser } from './CustomerAuthModal';
 
 interface NavbarProps {
   cartCount: number;
   onOpenCart: () => void;
-  onOpenQuiz: () => void;
+  onOpenQuiz?: () => void;
   onOpenAuth: () => void;
   currentUser: CustomerUser | null;
   announcementText?: string;
@@ -15,7 +15,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   cartCount,
   onOpenCart,
-  onOpenQuiz,
   onOpenAuth,
   currentUser,
   announcementText,
@@ -62,13 +61,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Collections
           </a>
-          <button 
-            onClick={onOpenQuiz} 
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-            <span>Scent Finder</span>
-          </button>
           <a 
             href="#custom-favors" 
             className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"

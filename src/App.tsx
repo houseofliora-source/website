@@ -7,7 +7,6 @@ import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { ProductQuickView } from './components/ProductQuickView';
-import { ScentQuiz } from './components/ScentQuiz';
 import { CustomFavorBuilder } from './components/CustomFavorBuilder';
 import { CustomerAuthModal, CustomerUser } from './components/CustomerAuthModal';
 import { CartDrawer } from './components/CartDrawer';
@@ -186,7 +185,6 @@ export default function App() {
 
   // Modals & Drawers
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -314,7 +312,6 @@ export default function App() {
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenQuiz={() => setIsQuizOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
         currentUser={currentUser}
         announcementText={storeSettings.announcementText}
@@ -395,15 +392,6 @@ export default function App() {
                     {siteContent.catalog.subtitle}
                   </p>
                 </div>
-
-                {/* Scent Quiz Trigger in Apple Liquid Glass Pill */}
-                <button
-                  onClick={() => setIsQuizOpen(true)}
-                  className="px-4 py-2.5 apple-glass-pill text-[#24211D] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0 shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
-                  <span>{siteContent.catalog.quizBtnText}</span>
-                </button>
               </div>
 
               {/* Filter Bar (Segmented Controls in Apple Liquid Glass Pill Capsule) */}
@@ -496,16 +484,6 @@ export default function App() {
         onAddToCart={(p, q, s) => {
           handleAddToCart(p, q, s);
           setQuickViewProduct(null);
-        }}
-      />
-
-      <ScentQuiz
-        isOpen={isQuizOpen}
-        onClose={() => setIsQuizOpen(false)}
-        products={products}
-        content={siteContent.scentQuiz}
-        onSelectProduct={p => {
-          navigateToProduct(p.id);
         }}
       />
 
