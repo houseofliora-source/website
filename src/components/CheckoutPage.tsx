@@ -314,15 +314,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <a
-            href={`https://wa.me/?text=Hello%20House%20of%20Liora,%20I%20just%20placed%20order%20${confirmedOrder.id}%20for%20BDT%20${confirmedOrder.grandTotal}%20under%20the%20name%20${encodeURIComponent(confirmedOrder.customerName)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-full sm:w-auto px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full text-xs font-semibold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg transition-all"
-          >
-            <span>Send Order to WhatsApp</span>
-          </a>
-
           <button
             onClick={handleFinish}
             className="w-full sm:w-auto px-8 py-3.5 apple-glass-pill hover:bg-white text-[#24211D] rounded-full text-xs font-semibold tracking-wider uppercase transition-all cursor-pointer shadow-xs border border-[#8C5E35]/40"

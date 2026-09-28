@@ -76,6 +76,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   const [rememberDevice, setRememberDevice] = useState<boolean>(true);
   const [showPasscode, setShowPasscode] = useState<boolean>(false);
   const [passcode, setPasscode] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<'products' | 'orders' | 'customers' | 'coupons' | 'policies' | 'settings' | null>(null);
   const [newCouponCode, setNewCouponCode] = useState('');
   const [newCouponDiscount, setNewCouponDiscount] = useState<number>(10);
