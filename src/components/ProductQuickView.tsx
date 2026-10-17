@@ -1,29 +1,48 @@
-import React, { useState } from 'react';
-import { Product } from '../types';
-import { X, Check, Flame, Clock, Sparkles, Shield, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Product, FragranceItem } from '../types';
+import { X, Check, Flame, Clock, Sparkles, Shield, ShoppingBag, AlertTriangle } from 'lucide-react';
 
 interface ProductQuickViewProps {
   product: Product | null;
   onClose: () => void;
   onAddToCart: (product: Product, quantity: number, selectedScent?: string) => void;
+  fragrances?: FragranceItem[];
 }
 
 export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
   product,
   onClose,
   onAddToCart,
+  fragrances = [],
 }) => {
   if (!product) return null;
 
+  const activeFragrances = useMemo(() => {
+    return (fragrances || []).filter(f => f.active);
+  }, [fragrances]);
+
   const [quantity, setQuantity] = useState(1);
-  const [selectedNote, setSelectedNote] = useState(product.scentNotes[0] || 'Original');
+  const [selectedFragrance, setSelectedFragrance] = useState<string>(() => {
+    return activeFragrances[0]?.name || '';
+  });
   const [added, setAdded] = useState(false);
 
-  const isOutOfStock = product.inStock === false;
+  useEffect(() => {
+    if (activeFragrances.length > 0) {
+      if (!selectedFragrance || !activeFragrances.some(f => f.name === selectedFragrance)) {
+        setSelectedFragrance(activeFragrances[0].name);
+      }
+    } else {
+      setSelectedFragrance('');
+    }
+  }, [activeFragrances, selectedFragrance]);
+
+  const hasNoActiveFragrances = activeFragrances.length === 0;
+  const isOutOfStock = product.inStock === false || hasNoActiveFragrances;
 
   const handleAdd = () => {
     if (isOutOfStock) return;
-    onAddToCart(product, quantity, selectedNote);
+    onAddToCart(product, quantity, selectedFragrance);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -50,18 +69,22 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
             className="w-full h-full object-cover max-h-[380px] md:max-h-full"
           />
           <div className="absolute bottom-3 left-3 apple-glass-dark text-white text-[11px] px-3 py-1 rounded-full font-medium">
-            {product.waxType}
+            {product.waxType || '100% Soy Wax'}
           </div>
         </div>
 
         {/* Right: Contiguous Purchase Module */}
         <div className="md:w-1/2 p-6 flex flex-col justify-between overflow-y-auto">
           <div className="space-y-4">
-            {/* Category & Status */}
+            {/* Status / Wax Type */}
             <div className="flex items-center gap-2 text-xs text-[#8C5E35] font-semibold uppercase tracking-wider">
-              <span>{product.category}</span>
-              <span aria-hidden="true">·</span>
-              <span>{product.scentFamily}</span>
+              <span>100% Natural Botanical Soy Wax</span>
+              {product.scentFamily && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{product.scentFamily}</span>
+                </>
+              )}
             </div>
 
             {/* Title */}
@@ -80,7 +103,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
                 </span>
               )}
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isOutOfStock ? 'text-red-700 bg-red-100/60' : 'text-emerald-800 bg-emerald-100/60'}`}>
-                {isOutOfStock ? 'Currently Sold Out' : 'In Stock · Ready to Ship'}
+                {hasNoActiveFragrances ? 'No Fragrance Available' : isOutOfStock ? 'Currently Sold Out' : 'In Stock · Ready to Ship'}
               </span>
             </div>
 
@@ -89,27 +112,34 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
               {product.description}
             </p>
 
-            {/* Scent notes selection */}
+            {/* Global Fragrance Selection */}
             <div className="space-y-2 pt-1">
               <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                Dominant Fragrance Note:
+                Select Fragrance / Aroma Profile: <span className="text-rose-600">*</span>
               </label>
-              <div className="flex flex-wrap gap-2">
-                {product.scentNotes.map((note) => (
-                  <button
-                    key={note}
-                    type="button"
-                    onClick={() => setSelectedNote(note)}
-                    className={`px-3 py-1 text-xs rounded-full transition-all cursor-pointer ${
-                      selectedNote === note
-                        ? 'apple-glass-dark text-white'
-                        : 'apple-glass-pill text-[#5A5248] hover:text-[#24211D]'
-                    }`}
-                  >
-                    {note}
-                  </button>
-                ))}
-              </div>
+              {hasNoActiveFragrances ? (
+                <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>No fragrance active right now</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {activeFragrances.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setSelectedFragrance(f.name)}
+                      className={`min-h-[40px] px-3.5 py-1.5 text-xs rounded-xl transition-all cursor-pointer font-medium border text-left ${
+                        selectedFragrance === f.name
+                          ? 'apple-glass-dark text-white border-[#24211D]'
+                          : 'apple-glass-pill text-[#5A5248] border-[#EAE0D5] hover:text-[#24211D]'
+                      }`}
+                    >
+                      <span>{f.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Specifications Grid in Liquid Pods */}

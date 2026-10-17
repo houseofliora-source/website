@@ -64,8 +64,12 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, settings, onC
               </div>
               <div className="text-[11px] text-[#7A6F62] mt-3 space-y-0.5">
                 <p>Dhaka, Bangladesh · houseofliora.company</p>
-                {settings.supportPhone && <p>Support Phone: {settings.supportPhone}</p>}
-                {settings.supportEmail && <p>Email: {settings.supportEmail}</p>}
+                {Boolean(settings.supportPhone && settings.supportPhone.trim() && !settings.supportPhone.includes('000000')) && (
+                  <p>Support Phone: {settings.supportPhone}</p>
+                )}
+                {Boolean(settings.supportEmail && settings.supportEmail.trim()) && (
+                  <p>Email: {settings.supportEmail}</p>
+                )}
               </div>
             </div>
 
@@ -133,17 +137,24 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, settings, onC
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE0D5]">
-                {order.items.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-[#FAF8F5]/50">
-                    <td className="py-3 pr-2">
-                      <span className="font-semibold text-[#24211D] block">{item.title}</span>
-                      {item.scent && <span className="text-[11px] text-[#7A6F62]">Scent: {item.scent}</span>}
-                    </td>
-                    <td className="py-3 text-center font-mono font-medium">{item.quantity}</td>
-                    <td className="py-3 text-right font-mono text-[#5A5248]">৳{item.price}</td>
-                    <td className="py-3 text-right font-mono font-semibold text-[#24211D]">৳{item.price * item.quantity}</td>
-                  </tr>
-                ))}
+                {order.items.map((item, idx) => {
+                  const fragrance = item.fragrance || item.scent || '';
+                  return (
+                    <tr key={idx} className="hover:bg-[#FAF8F5]/50">
+                      <td className="py-3 pr-2">
+                        <span className="font-semibold text-[#24211D] block">{item.title}</span>
+                        {fragrance ? (
+                          <span className="text-[11px] text-[#8C5E35] font-medium block">
+                            Fragrance: {fragrance}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="py-3 text-center font-mono font-medium">{item.quantity}</td>
+                      <td className="py-3 text-right font-mono text-[#5A5248]">৳{item.price}</td>
+                      <td className="py-3 text-right font-mono font-semibold text-[#24211D]">৳{item.price * item.quantity}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

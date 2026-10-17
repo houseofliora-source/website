@@ -146,7 +146,10 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom bar */}
         <div className="pt-8 border-t border-[#38322B] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#877E71]">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
-            <p>© {new Date().getFullYear()} {content.copyright ? content.copyright.replace(/^©?\s*\d{4}\s*/, '').replace(/\b\d{4}\b$/, '').trim() : 'House of Líora (@houseofliorabd). All rights reserved.'}</p>
+            <p>© {new Date().getFullYear()} {(() => {
+              const base = content.copyright || 'House of Líora (@houseofliorabd). All rights reserved.';
+              return base.replace(/^©?\s*\d{4}\s*/, '').replace(/\b\d{4}\b/g, '').replace(/\s{2,}/g, ' ').trim();
+            })()}</p>
             <div className="flex items-center gap-2 text-[11px] text-[#A89E90]">
               <button type="button" onClick={() => onOpenPolicy?.('terms')} className="hover:text-white underline cursor-pointer">Terms</button>
               <span>·</span>

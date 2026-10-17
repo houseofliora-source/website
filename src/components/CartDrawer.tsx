@@ -1,7 +1,7 @@
 import React from 'react';
-import { CartItem, CustomFavorItem, StoreSettings } from '../types';
+import { CartItem, CustomFavorItem, StoreSettings, FragranceItem } from '../types';
 import { CustomerUser } from './CustomerAuthModal';
-import { X, Trash2, ArrowRight } from 'lucide-react';
+import { X, Trash2, ArrowRight, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -10,11 +10,13 @@ interface CartDrawerProps {
   customFavors: CustomFavorItem[];
   storeSettings: StoreSettings;
   currentUser?: CustomerUser | null;
-  onUpdateQuantity: (id: string, delta: number) => void;
-  onRemoveItem: (id: string) => void;
+  onUpdateQuantity: (lineKey: string, delta: number) => void;
+  onRemoveItem: (lineKey: string) => void;
   onRemoveCustomFavor: (index: number) => void;
   onClearCart?: () => void;
   onProceedToCheckout: () => void;
+  fragrances?: FragranceItem[];
+  onChangeItemFragrance?: (lineKey: string, newFragrance: string) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -27,8 +29,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onRemoveCustomFavor,
   onProceedToCheckout,
+  fragrances = [],
+  onChangeItemFragrance,
 }) => {
   if (!isOpen) return null;
+
+  const activeFragrances = fragrances.filter(f => f.active);
 
   // Computations
   const itemsSubtotal = items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -38,10 +44,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const minOrderAmount = storeSettings.minimumOrder || 200;
   const isBelowMin = totalSubtotal > 0 && totalSubtotal < minOrderAmount;
 
+  // Check if any cart item has an inactive or missing fragrance
+  const invalidFragranceItems = items.filter(item => {
+    const scent = item.selectedFragrance || item.selectedScent;
+    return !scent || !activeFragrances.some(f => f.name.toLowerCase() === scent.toLowerCase());
+  });
+
+  const hasInvalidFragrance = invalidFragranceItems.length > 0;
+
   const handleCheckoutClick = () => {
+    if (hasInvalidFragrance) {
+      alert('One or more items in your cart have a fragrance that is no longer available. Please select an available fragrance before proceeding.');
+      return;
+    }
     onClose();
     onProceedToCheckout();
   };
+
+  const totalItemCount = items.length + customFavors.length;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-md flex justify-end animate-fade-in">
@@ -56,7 +76,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               Your Shopping Bag
             </h3>
             <span className="text-xs font-mono text-[#8C5E35] apple-glass-pill px-2.5 py-0.5">
-              {items.length + customFavors.length} items
+              {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
             </span>
           </div>
 
@@ -85,55 +105,96 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           ) : (
             <div className="space-y-3">
               {/* Standard Catalog Items in Apple Liquid Glass Cards */}
-              {items.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="p-3 apple-glass-card rounded-2xl border border-white/70 flex gap-3 items-center shadow-xs"
-                >
-                  <img
-                    src={item.product.image}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-xl border border-white/60 shrink-0 bg-[#FAF8F5]"
-                  />
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h4 className="font-serif text-sm font-medium text-[#24211D] truncate">
-                      {item.product.name}
-                    </h4>
-                    {item.selectedScent && (
-                      <p className="text-[11px] text-[#8C5E35] italic truncate">
-                        Scent: {item.selectedScent}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex items-center apple-glass-pill p-0.5 text-xs">
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, -1)}
-                          className="w-6 h-6 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <span className="px-2 font-mono tabular-nums font-semibold">{item.quantity}</span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, 1)}
-                          className="w-6 h-6 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <span className="font-mono text-xs font-semibold text-[#24211D]">
-                        ৳{item.product.price * item.quantity}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onRemoveItem(item.product.id)}
-                    className="text-[#9E9282] hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 cursor-pointer transition-colors"
-                    title="Remove item"
+              {items.map((item) => {
+                const currentFragrance = item.selectedFragrance || item.selectedScent || '';
+                const lineKey = `${item.product.id}:::${currentFragrance}`;
+                const isFragranceActive = activeFragrances.some(
+                  f => f.name.toLowerCase() === currentFragrance.toLowerCase()
+                );
+
+                return (
+                  <div
+                    key={lineKey}
+                    className={`p-3 apple-glass-card rounded-2xl border ${
+                      !isFragranceActive ? 'border-amber-300 bg-amber-50/30' : 'border-white/70'
+                    } flex gap-3 items-center shadow-xs`}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-16 h-16 object-cover rounded-xl border border-white/60 shrink-0 bg-[#FAF8F5]"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4 className="font-serif text-sm font-medium text-[#24211D] truncate">
+                        {item.product.name}
+                      </h4>
+
+                      {/* Fragrance Display / Selector */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] text-[#8C5E35] font-medium">Fragrance:</span>
+                        {onChangeItemFragrance && activeFragrances.length > 0 ? (
+                          <select
+                            value={currentFragrance}
+                            onChange={(e) => onChangeItemFragrance(lineKey, e.target.value)}
+                            className="bg-white/90 border border-[#D5C7B7] rounded-lg px-2 py-0.5 text-xs text-[#24211D] focus:outline-none focus:ring-1 focus:ring-[#8C5E35] cursor-pointer"
+                          >
+                            {!isFragranceActive && (
+                              <option value={currentFragrance} disabled>
+                                {currentFragrance ? `${currentFragrance} (Unavailable)` : 'None selected'}
+                              </option>
+                            )}
+                            {activeFragrances.map(f => (
+                              <option key={f.id} value={f.name}>
+                                {f.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-xs text-[#24211D] font-medium">
+                            {currentFragrance || 'None selected'}
+                          </span>
+                        )}
+                      </div>
+
+                      {!isFragranceActive && (
+                        <p className="text-[10px] text-amber-900 bg-amber-100/80 border border-amber-300 rounded px-1.5 py-0.5 font-medium leading-tight">
+                          This fragrance is no longer available — please choose another
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center apple-glass-pill p-0.5 text-xs">
+                          <button
+                            onClick={() => onUpdateQuantity(lineKey, -1)}
+                            className="w-6 h-6 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
+                            title="Decrease quantity"
+                          >
+                            -
+                          </button>
+                          <span className="px-2 font-mono tabular-nums font-semibold">{item.quantity}</span>
+                          <button
+                            onClick={() => onUpdateQuantity(lineKey, 1)}
+                            className="w-6 h-6 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
+                            title="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="font-mono text-xs font-semibold text-[#24211D]">
+                          ৳{item.product.price * item.quantity}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onRemoveItem(lineKey)}
+                      className="text-[#9E9282] hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 cursor-pointer transition-colors"
+                      title="Remove item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
 
               {/* Custom Favors Batches in Apple Liquid Glass Cards */}
               {customFavors.map((cf, idx) => (

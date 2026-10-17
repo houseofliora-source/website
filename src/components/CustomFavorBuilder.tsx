@@ -182,10 +182,10 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     {/* Subtle Gradient Shadow for Readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent pointer-events-none" />
 
-                    {/* Top Floating Category Badge */}
+                    {/* Top Floating Badge */}
                     <div className="absolute top-3 left-3 flex items-center gap-2">
                       <span className="apple-glass-pill px-3 py-1 rounded-full text-white text-[11px] font-medium tracking-wide uppercase shadow-sm">
-                        {activeProduct.category || 'Atelier Collection'}
+                        Atelier Collection
                       </span>
                     </div>
 

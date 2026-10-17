@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS, INITIAL_SAMPLE_ORDERS } from './data/products';
+import { INITIAL_FRAGRANCES } from './data/fragrances';
 import { DEFAULT_SITE_CONTENT, sanitizeSiteContent } from './data/defaultContent';
-import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings, SiteContent } from './types';
+import { Product, CartItem, CustomFavorItem, OrderRecord, StoreSettings, SiteContent, FragranceItem } from './types';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
@@ -24,7 +25,8 @@ import {
   updateDocumentFavicon,
   subscribeToProducts,
   subscribeToSiteContent,
-  applySiteThemeToDOM
+  applySiteThemeToDOM,
+  subscribeToFragrances
 } from './services/firebase';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 
@@ -148,6 +150,16 @@ export default function App() {
   // Store products, settings, and dynamic site content & typography
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  const [fragrances, setFragrances] = useState<FragranceItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('liora_fragrances');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_FRAGRANCES;
+  });
   const [siteContent, setSiteContent] = useState<SiteContent>(() => {
     try {
       const cached = localStorage.getItem('liora_site_content');
@@ -180,6 +192,15 @@ export default function App() {
       }
     });
 
+
+    const unsubscribeFragrances = subscribeToFragrances((live) => {
+      if (live && live.length > 0) {
+        setFragrances(live);
+        try {
+          localStorage.setItem('liora_fragrances', JSON.stringify(live));
+        } catch {}
+      }
+    });
     fetchStoreSettings().then(settings => {
       if (settings) {
         setStoreSettings(settings);
@@ -192,6 +213,7 @@ export default function App() {
     return () => {
       if (unsubscribeProds) unsubscribeProds();
       if (unsubscribeContent) unsubscribeContent();
+      if (unsubscribeFragrances) unsubscribeFragrances();
     };
   }, []);
 
@@ -218,17 +240,20 @@ export default function App() {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Filters
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
   // Cart state
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      product: products[0] || INITIAL_PRODUCTS[0],
-      quantity: 1,
-      selectedScent: 'French Vanilla',
-    }
-  ]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    const prod = INITIAL_PRODUCTS[0];
+    const initialFrag = INITIAL_FRAGRANCES[0]?.name || 'French Vanilla';
+    return [
+      {
+        product: prod,
+        quantity: 1,
+        selectedFragrance: initialFrag,
+        selectedScent: initialFrag,
+        fragrance: initialFrag,
+      }
+    ];
+  });
 
   const [customFavors, setCustomFavors] = useState<CustomFavorItem[]>([]);
 
@@ -253,18 +278,83 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Add standard product to cart
-  const handleAddToCart = (product: Product, quantity = 1, selectedScent?: string) => {
+  // Public products (Drafts hidden from customer storefront - Part 2H)
+  const publicProducts = useMemo(() => {
+    return products.filter(p => p.status !== 'draft');
+  }, [products]);
+
+  // Change fragrance of an existing cart item with quantity merging
+  const handleChangeCartFragrance = (lineKeyOrId: string, newFragrance: string) => {
     setCartItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id && item.selectedScent === selectedScent);
-      if (existing) {
-        return prev.map(item =>
-          item.product.id === product.id && item.selectedScent === selectedScent
+      const targetIndex = prev.findIndex(item => {
+        const key = `${item.product.id}:::${item.selectedFragrance || item.fragrance || item.selectedScent || ''}`;
+        return key === lineKeyOrId || item.product.id === lineKeyOrId;
+      });
+
+      if (targetIndex === -1) return prev;
+      const targetItem = prev[targetIndex];
+
+      const existingSameFragIndex = prev.findIndex((item, idx) => {
+        if (idx === targetIndex) return false;
+        const itemFrag = item.selectedFragrance || item.fragrance || item.selectedScent || '';
+        return item.product.id === targetItem.product.id && itemFrag.toLowerCase() === newFragrance.toLowerCase();
+      });
+
+      if (existingSameFragIndex >= 0) {
+        return prev
+          .map((item, idx) => {
+            if (idx === existingSameFragIndex) {
+              return { ...item, quantity: item.quantity + targetItem.quantity };
+            }
+            if (idx === targetIndex) {
+              return null;
+            }
+            return item;
+          })
+          .filter(Boolean) as CartItem[];
+      } else {
+        return prev.map((item, idx) =>
+          idx === targetIndex
+            ? { 
+                ...item, 
+                selectedFragrance: newFragrance, 
+                selectedScent: newFragrance, 
+                fragrance: newFragrance 
+              }
+            : item
+        );
+      }
+    });
+  };
+
+  // Add standard product to cart
+  const handleAddToCart = (product: Product, quantity = 1, selectedFragrance?: string) => {
+    const activeFrag = (fragrances.filter(f => f.active)[0]?.name) || 'French Vanilla';
+    const chosenFrag = selectedFragrance || activeFrag;
+
+    setCartItems(prev => {
+      const matchIdx = prev.findIndex(item => {
+        const itemFrag = item.selectedFragrance || item.fragrance || item.selectedScent || '';
+        return item.product.id === product.id && itemFrag.toLowerCase() === chosenFrag.toLowerCase();
+      });
+
+      if (matchIdx >= 0) {
+        return prev.map((item, idx) =>
+          idx === matchIdx
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity, selectedScent: selectedScent || product.scentNotes[0] }];
+      return [
+        ...prev, 
+        { 
+          product, 
+          quantity, 
+          selectedFragrance: chosenFrag, 
+          selectedScent: chosenFrag, 
+          fragrance: chosenFrag 
+        }
+      ];
     });
     setIsCartOpen(true);
   };
@@ -289,8 +379,13 @@ export default function App() {
     );
   };
 
-  const handleRemoveItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.product.id !== id));
+  const handleRemoveItem = (lineKeyOrId: string) => {
+    setCartItems(prev =>
+      prev.filter(item => {
+        const key = `${item.product.id}:::${item.selectedFragrance || item.fragrance || item.selectedScent || ''}`;
+        return key !== lineKeyOrId && item.product.id !== lineKeyOrId;
+      })
+    );
   };
 
   const handleRemoveCustomFavor = (index: number) => {
@@ -308,24 +403,14 @@ export default function App() {
     submitOrderToFirestore(newOrder);
   };
 
-  // Dynamic filtered products (matching custom categories)
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'all') return products;
-    const currentCat = siteContent.catalog?.categories?.find(c => c.id === selectedCategory);
-    return products.filter(p => {
-      const catVal = (p.category || '').toLowerCase();
-      const selVal = selectedCategory.toLowerCase();
-      const labelVal = (currentCat?.label || '').toLowerCase();
-      return catVal === selVal || catVal === labelVal || (catVal && labelVal.includes(catVal)) || (catVal && selVal.includes(catVal));
-    });
-  }, [products, selectedCategory, siteContent.catalog?.categories]);
-
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0) + customFavors.length;
 
   if (isAdminRoute) {
     return (
       <AdminDashboard
         initialSiteContent={siteContent}
+        fragrances={fragrances}
+        onFragrancesChange={setFragrances}
         onBackToStore={() => {
           window.history.pushState({}, '', '/');
           setIsAdminRoute(false);
@@ -378,14 +463,16 @@ export default function App() {
             onNavigateHome={navigateToHome}
             onOpenAuth={navigateToAccount}
             onOpenPolicy={setActivePolicy}
+            fragrances={fragrances}
           />
         ) : activeProductId && currentProduct ? (
           <ProductDetailPage
             product={currentProduct}
-            allProducts={products}
+            allProducts={publicProducts}
             pageContent={siteContent.productPage}
             onBack={navigateToHome}
             onSelectProduct={navigateToProduct}
+            fragrances={fragrances}
             onAddToCart={(p, q, s) => {
               handleAddToCart(p, q, s);
             }}
@@ -418,7 +505,7 @@ export default function App() {
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
               content={siteContent.hero}
-              products={products}
+              products={publicProducts}
               onSelectProduct={navigateToProduct}
             />
 
@@ -440,61 +527,17 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Filter Bar (Segmented Controls in Apple Liquid Glass Pill Capsule) */}
-              {siteContent.catalog.showFilter !== false && (
-                <div className="flex items-center justify-center sm:justify-start mb-8">
-                  <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 apple-glass-pill max-w-full no-scrollbar shadow-xs">
-                    {(siteContent.catalog.categories || [
-                      { id: 'all', label: 'All Pieces' },
-                      { id: 'bubble', label: 'Bubble Cubes' },
-                      { id: 'floating', label: 'Floating Blooms' },
-                      { id: 'sculpted', label: 'Sculpted Columns' },
-                      { id: 'hampers', label: 'Gift Hampers' },
-                      { id: 'jar', label: 'Aroma Tablets' },
-                    ]).map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer ${
-                          selectedCategory === cat.id
-                            ? 'apple-glass-dark text-white shadow-xs'
-                            : 'text-[#5A5248] hover:text-[#24211D] hover:bg-white/60'
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Product Grid */}
-              {filteredProducts.length === 0 ? (
-                <div className="p-12 text-center apple-glass-card rounded-2xl space-y-3">
-                  <p className="text-sm text-[#7A6F62]">
-                    No candles or items match the selected filter.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory('all');
-                    }}
-                    className="px-4 py-2 text-xs apple-glass-dark text-white rounded-full cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
-                  {filteredProducts.map(product => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onQuickView={p => navigateToProduct(p.id)}
-                      onAddToCart={p => handleAddToCart(p, 1)}
-                    />
-                  ))}
-                </div>
-              )}
+              {/* Product Grid - ALL CANDLES, ONE LIST (No categories or filters) */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+                {publicProducts.map(product => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onQuickView={p => navigateToProduct(p.id)}
+                    onAddToCart={p => handleAddToCart(p, 1)}
+                  />
+                ))}
+              </div>
             </section>
 
             {/* Bespoke Inquiry & Custom Order Atelier */}
@@ -502,7 +545,7 @@ export default function App() {
               facebookUrl={storeSettings.facebookUrl}
               supportPhone={storeSettings.supportPhone}
               content={siteContent.favors}
-              products={products}
+              products={publicProducts}
               onSelectProduct={navigateToProduct}
             />
 
@@ -527,6 +570,7 @@ export default function App() {
       <ProductQuickView
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
+        fragrances={fragrances}
         onAddToCart={(p, q, s) => {
           handleAddToCart(p, q, s);
           setQuickViewProduct(null);
@@ -545,6 +589,8 @@ export default function App() {
         onRemoveCustomFavor={handleRemoveCustomFavor}
         onClearCart={handleClearCart}
         onProceedToCheckout={navigateToCheckout}
+        fragrances={fragrances}
+        onChangeItemFragrance={handleChangeCartFragrance}
       />
 
       {/* Global Policy Modal */}

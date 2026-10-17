@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CartItem, CustomFavorItem, OrderRecord, StoreSettings } from '../types';
+import { CartItem, CustomFavorItem, OrderRecord, StoreSettings, FragranceItem } from '../types';
 import { CustomerUser } from './CustomerAuthModal';
 import { 
   ArrowLeft, 
@@ -37,6 +37,8 @@ interface CheckoutPageProps {
   onNavigateHome: () => void;
   onOpenAuth: () => void;
   onOpenPolicy?: (type: 'terms' | 'privacy' | 'refund') => void;
+  fragrances?: FragranceItem[];
+  forceMobileLayout?: boolean;
 }
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({
@@ -52,6 +54,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onNavigateHome,
   onOpenAuth,
   onOpenPolicy,
+  fragrances = [],
+  forceMobileLayout = false,
 }) => {
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   // Form fields
@@ -78,7 +82,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Special notes & terms
   const [specialNotes, setSpecialNotes] = useState('');
-  const [agreedTerms, setAgreedTerms] = useState(true);
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   // Order submission states
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,6 +203,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       }
     }
 
+    // Validate that each item's fragrance is currently active
+    const activeFragrances = (fragrances || []).filter(f => f.active);
+    for (const item of items) {
+      const chosen = item.selectedFragrance || item.selectedScent;
+      const isActive = chosen && activeFragrances.some(f => f.name.toLowerCase() === chosen.toLowerCase());
+      if (!isActive) {
+        alert('This fragrance is no longer available. Please choose another fragrance.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     const cleanTrx = transactionId.trim().toUpperCase();
@@ -217,12 +232,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       transactionId: cleanTrx || undefined,
       senderPhone: cleanSender || undefined,
       paymentStatus: paymentMethod === 'cod' ? 'verified' : 'pending',
-      items: items.map(i => ({
-        title: i.product.name,
-        quantity: i.quantity,
-        price: i.product.price,
-        scent: i.selectedScent,
-      })),
+      items: items.map(i => {
+        const frag = i.selectedFragrance || i.selectedScent || '';
+        return {
+          title: i.product.name,
+          quantity: i.quantity,
+          price: i.product.price,
+          fragrance: frag,
+          scent: frag,
+        };
+      }),
       customFavors: customFavors.length > 0 ? customFavors : undefined,
       subtotal: totalSubtotal,
       deliveryFee,
@@ -295,14 +314,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
           <div className="pt-3 border-t border-[#EAE0D5] space-y-2">
             <span className="text-[#7A6F62] block font-semibold">Items Ordered:</span>
-            {confirmedOrder.items.map((it, idx) => (
-              <div key={idx} className="flex justify-between items-center text-xs">
-                <span>
-                  {it.title} {it.scent ? `(${it.scent})` : ''} × {it.quantity}
-                </span>
-                <span className="font-mono font-medium text-[#24211D]">৳{it.price * it.quantity}</span>
-              </div>
-            ))}
+            {confirmedOrder.items.map((it, idx) => {
+              const frag = it.fragrance || it.scent;
+              return (
+                <div key={idx} className="flex justify-between items-center text-xs">
+                  <span>
+                    {it.title} {frag ? `— Fragrance: ${frag}` : ''} × {it.quantity}
+                  </span>
+                  <span className="font-mono font-medium text-[#24211D]">৳{it.price * it.quantity}</span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="pt-3 border-t border-[#EAE0D5] space-y-1">
@@ -410,11 +432,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         )}
       </div>
 
-      <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <form onSubmit={handleSubmitOrder} className={`grid grid-cols-1 ${forceMobileLayout ? 'grid-cols-1' : 'lg:grid-cols-12'} gap-8 items-start`}>
         {/* =================================================================== */}
         {/* LEFT COLUMN: Order Review, Shipping Address, Billing Address        */}
         {/* =================================================================== */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className={`${forceMobileLayout ? 'w-full' : 'lg:col-span-7'} space-y-6`}>
           {/* 1. ORDER REVIEW (Matching Demo Section 1) */}
           <div className="apple-glass-card rounded-3xl p-5 sm:p-7 border border-[#EAE0D5] space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-[#EAE0D5] pb-3">
@@ -428,61 +450,65 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
 
             <div className="space-y-3 divide-y divide-[#EAE0D5]/70">
-              {items.map((item) => (
-                <div key={item.product.id} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="w-14 h-14 object-cover rounded-xl border border-white/80 shrink-0 bg-[#FAF8F5]"
-                    />
-                    <div className="min-w-0">
-                      <h4 className="font-serif text-sm font-medium text-[#24211D] truncate">
-                        {item.product.name}
-                      </h4>
-                      {item.selectedScent && (
-                        <p className="text-[11px] text-[#8C5E35] italic truncate">
-                          Scent: {item.selectedScent}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 pt-1">
-                        <span className="text-xs text-[#7A6F62]">Qty:</span>
-                        <div className="flex items-center apple-glass-pill p-0.5 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => onUpdateQuantity(item.product.id, -1)}
-                            className="w-5 h-5 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
-                          >
-                            -
-                          </button>
-                          <span className="px-2 font-mono tabular-nums font-semibold">{item.quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => onUpdateQuantity(item.product.id, 1)}
-                            className="w-5 h-5 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
-                          >
-                            +
-                          </button>
+              {items.map((item) => {
+                const currentFragrance = item.selectedFragrance || item.selectedScent || '';
+                const lineKey = `${item.product.id}:::${currentFragrance}`;
+                return (
+                  <div key={lineKey} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={item.product.image}
+                        alt={item.product.name}
+                        className="w-14 h-14 object-cover rounded-xl border border-white/80 shrink-0 bg-[#FAF8F5]"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="font-serif text-sm font-medium text-[#24211D] truncate">
+                          {item.product.name}
+                        </h4>
+                        {currentFragrance && (
+                          <p className="text-[11px] text-[#8C5E35] font-medium truncate">
+                            Fragrance: <span className="text-[#24211D]">{currentFragrance}</span>
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-xs text-[#7A6F62]">Qty:</span>
+                          <div className="flex items-center apple-glass-pill p-0.5 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity(lineKey, -1)}
+                              className="w-5 h-5 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
+                            >
+                              -
+                            </button>
+                            <span className="px-2 font-mono tabular-nums font-semibold">{item.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity(lineKey, 1)}
+                              className="w-5 h-5 flex items-center justify-center text-[#5A5248] hover:text-[#24211D] rounded-full hover:bg-white/80 cursor-pointer"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-mono text-sm font-semibold text-[#24211D]">
-                      ৳{item.product.price * item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveItem(item.product.id)}
-                      className="p-1.5 text-[#9E9282] hover:text-red-700 rounded-full hover:bg-red-50 cursor-pointer transition-colors"
-                      title="Remove item"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="font-mono text-sm font-semibold text-[#24211D]">
+                        ৳{item.product.price * item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveItem(lineKey)}
+                        className="p-1.5 text-[#9E9282] hover:text-red-700 rounded-full hover:bg-red-50 cursor-pointer transition-colors"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {customFavors.map((cf, idx) => (
                 <div key={idx} className="pt-3 flex items-center justify-between gap-3">
@@ -644,7 +670,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         {/* =================================================================== */}
         {/* RIGHT COLUMN: Payment, Destination, Coupons, Cost Summary, Order CTA */}
         {/* =================================================================== */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className={`${forceMobileLayout ? 'w-full' : 'lg:col-span-5'} space-y-6`}>
           {/* 4. PAYMENT METHOD (Matching Demo Section 4) */}
           <div className="apple-glass-card rounded-3xl p-5 sm:p-7 border border-[#EAE0D5] space-y-4 shadow-sm">
             <div className="border-b border-[#EAE0D5] pb-3">

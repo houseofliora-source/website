@@ -25,8 +25,10 @@ export const Hero: React.FC<HeroProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Products with valid images
-  const slideProducts = products.filter(p => p.image);
+  // Products with valid images (excluding any phantom/legacy items)
+  const slideProducts = products.filter(
+    p => p.image && !p.name?.toLowerCase().includes('aphrodite') && p.id !== 'sculpted-aphrodite-torso'
+  );
   const totalSlides = slideProducts.length;
 
   useEffect(() => {
@@ -64,9 +66,10 @@ export const Hero: React.FC<HeroProps> = ({
   return (
     <section className="relative overflow-hidden border-b border-[#EAE0D5]/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 md:py-20 lg:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
-          {/* Left Column: Editorial Headline & CTAs */}
-          <div className="lg:col-span-6 space-y-5 sm:space-y-6 relative group">
+        {/* Responsive flex-col on mobile, 12-col grid on desktop */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
+          {/* Left Column Container: contents on mobile so children participate directly in flex ordering, block on desktop */}
+          <div className="contents lg:block lg:col-span-6 space-y-5 sm:space-y-6 relative group">
             {isEditMode && (
               <button
                 onClick={() => onEdit?.('hero')}
@@ -78,25 +81,28 @@ export const Hero: React.FC<HeroProps> = ({
               </button>
             )}
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 apple-glass-pill text-[11px] sm:text-xs tracking-wider uppercase text-[#8C5E35] font-semibold">
-              <Flame className="w-3.5 h-3.5 text-[#C68B59] animate-flame" />
-              <span>{content.badge}</span>
+            {/* Headline Text & Story (Mobile Order 3) */}
+            <div className="order-3 lg:order-none space-y-4 sm:space-y-5 w-full">
+              <div className="inline-flex items-center gap-2 px-3 py-1 apple-glass-pill text-[11px] sm:text-xs tracking-wider uppercase text-[#8C5E35] font-semibold">
+                <Flame className="w-3.5 h-3.5 text-[#C68B59] animate-flame" />
+                <span>{content.badge}</span>
+              </div>
+
+              <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-[#24211D] font-normal leading-[1.2] sm:leading-[1.18] tracking-tight break-normal sm:break-words">
+                {content.title}{' '}
+                <span className="italic font-light text-[#8C5E35] inline-block">{content.titleHighlight}</span> for Modern Living
+              </h1>
+
+              <p className="text-sm sm:text-base md:text-lg text-[#5A5248] leading-relaxed max-w-xl font-normal">
+                {content.subtitle}
+              </p>
             </div>
 
-            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#24211D] font-normal leading-[1.14] tracking-tight">
-              {content.title} <br />
-              <span className="italic font-light text-[#8C5E35]">{content.titleHighlight}</span> for Modern Living
-            </h1>
-
-            <p className="text-sm sm:text-base md:text-lg text-[#5A5248] leading-relaxed max-w-xl font-normal">
-              {content.subtitle}
-            </p>
-
-            {/* CTAs - Apple Liquid Glass Side-by-Side Capsules on Mobile without Wrapping */}
-            <div className="flex items-center gap-2.5 sm:gap-3 pt-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+            {/* CTAs (Mobile Order 2) - Full Tap Targets min 44px */}
+            <div className="order-2 lg:order-none flex items-center gap-2.5 sm:gap-3 pt-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1 w-full">
               <button
                 onClick={onExplore}
-                className="shrink-0 px-5 sm:px-6 py-3 sm:py-3.5 apple-glass-dark text-white text-xs sm:text-sm font-medium rounded-full inline-flex items-center gap-2 cursor-pointer shadow-md whitespace-nowrap"
+                className="shrink-0 min-h-[44px] px-5 sm:px-6 py-3 sm:py-3.5 apple-glass-dark text-white text-xs sm:text-sm font-medium rounded-full inline-flex items-center justify-center gap-2 cursor-pointer shadow-md whitespace-nowrap"
               >
                 <span>{content.btnPrimary}</span>
                 <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 shrink-0" />
@@ -104,7 +110,7 @@ export const Hero: React.FC<HeroProps> = ({
 
               <button
                 onClick={onOpenCustomFavors}
-                className="shrink-0 px-4 sm:px-5 py-3 sm:py-3.5 apple-glass-pill text-[#24211D] text-xs sm:text-sm font-medium rounded-full inline-flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                className="shrink-0 min-h-[44px] px-4 sm:px-5 py-3 sm:py-3.5 apple-glass-pill text-[#24211D] text-xs sm:text-sm font-medium rounded-full inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
               >
                 <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#8C5E35] shrink-0" />
                 <span>{content.btnSecondary}</span>
@@ -112,8 +118,8 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Dynamic Catalog Product Slideshow */}
-          <div className="lg:col-span-6 relative">
+          {/* Right Column: Dynamic Catalog Product Slideshow (Mobile Order 1 - First on Mobile) */}
+          <div className="order-1 lg:order-none lg:col-span-6 relative w-full">
             <div 
               onClick={handleCardClick}
               onMouseEnter={() => setIsPaused(true)}

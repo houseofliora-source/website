@@ -38,36 +38,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               onNavigateHome();
             }
           }}
-          className="flex flex-col group cursor-pointer"
+          className="flex flex-col group cursor-pointer whitespace-nowrap shrink-0"
         >
-          <span className="font-serif text-2xl sm:text-3xl font-medium tracking-tight text-[#24211D] group-hover:text-[#8C5E35] transition-colors">
+          <span className="font-serif text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-[#24211D] group-hover:text-[#8C5E35] transition-colors whitespace-nowrap">
             House of Líora
           </span>
-          <span className="text-[10px] tracking-[0.25em] text-[#8C5E35] uppercase font-sans -mt-1 font-semibold">
+          <span className="text-[9px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-[#8C5E35] uppercase font-sans -mt-0.5 sm:-mt-1 font-semibold whitespace-nowrap">
             Artisanal Home Fragrance
           </span>
         </a>
 
-        {/* Zone 2: Navigation Links in Apple Liquid Glass Pill Capsule */}
-        <nav className="hidden lg:flex items-center gap-1 p-1.5 apple-glass-pill text-xs font-medium text-[#4A443C]">
-          <a 
-            href="#collections" 
-            onClick={(e) => {
-              if (onNavigateHome) {
-                onNavigateHome();
-              }
-            }}
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
-          >
-            Collections
-          </a>
-          <a 
-            href="#custom-favors" 
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
-          >
-            Custom Favors & Events
-          </a>
-        </nav>
+
 
         {/* Zone 3: Actions (Customer Account & Shopping Bag as Apple Liquid Glass Buttons) */}
         <div className="flex items-center gap-2.5 sm:gap-3">

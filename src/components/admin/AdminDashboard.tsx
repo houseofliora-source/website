@@ -72,10 +72,14 @@ import { VisualSiteEditor } from './VisualSiteEditor';
 import { InvoiceModal } from './InvoiceModal';
 import { BespokeInbox } from './BespokeInbox';
 import { CustomerDetailModal } from './CustomerDetailModal';
+import { FragranceManager } from './FragranceManager';
+import { FragranceItem } from '../../types';
 
 interface AdminDashboardProps {
   onBackToStore: () => void;
   initialSiteContent?: SiteContent;
+  fragrances?: FragranceItem[];
+  onFragrancesChange?: (fragrances: FragranceItem[]) => void;
 }
 
 const DEFAULT_ADMIN_PASSCODE = 'liora2026';
@@ -87,21 +91,18 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes auto-logout
 
-// Canonical Category List
-export const CANONICAL_CATEGORIES = [
-  { id: 'all', label: 'All Pieces' },
-  { id: 'bubble', label: 'Bubble Cubes' },
-  { id: 'floating', label: 'Floating Blooms' },
-  { id: 'sculpted', label: 'Sculpted Columns' },
-  { id: 'hampers', label: 'Gift Hampers' },
-  { id: 'tablets', label: 'Aroma Tablets' }, // Migrated from old 'jar'
-] as const;
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, initialSiteContent }) => {
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
+  onBackToStore, 
+  initialSiteContent,
+  fragrances = [],
+  onFragrancesChange,
+}) => {
   // ── Tab Navigation State ──────────────────────────────────────────
   // Main tabs: 'today' | 'orders' | 'products' | 'inbox' | 'more'
-  const [currentTab, setCurrentTab] = useState<'today' | 'orders' | 'products' | 'inbox' | 'more'>('today');
-  const [moreSubTab, setMoreSubTab] = useState<'coupons' | 'policies' | 'settings' | 'editor' | 'customers' | 'analytics' | 'backup' | 'activity'>('coupons');
+  const [currentTab, setCurrentTab] = useState<'today' | 'orders' | 'products' | 'fragrances' | 'inbox' | 'more'>('today');
+  const [moreSubTab, setMoreSubTab] = useState<'fragrances' | 'coupons' | 'policies' | 'settings' | 'editor' | 'customers' | 'analytics' | 'backup' | 'activity'>('fragrances');
 
   // ── Core Data States ──────────────────────────────────────────────
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
@@ -190,8 +191,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   const [orderPaymentFilter, setOrderPaymentFilter] = useState<string>('all');
   const [orderSearch, setOrderSearch] = useState<string>('');
 
-  // ── Product Catalog Filtering & Sorting ───────────────────────────
-  const [productCategoryFilter, setProductCategoryFilter] = useState<string>('all');
+  // ── Product Catalog Search & Sorting ───────────────────────────
   const [productSearch, setProductSearch] = useState<string>('');
   const [productSort, setProductSort] = useState<'newest' | 'price_asc' | 'price_desc' | 'name'>('newest');
 
@@ -412,7 +412,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   // ── Calculated Metrics (Section 11) ───────────────────────────────
   const totalRevenue = useMemo(() => {
     return orders
-      .filter(o => o.status !== 'Cancelled' && !o.isTestOrder)
+      .filter(o => o.status !== 'Cancelled' && !o.isTestOrder && o.id !== 'HL-SAMPLE' && o.paymentStatus === 'verified')
       .reduce((acc, curr) => {
         // Recalculate each order to ensure mathematical integrity
         const sub = curr.items.reduce((s, it) => s + (it.price * it.quantity), 0);
@@ -446,7 +446,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
         order.id.toLowerCase().includes(term) ||
         order.customerName.toLowerCase().includes(term) ||
         order.customerPhone.includes(term) ||
-        (order.transactionId && order.transactionId.toLowerCase().includes(term));
+        (order.transactionId && order.transactionId.toLowerCase().includes(term)) ||
+        order.items.some(i => (i.fragrance || i.scent || '').toLowerCase().includes(term));
 
       return matchesStatus && matchesPayment && matchesSearch;
     });
@@ -455,13 +456,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   // ── Filtered & Sorted Products ────────────────────────────────────
   const filteredProducts = useMemo(() => {
     let prods = products.filter(p => {
-      const matchesCategory = productCategoryFilter === 'all' || p.category === productCategoryFilter;
       const term = productSearch.toLowerCase().trim();
       const matchesSearch = !term || 
         p.name.toLowerCase().includes(term) ||
         (p.scentNotes && p.scentNotes.some(s => s.toLowerCase().includes(term))) ||
         (p.sku && p.sku.toLowerCase().includes(term));
-      return matchesCategory && matchesSearch;
+      return matchesSearch;
     });
 
     return prods.sort((a, b) => {
@@ -470,7 +470,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
       if (productSort === 'name') return a.name.localeCompare(b.name);
       return b.id.localeCompare(a.id); // newest by default
     });
-  }, [products, productCategoryFilter, productSearch, productSort]);
+  }, [products, productSearch, productSort]);
 
   // ── Order Operations ──────────────────────────────────────────────
   const handleUpdateOrderStatusWithConfirm = async (order: OrderRecord, newStatus: OrderRecord['status']) => {
@@ -501,6 +501,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   };
 
   const handleTogglePaymentVerified = async (order: OrderRecord, newStatus: 'verified' | 'rejected' | 'pending_verification') => {
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, paymentStatus: newStatus } : o));
     const success = await updateOrderInFirestore(order.id, { paymentStatus: newStatus });
     if (success) {
       flash(`Order #${order.id} payment marked as "${newStatus}".`);
@@ -522,6 +523,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
 
   const handleToggleTestOrder = async (order: OrderRecord) => {
     const newFlag = !order.isTestOrder;
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, isTestOrder: newFlag } : o));
     await updateOrderInFirestore(order.id, { isTestOrder: newFlag });
     flash(`Order #${order.id} marked as ${newFlag ? 'Test (Excluded from Revenue)' : 'Real Order'}.`);
   };
@@ -529,6 +531,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   const handleCancelOrderWithReason = async (order: OrderRecord) => {
     const reason = window.prompt(`Enter cancellation reason for Order #${order.id}:`, 'Customer requested cancellation');
     if (reason === null) return;
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Cancelled' } : o));
     const success = await updateOrderInFirestore(order.id, { 
       status: 'Cancelled',
       cancellationReason: reason,
@@ -551,7 +554,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
         ? `88${cleanPhone}` 
         : `880${cleanPhone}`;
 
-    const itemsSummary = order.items.map(i => `• ${i.title} (x${i.quantity}) - ৳${i.price * i.quantity}`).join('%0A');
+    const itemsSummary = order.items.map(i => {
+      const frag = i.fragrance || i.scent;
+      return `• ${i.title}${frag ? ` (Fragrance: ${frag})` : ''} (x${i.quantity}) - ৳${i.price * i.quantity}`;
+    }).join('%0A');
     const message = `Hello ${order.customerName},%0A%0AThank you for ordering with *House of Líora* (@houseofliorabd)!%0A%0A*Order ID:* ${order.id}%0A*Items:*%0A${itemsSummary}%0A%0A*Delivery Fee:* ৳${order.deliveryFee}%0A*Grand Total:* ৳${order.grandTotal}%0A*Payment Method:* ${order.paymentMethod.toUpperCase()}%0A*Status:* ${order.status}%0A%0AWe are preparing your artisanal botanical soy candle batch with utmost care! ✨`;
     
     window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, '_blank');
@@ -646,8 +652,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
   };
 
   const openEditProductModal = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm(product);
+    const exactStockQty = product.stockQuantity !== undefined ? Number(product.stockQuantity) : (product.inStock ? 20 : 0);
+    const exactInStock = exactStockQty > 0 ? (product.inStock ?? true) : false;
+    const exactSku = product.sku || `HL-${product.id.slice(-4)}`;
+
+    const loadedProduct: Product = {
+      ...product,
+      stockQuantity: exactStockQty,
+      inStock: exactInStock,
+      sku: exactSku,
+      status: product.status || 'published',
+    };
+
+    setEditingProduct(loadedProduct);
+    setProductForm(loadedProduct);
     setScentNotesInput((product.scentNotes || []).join(', '));
     setProductImagePreview(product.image);
     setProductFormErrors({});
@@ -703,10 +721,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
     e.preventDefault();
     const errors: Record<string, string> = {};
 
-    // Strict validation (Section 4): Title, Price, Category, Photo required
+    // Strict validation (Section 4): Title, Price, Photo required
     if (!productForm.name?.trim()) errors.name = 'Candle title is required';
     if (!productForm.price || Number(productForm.price) <= 0) errors.price = 'Valid price is required';
-    if (!productForm.category) errors.category = 'Category is required';
     const finalImage = productImagePreview || productForm.image;
     if (!finalImage) errors.image = 'Candle photo is required';
 
@@ -718,21 +735,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
 
     setLoading(true);
     const id = editingProduct ? editingProduct.id : `liora-${Date.now()}`;
-    const notesArray = scentNotesInput 
-      ? scentNotesInput.split(',').map(s => s.trim()).filter(Boolean)
-      : (productForm.scentNotes || []);
-
-    const qty = Number(productForm.stockQuantity ?? 20);
+    const qty = Number(productForm.stockQuantity ?? (productForm.inStock ? 20 : 0));
 
     const newProduct: Product = {
       id,
       name: productForm.name!.trim(),
-      category: productForm.category as Product['category'],
+      category: (productForm.category || 'candles') as Product['category'],
       price: Number(productForm.price),
       originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : undefined,
       image: finalImage!,
+      gallery: productForm.gallery || [],
       scentFamily: productForm.scentFamily as Product['scentFamily'] || 'Floral',
-      scentNotes: notesArray,
+      scentNotes: [], // Global pool manages fragrances (Part 1A)
       dimensions: productForm.dimensions || '6cm x 6cm x 6cm',
       burnTime: productForm.burnTime || '20 Hours',
       waxType: productForm.waxType || '100% Pure Botanical Soy Wax',
@@ -740,22 +754,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
       inStock: qty > 0 ? (productForm.inStock ?? true) : false,
       stockQuantity: qty,
       lowStockThreshold: Number(productForm.lowStockThreshold ?? 5),
-      sku: productForm.sku?.trim() || `HL-${id.slice(-4)}`,
+      sku: productForm.sku?.trim() || (id === 'botanical-aroma-sachets' ? 'HL-TAB-01' : `HL-${id.slice(-4)}`),
       status: productForm.status || 'published',
       isBestseller: productForm.isBestseller ?? false,
       isNewArrival: productForm.isNewArrival ?? false,
     };
 
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === id);
+      return exists ? prev.map(p => p.id === id ? newProduct : p) : [newProduct, ...prev];
+    });
+
     const success = await saveProductToFirestore(newProduct);
     setLoading(false);
-
     if (success) {
-      flash(editingProduct ? `"${newProduct.name}" updated!` : `"${newProduct.name}" created and live!`);
-      logActivity(editingProduct ? `Updated product: ${newProduct.name}` : `Created product: ${newProduct.name}`);
+      flash(editingProduct ? `"${newProduct.name}" updated successfully.` : `"${newProduct.name}" published to live store.`);
+      logActivity(editingProduct ? `Updated candle: ${newProduct.name}` : `Published new candle: ${newProduct.name}`);
       setIsProductModalOpen(false);
       setEditingProduct(null);
     } else {
-      flash('Failed to save product to Cloud.', 'error');
+      flash('Failed to save product to cloud', 'error');
     }
   };
 
@@ -1143,6 +1161,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
             <Package className="w-3.5 h-3.5" />
             <span>Products</span>
           </button>
+        <button
+          onClick={() => setCurrentTab('fragrances')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-lg text-[10px] font-medium transition-colors ${
+            currentTab === 'fragrances' ? 'text-[#8C5E35] font-bold' : 'text-[#7A6F62]'
+          }`}
+        >
+          <Sparkles className="w-5 h-5 text-[#C68B59]" />
+          <span>Fragrances</span>
+        </button>
+          <button
+            onClick={() => setCurrentTab('fragrances')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+              currentTab === 'fragrances' ? 'bg-[#24211D] text-white shadow-xs' : 'text-[#5A5248] hover:bg-[#EAE0D5]'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" />
+            <span>Fragrances</span>
+          </button>
           <button
             onClick={() => setCurrentTab('inbox')}
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
@@ -1215,7 +1251,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                   Net Revenue
                 </span>
                 <p className="text-xl sm:text-2xl font-serif font-bold text-[#24211D]">৳{totalRevenue.toLocaleString()}</p>
-                <p className="text-[10px] text-emerald-700">Calculated from verified orders</p>
+                <p className="text-[10px] text-emerald-700 font-medium">Revenue from verified, non-test orders only</p>
               </div>
 
               <div 
@@ -1573,12 +1609,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                         <div className="space-y-1.5 p-3.5 bg-[#FAF8F5] rounded-lg border border-[#EAE0D5]">
                           <p className="font-semibold text-[#24211D]">Items Ordered ({order.items.length})</p>
                           <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                            {order.items.map((it, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-[#5A5248] text-xs">
-                                <span className="truncate max-w-[160px]">• {it.title}</span>
-                                <span className="font-mono text-[#24211D]">x{it.quantity} (৳{it.price * it.quantity})</span>
-                              </div>
-                            ))}
+                            {order.items.map((it, idx) => {
+                              const fragName = it.fragrance || it.selectedFragrance || it.scent;
+                              return (
+                                <div key={idx} className="text-[#5A5248] text-xs py-1 border-b border-[#EAE0D5]/50 last:border-0">
+                                  <div className="flex justify-between items-start gap-1">
+                                    <span className="font-medium text-[#24211D]">• {it.title}</span>
+                                    <span className="font-mono text-[#24211D] shrink-0">x{it.quantity} (৳{it.price * it.quantity})</span>
+                                  </div>
+                                  {fragName && (
+                                    <div className="pl-3 text-[11px] text-[#8C5E35] flex items-center gap-1 font-medium mt-0.5">
+                                      <Sparkles className="w-3 h-3 text-[#C68B59]" />
+                                      <span>Fragrance: {fragName}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -1751,29 +1798,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
 
             {/* Filter, Search & Sort Bar */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-              {/* Category Filter Pills (Section 4: One canonical list) */}
-              <div className="sm:col-span-6 flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                {CANONICAL_CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setProductCategoryFilter(cat.id)}
-                    className={`px-3 py-1.5 text-xs rounded-md font-medium capitalize whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-                      productCategoryFilter === cat.id
-                        ? 'bg-[#24211D] text-white shadow-xs'
-                        : 'bg-white border border-[#EAE0D5] text-[#5A5248] hover:bg-[#FAF8F5]'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-
               {/* Search */}
-              <div className="sm:col-span-3 relative">
+              <div className="sm:col-span-8 relative">
                 <Search className="w-3.5 h-3.5 text-[#7A6F62] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search candles by title, scent..."
+                  placeholder="Search candles by title, wax, fragrance..."
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#EAE0D5] rounded-lg focus:outline-none focus:border-[#8C5E35]"
@@ -1781,7 +1811,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
               </div>
 
               {/* Sort */}
-              <div className="sm:col-span-3">
+              <div className="sm:col-span-4">
                 <select
                   value={productSort}
                   onChange={(e) => setProductSort(e.target.value as any)}
@@ -1801,7 +1831,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                 <thead className="bg-[#FAF8F5] border-b border-[#EAE0D5] text-[#7A6F62] uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="p-3.5 font-semibold">Candle Creation</th>
-                    <th className="p-3.5 font-semibold">Category</th>
+                    <th className="p-3.5 font-semibold">Formulation</th>
                     <th className="p-3.5 font-semibold">Price</th>
                     <th className="p-3.5 font-semibold">Stock &amp; Qty</th>
                     <th className="p-3.5 font-semibold text-right">Actions</th>
@@ -1824,8 +1854,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                         </div>
                       </td>
                       <td className="p-3.5">
-                        <span className="px-2.5 py-1 rounded text-[10px] bg-[#FAF8F5] border border-[#EAE0D5] text-[#7A6F62] font-medium capitalize">
-                          {p.category === 'tablets' || p.category === 'jar' ? 'Aroma Tablets' : p.category}
+                        <span className="px-2.5 py-1 rounded text-[10px] bg-[#FAF8F5] border border-[#EAE0D5] text-[#7A6F62] font-medium">
+                          {p.waxType || '100% Pure Soy Wax'}
                         </span>
                       </td>
                       <td className="p-3.5 font-mono font-medium text-[#24211D]">
@@ -1904,7 +1934,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-xs text-[#24211D] truncate">{p.name}</h4>
                       <p className="text-[10px] text-[#7A6F62] truncate mt-0.5">
-                        {p.category === 'tablets' || p.category === 'jar' ? 'Aroma Tablets' : p.category} · {p.scentNotes?.slice(0, 2).join(', ')}
+                        {p.waxType || '100% Pure Soy Wax'}{p.scentFamily ? ` · ${p.scentFamily}` : ''}
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="font-mono font-bold text-xs text-[#24211D]">৳{p.price}</span>
@@ -1946,6 +1976,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
         )}
 
         {/* =================================================================== */}
+        {/* TAB 3B: GLOBAL FRAGRANCE LIBRARY (Part 1B) */}
+        {/* =================================================================== */}
+        {currentTab === 'fragrances' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <FragranceManager 
+              fragrances={fragrances} 
+              onFragrancesChange={onFragrancesChange || (() => {})} 
+            />
+          </div>
+        )}
+
+        {/* =================================================================== */}
         {/* TAB 4: INBOX (Section 8: Bespoke & Custom Inquiries Inbox) */}
         {/* =================================================================== */}
         {currentTab === 'inbox' && (
@@ -1966,6 +2008,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
             {/* More Sub-navigation tabs */}
             <div className="bg-white p-2 rounded-xl border border-[#EAE0D5] flex flex-wrap gap-1 shadow-xs">
               {[
+                { id: 'fragrances', label: 'Fragrance Library', icon: <Sparkles className="w-3.5 h-3.5 text-[#C68B59]" /> },
                 { id: 'coupons', label: 'Coupons & Vouchers', icon: <Tag className="w-3.5 h-3.5" /> },
                 { id: 'policies', label: 'Legal Policies', icon: <FileText className="w-3.5 h-3.5" /> },
                 { id: 'settings', label: 'Store Settings', icon: <Settings className="w-3.5 h-3.5" /> },
@@ -1987,6 +2030,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                 </button>
               ))}
             </div>
+
+            {/* SUB-VIEW 1: COUPONS (Section 7: Single-Step Save & Edit) */}
+            {moreSubTab === 'fragrances' && (
+              <FragranceManager 
+                fragrances={fragrances} 
+                onFragrancesChange={onFragrancesChange || (() => {})} 
+              />
+            )}
 
             {/* SUB-VIEW 1: COUPONS (Section 7: Single-Step Save & Edit) */}
             {moreSubTab === 'coupons' && (
@@ -2132,6 +2183,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                               {c.minOrder ? <span className="text-[#7A6F62] text-[10px]">Min ৳{c.minOrder}</span> : null}
                             </div>
                             {c.description && <p className="text-[11px] text-[#5A5248]">{c.description}</p>}
+                            <div className="flex flex-wrap items-center gap-2 text-[10px] text-[#7A6F62] pt-0.5">
+                              {c.expiryDate ? (
+                                <span className="flex items-center gap-1 font-mono">
+                                  <Clock className="w-3 h-3 text-[#8C5E35]" />
+                                  <span>Expires: {c.expiryDate}</span>
+                                </span>
+                              ) : (
+                                <span>No expiration</span>
+                              )}
+                              <span>•</span>
+                              <span>
+                                Used: {c.usageCount || 0}{c.usageLimit ? ` / ${c.usageLimit} max` : ' (No limit)'}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
@@ -2250,6 +2315,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                           name="paymentMode"
                           checked={settingsForm.paymentMode !== 'merchant'}
                           onChange={() => setSettingsForm({ ...settingsForm, paymentMode: 'manual' })}
+
                           className="mt-0.5 accent-[#8C5E35]"
                         />
                         <div>
@@ -2402,7 +2468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                     <div className="flex items-center gap-3">
                       {faviconPreview && (
                         <div className="w-8 h-8 rounded bg-white border border-[#EAE0D5] p-1 shrink-0">
-                          <img src={faviconPreview} alt="Favicon" className="w-full h-full object-contain" />
+                          <img src={faviconPreview} alt="Favicon" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = "/favicon.svg"; }} />
                         </div>
                       )}
                       <label className="px-3 py-1.5 bg-white hover:bg-[#FAF8F5] border border-dashed border-[#8C5E35] rounded text-xs font-medium cursor-pointer">
@@ -2514,7 +2580,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
               <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#EAE0D5] space-y-6 shadow-xs">
                 <div>
                   <h3 className="font-serif text-base font-semibold text-[#24211D]">Sales Analytics Report</h3>
-                  <p className="text-xs text-[#7A6F62] mt-0.5">Computed directly from verified store orders.</p>
+                  <p className="text-xs text-[#7A6F62] mt-0.5">Revenue from verified, non-test orders only.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2698,7 +2764,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                   {editingProduct ? 'Edit Candle Creation' : 'Add New Candle Creation'}
                 </h3>
                 <p className="text-xs text-[#7A6F62]">
-                  {editingProduct ? 'Update specifications and pricing' : 'Form starts blank — fill title, price, category, and photo to publish.'}
+                  {editingProduct ? 'Update specifications and pricing' : 'Form starts blank — fill title, price, and photo to publish.'}
                 </p>
               </div>
               <button
@@ -2757,22 +2823,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                 {productFormErrors.image && <p className="text-[11px] text-rose-600">{productFormErrors.image}</p>}
               </div>
 
-              {/* Category Dropdown (Section 4: Canonical list) */}
-              <div className="space-y-1">
-                <label className="font-semibold text-[#24211D]">
-                  Category <span className="text-rose-600">*</span>
-                </label>
-                <select
-                  value={productForm.category || 'bubble'}
-                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value as any })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg focus:outline-none focus:border-[#8C5E35] cursor-pointer"
-                >
-                  {CANONICAL_CATEGORIES.filter(c => c.id !== 'all').map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* Price & Original Price */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -2821,14 +2871,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                   <input
                     type="number"
                     min="0"
-                    value={productForm.stockQuantity ?? 20}
+                    value={productForm.stockQuantity ?? 0}
                     onChange={(e) => setProductForm({ ...productForm, stockQuantity: Number(e.target.value) })}
                     className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg font-mono"
                   />
                 </div>
               </div>
 
-              {/* Scent Family & Scent Notes (Section 4) */}
+              {/* Scent Family & Product Status */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="font-semibold text-[#24211D]">Fragrance Family</label>
@@ -2846,14 +2896,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore, i
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-[#24211D]">Scent Notes (comma separated)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. French Vanilla, Rose Petals"
-                    value={scentNotesInput}
-                    onChange={(e) => setScentNotesInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg"
-                  />
+                  <label className="font-semibold text-[#24211D]">Product Visibility Status</label>
+                  <select
+                    value={productForm.status || 'published'}
+                    onChange={(e) => setProductForm({ ...productForm, status: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg cursor-pointer font-medium"
+                  >
+                    <option value="published">Published (Visible on storefront)</option>
+                    <option value="draft">Draft (Hidden from storefront)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Global Fragrance Notice (Part 1A) */}
+              <div className="p-3 bg-[#F5F1EB] border border-[#EAE0D5] rounded-lg flex items-start gap-2.5 text-xs text-[#5A5248]">
+                <Sparkles className="w-4 h-4 text-[#8C5E35] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-[#24211D] block">Global Fragrance Pool Active</span>
+                  <p className="text-[11px] text-[#7A6F62] mt-0.5">
+                    Fragrances are managed globally in Fragrance Library — this product uses all Active fragrances.
+                  </p>
                 </div>
               </div>
 

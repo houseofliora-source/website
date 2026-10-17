@@ -19,9 +19,10 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut
 } from 'firebase/auth';
-import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme, CustomerUser, CustomInquiry } from '../types';
+import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme, CustomerUser, CustomInquiry, FragranceItem } from '../types';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../data/products';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
+import { INITIAL_FRAGRANCES } from '../data/fragrances';
 
 // Firebase configuration from environment variables with House of Líora project defaults
 const firebaseConfig = {
@@ -96,6 +97,10 @@ export async function fetchLiveProducts(): Promise<Product[]> {
 
     const fetchedProducts: Product[] = [];
     snapshot.forEach(docSnap => {
+      // Exclude phantom Aphrodite product permanently (Part 2A)
+      if (docSnap.id === 'sculpted-aphrodite-torso' || docSnap.data().name?.includes('Aphrodite')) {
+        return;
+      }
       fetchedProducts.push({
         id: docSnap.id,
         ...(docSnap.data() as Omit<Product, 'id'>)
@@ -208,6 +213,16 @@ export function updateDocumentFavicon(urlOrSvg?: string) {
   if (!urlOrSvg) return;
   let finalHref = urlOrSvg.trim();
 
+  // Guard against invalid SPA HTML or broken HTML strings being set as favicon
+  if (
+    finalHref.startsWith('<!') || 
+    finalHref.startsWith('<html') || 
+    finalHref.includes('<body') || 
+    finalHref.includes('<!DOCTYPE')
+  ) {
+    return;
+  }
+
   // If the owner pasted raw SVG code directly, convert it to a valid SVG Data URI
   if (finalHref.startsWith('<svg') || finalHref.includes('</svg>')) {
     const encodedSvg = encodeURIComponent(finalHref)
@@ -221,12 +236,12 @@ export function updateDocumentFavicon(urlOrSvg?: string) {
 
   if (link) {
     link.href = finalHref;
-    link.type = isSvg ? 'image/svg+xml' : 'image/x-icon';
+    link.type = isSvg ? 'image/svg+xml' : 'image/png';
   } else {
     const newLink = document.createElement('link');
     newLink.id = 'site-favicon';
     newLink.rel = 'icon';
-    newLink.type = isSvg ? 'image/svg+xml' : 'image/x-icon';
+    newLink.type = isSvg ? 'image/svg+xml' : 'image/png';
     newLink.href = finalHref;
     document.head.appendChild(newLink);
   }
@@ -401,11 +416,16 @@ export function subscribeToProducts(callback: (products: Product[]) => void) {
     return onSnapshot(prodsRef, (snapshot) => {
       const list: Product[] = [];
       snapshot.forEach(docSnap => {
-        list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Product, 'id'>) });
+        const data = docSnap.data() as Partial<Product>;
+        if (docSnap.id === 'sculpted-aphrodite-torso' || (data.name && data.name.includes('Aphrodite'))) {
+          return;
+        }
+        list.push({ id: docSnap.id, ...(data as Omit<Product, 'id'>) });
       });
       callback(list.length > 0 ? list : INITIAL_PRODUCTS);
     }, (error) => {
       console.warn('[Firebase] Product subscription warning:', error);
+      callback(INITIAL_PRODUCTS);
     });
   } catch (err) {
     console.error('[Firebase] subscribeToProducts error:', err);
@@ -682,6 +702,133 @@ export function subscribeToInquiries(callback: (inquiries: CustomInquiry[]) => v
     return () => {};
   }
 }
+
+/**
+ * Global Fragrance Pool Services (Part 1)
+ */
+export async function fetchFragrancesFromFirestore(): Promise<FragranceItem[]> {
+  if (!db) {
+    try {
+      const cached = localStorage.getItem('liora_fragrances');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return INITIAL_FRAGRANCES;
+  }
+  try {
+    const ref = collection(db, 'fragrances');
+    const snap = await getDocs(ref);
+    if (snap.empty) {
+      for (const item of INITIAL_FRAGRANCES) {
+        const docRef = doc(db, 'fragrances', item.id);
+        await setDoc(docRef, item);
+      }
+      return INITIAL_FRAGRANCES;
+    }
+    const list: FragranceItem[] = [];
+    snap.forEach(d => list.push(d.data() as FragranceItem));
+    const sorted = list.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+    try {
+      localStorage.setItem('liora_fragrances', JSON.stringify(sorted));
+    } catch {}
+    return sorted;
+  } catch (e) {
+    console.warn('[Firebase] fetchFragrances error, using initial fallback:', e);
+    return INITIAL_FRAGRANCES;
+  }
+}
+
+export function subscribeToFragrances(callback: (fragrances: FragranceItem[]) => void) {
+  if (!db) {
+    try {
+      const cached = localStorage.getItem('liora_fragrances');
+      callback(cached ? JSON.parse(cached) : INITIAL_FRAGRANCES);
+    } catch {
+      callback(INITIAL_FRAGRANCES);
+    }
+    return () => {};
+  }
+  try {
+    const ref = collection(db, 'fragrances');
+    return onSnapshot(ref, (snap) => {
+      if (snap.empty) {
+        callback(INITIAL_FRAGRANCES);
+        return;
+      }
+      const list: FragranceItem[] = [];
+      snap.forEach(d => list.push(d.data() as FragranceItem));
+      const sorted = list.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+      try {
+        localStorage.setItem('liora_fragrances', JSON.stringify(sorted));
+      } catch {}
+      callback(sorted);
+    }, (err) => {
+      console.warn('[Firebase] Fragrances subscription error:', err);
+    });
+  } catch (err) {
+    console.error('[Firebase] subscribeToFragrances failed:', err);
+    return () => {};
+  }
+}
+
+export async function saveFragranceToFirestore(fragrance: FragranceItem): Promise<boolean> {
+  const clean = JSON.parse(JSON.stringify(fragrance));
+  try {
+    const current = JSON.parse(localStorage.getItem('liora_fragrances') || '[]');
+    const idx = current.findIndex((f: FragranceItem) => f.id === fragrance.id);
+    if (idx !== -1) {
+      current[idx] = clean;
+    } else {
+      current.push(clean);
+    }
+    localStorage.setItem('liora_fragrances', JSON.stringify(current));
+  } catch {}
+
+  if (!db) return true;
+  try {
+    const ref = doc(db, 'fragrances', fragrance.id);
+    await setDoc(ref, clean, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to save fragrance:', error);
+    return false;
+  }
+}
+
+export async function deleteFragranceFromFirestore(id: string): Promise<boolean> {
+  try {
+    const current = JSON.parse(localStorage.getItem('liora_fragrances') || '[]');
+    const filtered = current.filter((f: FragranceItem) => f.id !== id);
+    localStorage.setItem('liora_fragrances', JSON.stringify(filtered));
+  } catch {}
+
+  if (!db) return true;
+  try {
+    const ref = doc(db, 'fragrances', id);
+    await deleteDoc(ref);
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to delete fragrance:', error);
+    return false;
+  }
+}
+
+export async function batchUpdateFragrances(fragrances: FragranceItem[]): Promise<boolean> {
+  try {
+    localStorage.setItem('liora_fragrances', JSON.stringify(fragrances));
+  } catch {}
+  if (!db) return true;
+  try {
+    for (const f of fragrances) {
+      const ref = doc(db, 'fragrances', f.id);
+      await setDoc(ref, f, { merge: true });
+    }
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to batch update fragrances:', error);
+    return false;
+  }
+}
+
 
 
 

@@ -13,12 +13,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const isOutOfStock = product.inStock === false;
 
-  // Format category badge label like "BESTSELLER" / "NEW ARRIVAL" / "BUBBLE" / "FLOWER VASE"
-  const tagLabel = product.isBestseller
+  // Status badges only (BESTSELLER / NEW ARRIVAL) - NO category labels
+  const badgeLabel = product.isBestseller
     ? 'BESTSELLER'
     : product.isNewArrival
     ? 'NEW ARRIVAL'
-    : (product.category || 'ARTISANAL').toUpperCase();
+    : null;
 
   return (
     <div
@@ -38,10 +38,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }}
         />
 
-        {/* Minimalist Top Tag in Apple Liquid Glass Pill */}
-        <span className="absolute top-3 left-3 apple-glass-pill px-2.5 py-1 text-[9px] sm:text-[10px] tracking-[0.2em] font-sans uppercase text-[#5A5248] font-medium shadow-xs">
-          {tagLabel}
-        </span>
+        {/* Minimalist Top Tag in Apple Liquid Glass Pill (Only for Bestseller / New Arrival) */}
+        {badgeLabel && (
+          <span className="absolute top-3 left-3 apple-glass-pill px-2.5 py-1 text-[9px] sm:text-[10px] tracking-[0.2em] font-sans uppercase text-[#5A5248] font-medium shadow-xs">
+            {badgeLabel}
+          </span>
+        )}
 
         {isOutOfStock && (
           <span className="absolute top-3 right-3 apple-glass-pill px-2.5 py-1 text-[9px] sm:text-[10px] tracking-[0.15em] font-sans uppercase text-red-700 bg-red-50/80 border-red-200">

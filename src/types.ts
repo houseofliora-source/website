@@ -15,7 +15,7 @@ export interface CatalogContent {
 export interface Product {
   id: string;
   name: string;
-  category: string;
+  category?: string;
   price: number;
   originalPrice?: number;
   image: string;
@@ -41,10 +41,22 @@ export interface Product {
   isDeleted?: boolean;
 }
 
+export interface FragranceItem {
+  id: string;
+  name: string;
+  description?: string;
+  active: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
   selectedScent?: string;
+  selectedFragrance?: string;
+  fragrance?: string;
   customRibbonColor?: string;
   customTagText?: string;
 }
@@ -82,6 +94,8 @@ export interface OrderRecord {
     quantity: number;
     price: number;
     scent?: string;
+    fragrance?: string;
+    selectedFragrance?: string;
   }[];
   customFavors?: CustomFavorItem[];
   subtotal: number;
