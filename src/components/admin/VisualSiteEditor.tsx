@@ -87,6 +87,8 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [favorEditTab, setFavorEditTab] = useState<'general' | 'form' | 'slideshow' | 'pillars'>('general');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
 
   // Sync external page view or product ID requests
   useEffect(() => {

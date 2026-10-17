@@ -255,8 +255,6 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     inscriptionNote: 'Includes personalized foil-accented card and botanical sprig.',
     cardBoxBadge: 'Live Estimate & Terms',
     cardBoxTitle: 'Order Quotation',
-    leadTimeText: '4–7 Business Days',
-    advanceNoticeText: '50% advance required upon confirmation.',
   },
   care: {
     badge: 'Artisan Soy Wisdom',
