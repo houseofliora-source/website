@@ -56,6 +56,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const isOutOfStock = product.inStock === false;
 
   const handleAddToCart = () => {
+    if (isEditMode) {
+      alert('Editor Preview Mode: Add to Bag is in preview mode and does not place orders.');
+      return;
+    }
     if (isOutOfStock || !onAddToCart) return;
     onAddToCart(product, quantity, selectedNote);
     setAdded(true);
@@ -63,6 +67,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   };
 
   const handleInstantBuy = () => {
+    if (isEditMode) {
+      alert('Editor Preview Mode: Buy Now is in preview mode and does not place orders.');
+      return;
+    }
     if (isOutOfStock || !onBuyNow) return;
     onBuyNow(product, quantity, selectedNote);
   };
@@ -275,7 +283,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 ) : (
                   <>
                     <ShoppingBag className="w-4 h-4" />
-                    <span>Add to Bag · ৳{product.price * quantity}</span>
+                    <span>{isEditMode ? '[Preview] Add to Bag' : 'Add to Bag'} · ৳{product.price * quantity}</span>
                   </>
                 )}
               </button>
@@ -288,7 +296,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 onClick={handleInstantBuy}
                 className="w-full py-3.5 px-6 text-xs sm:text-sm font-semibold rounded-full apple-glass-pill text-[#24211D] hover:bg-white/90 hover:text-[#8C5E35] border border-[#8C5E35]/40 transition-all flex items-center justify-center cursor-pointer shadow-xs tracking-wider"
               >
-                <span>Buy Now</span>
+                <span>{isEditMode ? '[Preview] Buy Now' : 'Buy Now'}</span>
               </button>
             )}
           </div>

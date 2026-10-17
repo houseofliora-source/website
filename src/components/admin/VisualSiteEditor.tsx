@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Edit3, 
   Save, 
@@ -36,7 +36,8 @@ import {
   ShoppingBag,
   Eye,
   Settings,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
 import { SiteContent, SiteTheme, ReviewItem, FaqItem, StoreSettings, Product, FavorMoldItem, FavorPackagingItem, CartItem } from '../../types';
 import { DEFAULT_SITE_CONTENT, DEFAULT_PRODUCT_PAGE_CONTENT, sanitizeSiteContent } from '../../data/defaultContent';
@@ -86,9 +87,28 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [favorEditTab, setFavorEditTab] = useState<'general' | 'form' | 'slideshow' | 'pillars'>('general');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [newCategoryLabel, setNewCategoryLabel] = useState<string>('');
+
+  // Compute modified sections between current draft content and initialContent (Section 1)
+  const changedSections = useMemo(() => {
+    const list: string[] = [];
+    if (!initialContent) return list;
+    if (JSON.stringify(content.hero) !== JSON.stringify(initialContent.hero)) list.push('Hero Section & Taglines');
+    if (JSON.stringify(content.catalog) !== JSON.stringify(initialContent.catalog)) list.push('Catalog Categories & Section Header');
+    if (JSON.stringify(content.favors) !== JSON.stringify(initialContent.favors)) list.push('Bespoke & Custom Orders Section');
+    if (JSON.stringify(content.care) !== JSON.stringify(initialContent.care)) list.push('Candle Care Ritual Rules');
+    if (JSON.stringify(content.reviews) !== JSON.stringify(initialContent.reviews)) list.push('Customer Reviews & Ratings');
+    if (JSON.stringify(content.faq) !== JSON.stringify(initialContent.faq)) list.push('Frequently Asked Questions');
+    if (JSON.stringify(content.footer) !== JSON.stringify(initialContent.footer)) list.push('Footer Brand & Policy Links');
+    if (JSON.stringify(content.theme) !== JSON.stringify(initialContent.theme)) list.push('Typography & Palette Theme');
+    if (JSON.stringify(content.productPage) !== JSON.stringify(initialContent.productPage)) list.push('Product Detail Page Content');
+    return list;
+  }, [content, initialContent]);
+
+  const isDraftModified = changedSections.length > 0;
 
   // Sync external page view or product ID requests
   useEffect(() => {
@@ -204,8 +224,8 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
 
   // Reset handler
   const handleReset = () => {
-    if (confirm('Are you sure you want to reset all edits to the default curated content?')) {
-      setContent(DEFAULT_SITE_CONTENT);
+    if (window.confirm('This will discard ALL unpublished changes. Are you sure?')) {
+      setContent(sanitizeSiteContent(initialContent));
     }
   };
 
@@ -333,10 +353,18 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Reset</span>
             </button>
+            <div className="h-4 w-px bg-[#3D3730] mx-1" />
+
+            {/* Draft Status Badge (Section 1) */}
+            {isDraftModified && (
+              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono animate-pulse">
+                Draft — not yet live
+              </span>
+            )}
 
             {/* Publish */}
             <button
-              onClick={handlePublish}
+              onClick={() => setIsPublishModalOpen(true)}
               disabled={isSaving}
               className="px-3.5 py-1.5 bg-[#8C5E35] hover:bg-[#A36E3F] text-white text-xs font-semibold rounded flex items-center gap-2 cursor-pointer shadow-md transition-all disabled:opacity-50"
             >
@@ -520,7 +548,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
 
           {/* Save & Publish */}
           <button
-            onClick={handlePublish}
+            onClick={() => setIsPublishModalOpen(true)}
             disabled={isSaving}
             className="px-4 py-1.5 bg-[#8C5E35] hover:bg-[#A36E3F] text-white text-xs font-semibold rounded flex items-center gap-2 cursor-pointer shadow-md transition-all disabled:opacity-50"
           >
@@ -815,7 +843,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
           <div className="relative group border-b border-[#EAE0D5] bg-[#FAF8F5] py-3.5 px-4 text-xs text-[#5A5248]">
             {isEditMode && (
               <button
-                onClick={() => setActiveModal('hero_text')}
+                onClick={() => setActiveModal('ribbon')}
                 className="absolute -top-3 right-4 z-20 px-3 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-xs rounded-full flex items-center gap-1.5 shadow-md cursor-pointer border border-white/40"
               >
                 <Edit3 className="w-3 h-3" />
@@ -1290,7 +1318,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             </div>
 
             <div className="pt-4 border-t border-[#3D3730] text-center text-xs text-[#877E71]">
-              <p>© {new Date().getFullYear()} {content.footer.copyright}</p>
+              <p>© {new Date().getFullYear()} {content.footer.copyright ? content.footer.copyright.replace(/^©?\s*\d{4}\s*/, '').replace(/\b\d{4}\b$/, '').trim() : 'House of Líora (@houseofliorabd). All rights reserved.'}</p>
             </div>
           </footer>
       </>
@@ -1412,69 +1440,91 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
                 </p>
               </div>
 
-              {/* Trust Ribbon (Image 3 bar under hero) */}
-              <div className="pt-3 border-t border-[#EAE0D5] space-y-2">
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#EAE0D5]">
+              <button
+                onClick={() => setActiveModal(null)}
+                className="px-4 py-2 bg-[#24211D] text-white text-xs rounded hover:bg-[#3D3730] cursor-pointer"
+              >
+                Apply to Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED MODAL: Hero Bottom Trust Ribbon / 4 Points Editor */}
+      {activeModal === 'ribbon' && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF8F5] text-[#24211D] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-[#D8CEBE] max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAE0D5]">
+              <h3 className="font-serif text-lg font-semibold flex items-center gap-2 text-[#24211D]">
+                <Sparkles className="w-4 h-4 text-[#8C5E35]" />
+                <span>Hero Bottom Trust Ribbon / ৪টি সুবিধা ও পলিসির পয়েন্ট</span>
+              </h3>
+              <button onClick={() => setActiveModal(null)} className="p-1 hover:bg-[#EAE0D5] rounded cursor-pointer">
+                <X className="w-5 h-5 text-[#7A6F62]" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-[#7A6F62]">
+                হিরো সেকশনের ঠিক নিচে থাকা ৪টি ব্র্যান্ড সুবিধা ও ট্রাস্ট পয়েন্টের টেক্সট এখান থেকে পরিবর্তন করুন:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <h4 className="font-semibold text-[#8C5E35] text-xs">
-                    Hero Bottom Trust Ribbon / ৪টি সুবিধা ও পলিসির পয়েন্ট:
-                  </h4>
-                  <p className="text-[11px] text-[#7A6F62]">
-                    হিরো সেকশনের ঠিক নিচে থাকা ৪টি সুবিধার টেক্সট এখান থেকে পরিবর্তন করুন:
-                  </p>
+                  <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 1 (Flame Icon):</label>
+                  <input
+                    type="text"
+                    value={content.hero.ribbonItem1 ?? '100% Natural Botanical Soy Wax'}
+                    onChange={e => setContent({
+                      ...content,
+                      hero: { ...content.hero, ribbonItem1: e.target.value }
+                    })}
+                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                    placeholder="100% Natural Botanical Soy Wax"
+                  />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 1 (Flame Icon):</label>
-                    <input
-                      type="text"
-                      value={content.hero.ribbonItem1 ?? '100% Natural Botanical Soy Wax'}
-                      onChange={e => setContent({
-                        ...content,
-                        hero: { ...content.hero, ribbonItem1: e.target.value }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      placeholder="100% Natural Botanical Soy Wax"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 2 (Courier Icon):</label>
-                    <input
-                      type="text"
-                      value={content.hero.ribbonItem2 ?? 'Doorstep Courier (Dhaka ৳70, Outside ৳130)'}
-                      onChange={e => setContent({
-                        ...content,
-                        hero: { ...content.hero, ribbonItem2: e.target.value }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      placeholder="Doorstep Courier (Dhaka ৳70, Outside ৳130)"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 3 (Sparkles Icon):</label>
-                    <input
-                      type="text"
-                      value={content.hero.ribbonItem3 ?? 'Bespoke Gifting & Custom Event Favors'}
-                      onChange={e => setContent({
-                        ...content,
-                        hero: { ...content.hero, ribbonItem3: e.target.value }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      placeholder="Bespoke Gifting & Custom Event Favors"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 4 (Shield Icon):</label>
-                    <input
-                      type="text"
-                      value={content.hero.ribbonItem4 ?? 'Cash on Delivery & Verified bKash'}
-                      onChange={e => setContent({
-                        ...content,
-                        hero: { ...content.hero, ribbonItem4: e.target.value }
-                      })}
-                      className="w-full p-2 bg-white border border-[#D8CEBE] rounded text-xs"
-                      placeholder="Cash on Delivery & Verified bKash"
-                    />
-                  </div>
+                <div>
+                  <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 2 (Courier Icon):</label>
+                  <input
+                    type="text"
+                    value={content.hero.ribbonItem2 ?? 'Doorstep Courier (Dhaka ৳70, Outside ৳130)'}
+                    onChange={e => setContent({
+                      ...content,
+                      hero: { ...content.hero, ribbonItem2: e.target.value }
+                    })}
+                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                    placeholder="Doorstep Courier (Dhaka ৳70, Outside ৳130)"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 3 (Sparkles Icon):</label>
+                  <input
+                    type="text"
+                    value={content.hero.ribbonItem3 ?? 'Bespoke Gifting & Custom Event Favors'}
+                    onChange={e => setContent({
+                      ...content,
+                      hero: { ...content.hero, ribbonItem3: e.target.value }
+                    })}
+                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                    placeholder="Bespoke Gifting & Custom Event Favors"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] text-[#5A5248] font-medium block mb-1">Point 4 (Shield Icon):</label>
+                  <input
+                    type="text"
+                    value={content.hero.ribbonItem4 ?? 'Cash on Delivery & Verified bKash'}
+                    onChange={e => setContent({
+                      ...content,
+                      hero: { ...content.hero, ribbonItem4: e.target.value }
+                    })}
+                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
+                    placeholder="Cash on Delivery & Verified bKash"
+                  />
                 </div>
               </div>
             </div>
@@ -1491,8 +1541,7 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
         </div>
       )}
 
-      {/* MODAL 2: Catalog Header & Dynamic Categories Editor */}
-      {activeModal === 'catalog' && (
+{activeModal === 'catalog' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#FAF8F5] text-[#24211D] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-[#D8CEBE] max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#EAE0D5]">
@@ -2616,6 +2665,72 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
       )}
 
       
+            {/* PUBLISH CONFIRMATION & SUMMARY MODAL (Section 1) */}
+      {isPublishModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF8F5] text-[#24211D] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-[#D8CEBE]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EAE0D5]">
+              <h3 className="font-serif text-lg font-semibold flex items-center gap-2 text-[#24211D]">
+                <Sparkles className="w-4 h-4 text-[#8C5E35]" />
+                <span>Publish to Live Site Confirmation</span>
+              </h3>
+              <button onClick={() => setIsPublishModalOpen(false)} className="p-1 hover:bg-[#EAE0D5] rounded cursor-pointer">
+                <X className="w-5 h-5 text-[#7A6F62]" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-[#5A5248] leading-relaxed">
+                Review the changes made in this draft session before making them live for all visitors:
+              </p>
+
+              {changedSections.length > 0 ? (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-2">
+                  <div className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                    <span>Modified Sections ({changedSections.length}):</span>
+                  </div>
+                  <ul className="text-xs text-amber-800 list-disc list-inside space-y-1">
+                    {changedSections.map(sec => (
+                      <li key={sec} className="font-medium">{sec}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="p-3 bg-[#F0EDE8] border border-[#D8CEBE] rounded-lg text-xs text-[#5A5248]">
+                  <span>No new modifications detected in this draft compared to live site. Publishing will re-synchronize live storage.</span>
+                </div>
+              )}
+
+              <p className="text-[11px] text-[#7A6F62]">
+                Once published, your visitors will immediately experience these updates on <span className="font-mono text-[#8C5E35]">houseofliora.company</span>.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#EAE0D5]">
+              <button
+                type="button"
+                onClick={() => setIsPublishModalOpen(false)}
+                className="px-4 py-2 border border-[#D8CEBE] bg-white text-[#5A5248] text-xs rounded hover:bg-[#F5F1EB] cursor-pointer"
+              >
+                Keep as Draft
+              </button>
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={async () => {
+                  setIsPublishModalOpen(false);
+                  await handlePublish();
+                }}
+                className="px-5 py-2 bg-[#8C5E35] hover:bg-[#A36E3F] text-white text-xs font-medium rounded flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                <span>Confirm & Make Live Now</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </>
     );
   }

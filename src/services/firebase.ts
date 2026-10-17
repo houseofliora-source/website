@@ -18,7 +18,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut
 } from 'firebase/auth';
-import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme, CustomerUser } from '../types';
+import { Product, OrderRecord, StoreSettings, SiteContent, SiteTheme, CustomerUser, CustomInquiry } from '../types';
 import { INITIAL_PRODUCTS, DEFAULT_STORE_SETTINGS } from '../data/products';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 
@@ -286,13 +286,30 @@ export async function fetchAllOrdersFromFirestore(): Promise<OrderRecord[]> {
  * Update an order's status in Firestore
  */
 export async function updateOrderStatusInFirestore(orderId: string, status: OrderRecord['status']): Promise<boolean> {
-  if (!db) return false;
+  return updateOrderInFirestore(orderId, { status });
+}
+
+/**
+ * Update arbitrary fields of an order in Firestore
+ */
+export async function updateOrderInFirestore(orderId: string, updates: Partial<OrderRecord>): Promise<boolean> {
+  if (!db) {
+    try {
+      const stored = localStorage.getItem('liora_offline_orders');
+      if (stored) {
+        const orders: OrderRecord[] = JSON.parse(stored);
+        const updated = orders.map(o => o.id === orderId ? { ...o, ...updates } : o);
+        localStorage.setItem('liora_offline_orders', JSON.stringify(updated));
+      }
+    } catch {}
+    return true;
+  }
   try {
     const ref = doc(db, 'orders', orderId);
-    await setDoc(ref, { status }, { merge: true });
+    await setDoc(ref, updates, { merge: true });
     return true;
   } catch (error) {
-    console.error('[Firebase] Failed to update order status:', error);
+    console.error('[Firebase] Failed to update order:', error);
     return false;
   }
 }
@@ -313,6 +330,22 @@ export async function fetchAllCustomersFromFirestore(): Promise<CustomerUser[]> 
   } catch (error) {
     console.error('[Firebase] Failed to fetch customers:', error);
     return [];
+  }
+}
+
+/**
+ * Delete a customer record from Firestore
+ */
+export async function deleteCustomerFromFirestore(customerKey: string): Promise<boolean> {
+  if (!db) return true;
+  try {
+    const customerId = customerKey.replace(/[^a-zA-Z0-9]/g, '_');
+    const ref = doc(db, 'customers', customerId);
+    await deleteDoc(ref);
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to delete customer:', error);
+    return false;
   }
 }
 
@@ -519,6 +552,137 @@ export function subscribeToSiteContent(callback: (content: SiteContent) => void)
     return () => {};
   }
 }
+
+/**
+ * Submit custom bespoke inquiry to Firestore 'inquiries' collection
+ */
+export async function submitInquiryToFirestore(inquiry: CustomInquiry): Promise<boolean> {
+  // Always cache locally as backup
+  try {
+    const local = JSON.parse(localStorage.getItem('liora_custom_inquiries') || '[]');
+    const filtered = local.filter((i: CustomInquiry) => i.id !== inquiry.id);
+    localStorage.setItem('liora_custom_inquiries', JSON.stringify([inquiry, ...filtered]));
+  } catch {}
+
+  if (!db) return true;
+
+  try {
+    const cleanInquiry = JSON.parse(JSON.stringify(inquiry));
+    const ref = doc(db, 'inquiries', inquiry.id);
+    await setDoc(ref, {
+      ...cleanInquiry,
+      timestamp: serverTimestamp(),
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.warn('[Firebase] Could not write inquiry to Firestore (saved locally):', error);
+    return true;
+  }
+}
+
+/**
+ * Fetch all bespoke inquiries from Firestore or fallback to localStorage
+ */
+export async function fetchAllInquiriesFromFirestore(): Promise<CustomInquiry[]> {
+  let localList: CustomInquiry[] = [];
+  try {
+    localList = JSON.parse(localStorage.getItem('liora_custom_inquiries') || '[]');
+  } catch {}
+
+  if (!db) return localList;
+
+  try {
+    const ref = collection(db, 'inquiries');
+    const snapshot = await getDocs(ref);
+    if (snapshot.empty) return localList;
+
+    const list: CustomInquiry[] = [];
+    snapshot.forEach(docSnap => {
+      list.push(docSnap.data() as CustomInquiry);
+    });
+
+    // Merge with any offline local inquiries
+    const combined = [...list];
+    localList.forEach(loc => {
+      if (!combined.some(c => c.id === loc.id)) {
+        combined.push(loc);
+      }
+    });
+
+    return combined.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  } catch (error) {
+    console.warn('[Firebase] Could not fetch inquiries, using local cache:', error);
+    return localList;
+  }
+}
+
+/**
+ * Update an inquiry's status or internal notes in Firestore
+ */
+export async function updateInquiryStatusInFirestore(
+  inquiryId: string, 
+  status: CustomInquiry['status'], 
+  internalNotes?: string
+): Promise<boolean> {
+  // Update local cache
+  try {
+    const local = JSON.parse(localStorage.getItem('liora_custom_inquiries') || '[]');
+    const updated = local.map((i: CustomInquiry) => {
+      if (i.id === inquiryId) {
+        return { ...i, status, internalNotes: internalNotes !== undefined ? internalNotes : i.internalNotes };
+      }
+      return i;
+    });
+    localStorage.setItem('liora_custom_inquiries', JSON.stringify(updated));
+  } catch {}
+
+  if (!db) return true;
+
+  try {
+    const ref = doc(db, 'inquiries', inquiryId);
+    const updatePayload: Record<string, any> = { status };
+    if (internalNotes !== undefined) {
+      updatePayload.internalNotes = internalNotes;
+    }
+    await setDoc(ref, updatePayload, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Failed to update inquiry in Firestore:', error);
+    return false;
+  }
+}
+
+/**
+ * Real-time listener for Bespoke Inquiries
+ */
+export function subscribeToInquiries(callback: (inquiries: CustomInquiry[]) => void) {
+  if (!db) {
+    try {
+      const local = JSON.parse(localStorage.getItem('liora_custom_inquiries') || '[]');
+      callback(local);
+    } catch {
+      callback([]);
+    }
+    return () => {};
+  }
+
+  try {
+    const ref = collection(db, 'inquiries');
+    return onSnapshot(ref, (snapshot) => {
+      const list: CustomInquiry[] = [];
+      snapshot.forEach(docSnap => {
+        list.push(docSnap.data() as CustomInquiry);
+      });
+      callback(list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
+    }, (error) => {
+      console.warn('[Firebase] Inquiries subscription warning:', error);
+    });
+  } catch (err) {
+    console.error('[Firebase] subscribeToInquiries error:', err);
+    return () => {};
+  }
+}
+
 
 
 

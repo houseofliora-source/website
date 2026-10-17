@@ -19,6 +19,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  gallery?: string[];
   scentFamily: string;
   scentNotes: string[];
   dimensions: string;
@@ -26,8 +27,18 @@ export interface Product {
   waxType: string;
   description: string;
   inStock?: boolean;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  sku?: string;
+  shippingWeight?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  slug?: string;
+  status?: 'draft' | 'published';
+  relatedProductIds?: string[];
   isBestseller?: boolean;
   isNewArrival?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface CartItem {
@@ -47,6 +58,14 @@ export interface CustomFavorItem {
   details: string;
 }
 
+export interface OrderAuditEntry {
+  timestamp?: string;
+  time?: string;
+  action: string;
+  author?: string;
+  by?: string;
+}
+
 export interface OrderRecord {
   id: string;
   createdAt: string;
@@ -56,6 +75,8 @@ export interface OrderRecord {
   deliveryArea: 'dhaka' | 'outside';
   paymentMethod: 'cod' | 'bkash' | 'nagad';
   transactionId?: string;
+  senderPhone?: string;
+  paymentStatus?: 'pending' | 'verified' | 'rejected' | 'pending_verification';
   items: {
     title: string;
     quantity: number;
@@ -71,8 +92,25 @@ export interface OrderRecord {
   customerEmail?: string;
   district?: string;
   specialNotes?: string;
+  notes?: string;
   couponCode?: string;
   discountAmount?: number;
+  courierTracking?: string;
+  internalNotes?: string;
+  cancellationReason?: string;
+  isTestOrder?: boolean;
+  auditLog?: OrderAuditEntry[];
+}
+
+export interface CustomInquiry {
+  id: string;
+  createdAt: string;
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+  status: 'New' | 'Replied' | 'Done' | 'new' | 'replied' | 'done';
+  internalNotes?: string;
 }
 
 export interface CouponItem {
@@ -83,6 +121,10 @@ export interface CouponItem {
   active: boolean;
   minOrder?: number;
   description?: string;
+  expiryDate?: string;
+  usageLimit?: number;
+  usageCount?: number;
+  oneTimePerCustomer?: boolean;
 }
 
 export interface SavedAddress {
@@ -106,9 +148,13 @@ export interface CustomerUser {
   avatar?: string;
   password?: string;
   addresses?: SavedAddress[];
+  isBlocked?: boolean;
+  notes?: string;
 }
 
 export interface StorePolicies {
+  lastUpdated?: string;
+  version?: string;
   terms: string;
   privacy: string;
   refund: string;
@@ -121,12 +167,23 @@ export interface StoreSettings {
   minimumOrder: number;
   deliveryFeeDhaka: number;
   deliveryFeeOutside: number;
+  paymentMode?: 'manual' | 'merchant';
   bkashNumber: string;
   nagadNumber: string;
+  bkashMerchantKey?: string;
+  nagadMerchantKey?: string;
   supportPhone: string;
   supportEmail: string;
   facebookUrl: string;
   instagramUrl: string;
+  checkoutInstructions?: string;
+  checkoutNotes?: string;
+  checkoutTermsText?: string;
+  isMaintenanceMode?: boolean;
+  maintenanceMessage?: string;
+  seoHomeTitle?: string;
+  seoHomeDesc?: string;
+  banners?: { id: string; text: string; link?: string; active: boolean }[];
   coupons?: CouponItem[];
   policies?: StorePolicies;
 }

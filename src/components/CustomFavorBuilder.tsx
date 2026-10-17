@@ -12,9 +12,10 @@ import {
   ChevronRight,
   Edit3 
 } from 'lucide-react';
-import { SiteContent, Product } from '../types';
+import { SiteContent, Product, CustomInquiry } from '../types';
 import { DEFAULT_SITE_CONTENT } from '../data/defaultContent';
 import { INITIAL_PRODUCTS } from '../data/products';
+import { submitInquiryToFirestore } from '../services/firebase';
 
 interface CustomFavorBuilderProps {
   facebookUrl?: string;
@@ -82,43 +83,48 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
     }
   };
 
-  // WhatsApp link preparation
-  const rawPhone = content.whatsappNumber || supportPhone || '01700000000';
-  const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
-  const formattedPhone = cleanPhone.startsWith('88') ? cleanPhone : `88${cleanPhone}`;
+  // Real WhatsApp number from settings / content (No fake dummy fallback)
+  const configuredPhone = (content.whatsappNumber || supportPhone || '').trim();
+  const digitsOnly = configuredPhone.replace(/[^0-9]/g, '');
+  const hasWhatsApp = digitsOnly.length >= 10;
+  const formattedPhone = digitsOnly.startsWith('88') ? digitsOnly : `88${digitsOnly}`;
 
   // WhatsApp formatted inquiry message with user inputs
-  const userWhatsAppUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(
-    `Hello House of Líora, I have submitted a custom order inquiry:\n\n• Name: ${name}\n• Phone: ${phone}\n• Email: ${email}\n• Requirements & Details: ${message}`
-  )}`;
+  const userWhatsAppUrl = hasWhatsApp ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(
+    `Hello House of Líora, I have submitted a bespoke order inquiry:\n\n• Name: ${name}\n• Phone: ${phone}\n• Email: ${email || 'N/A'}\n• Requirements: ${message}`
+  )}` : '';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim() || !email.trim() || !message.trim()) {
-      alert('Please fill in your name, phone number, email address, and order details.');
+    if (isEditMode) {
+      alert('Inquiry form is in Preview Mode within the editor.');
+      return;
+    }
+    if (!name.trim() || !phone.trim() || !message.trim()) {
+      alert('Please fill in your name, contact phone number, and order details.');
       return;
     }
 
     setIsSubmitting(true);
 
-    // Save inquiry to localStorage for store records
-    try {
-      const existingInquiries = JSON.parse(localStorage.getItem('liora_custom_inquiries') || '[]');
-      const newInquiry = {
-        id: `INQ-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        name,
-        phone,
-        email,
-        message,
-      };
-      localStorage.setItem('liora_custom_inquiries', JSON.stringify([newInquiry, ...existingInquiries]));
-    } catch {}
+    const newInquiry: CustomInquiry = {
+      id: `INQ-${Math.floor(1000 + Math.random() * 9000)}`,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim() || undefined,
+      message: message.trim(),
+      status: 'New',
+    };
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-    }, 600);
+    try {
+      await submitInquiryToFirestore(newInquiry);
+    } catch (err) {
+      console.warn('Inquiry save failed:', err);
+    }
+
+    setIsSubmitting(false);
+    setSubmitted(true);
   };
 
   return (
@@ -266,16 +272,22 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                   </div>
 
                   <div className="space-y-3 pt-3 max-w-sm mx-auto">
-                    <a
-                      href={userWhatsAppUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-3.5 px-5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase inline-flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      <span>Send Directly via WhatsApp Now</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
+                    {hasWhatsApp ? (
+                      <a
+                        href={userWhatsAppUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-3.5 px-5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase inline-flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-[1.01]"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        <span>Send Directly via WhatsApp</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </a>
+                    ) : (
+                      <p className="text-xs text-[#8C5E35] font-medium bg-[#FAF8F5] p-3 rounded-xl border border-[#EAE0D5]">
+                        Our atelier team will contact you via your provided phone ({phone}) shortly.
+                      </p>
+                    )}
 
                     <button
                       type="button"
@@ -375,7 +387,7 @@ export const CustomFavorBuilder: React.FC<CustomFavorBuilderProps> = ({
                     className="w-full py-3.5 apple-glass-dark text-white rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] disabled:opacity-50"
                   >
                     <Send className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Sending Inquiry...' : 'Send Inquiry to Atelier'}</span>
+                    <span>{isEditMode ? '[Preview] Send Inquiry' : (isSubmitting ? 'Sending Inquiry...' : 'Send Inquiry to Atelier')}</span>
                   </button>
                 </form>
               )}

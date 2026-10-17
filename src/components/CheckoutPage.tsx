@@ -180,23 +180,43 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       return;
     }
 
-    if ((paymentMethod === 'bkash' || paymentMethod === 'nagad') && !transactionId) {
-      alert(`Please provide the ${paymentMethod.toUpperCase()} Transaction ID (TrxID) for verification.`);
-      return;
+    if (paymentMethod === 'bkash' || paymentMethod === 'nagad') {
+      const activeNumber = paymentMethod === 'bkash' ? storeSettings.bkashNumber : storeSettings.nagadNumber;
+      if (!activeNumber || !activeNumber.trim() || activeNumber.includes('000000')) {
+        alert(`${paymentMethod.toUpperCase()} payment number is not set by the store yet. Please choose Cash on Delivery or contact the atelier.`);
+        return;
+      }
+      const cleanSender = senderPhone.trim().replace(/[^0-9]/g, '');
+      const validSender = (cleanSender.length === 11 && cleanSender.startsWith('01')) || (cleanSender.length === 13 && cleanSender.startsWith('8801'));
+      if (!validSender) {
+        alert(`Please enter a valid 11-digit Bangladeshi sender phone number (e.g. 01XXXXXXXXX) used to send the ${paymentMethod.toUpperCase()} payment.`);
+        return;
+      }
+      const cleanTrx = transactionId.trim().toUpperCase();
+      if (!cleanTrx || cleanTrx.length < 8 || cleanTrx.length > 16 || !/^[A-Z0-9]+$/.test(cleanTrx)) {
+        alert(`Please provide a valid alphanumeric Transaction ID (TrxID) (8-16 characters) received from ${paymentMethod.toUpperCase()}.`);
+        return;
+      }
     }
 
     setIsSubmitting(true);
 
+    const cleanTrx = transactionId.trim().toUpperCase();
+    const cleanSender = senderPhone.trim();
+    const calculatedGrandTotal = Math.max(0, totalSubtotal + deliveryFee - discountAmount);
+
     const newOrder: OrderRecord = {
       id: `HL-${Math.floor(1000 + Math.random() * 9000)}`,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      customerName,
-      customerPhone,
-      customerEmail: customerEmail || undefined,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail ? customerEmail.trim() : undefined,
       customerAddress: `${customerAddress.trim()}, ${finalThana}, ${district}`,
       deliveryArea,
       paymentMethod,
-      transactionId: transactionId || undefined,
+      transactionId: cleanTrx || undefined,
+      senderPhone: cleanSender || undefined,
+      paymentStatus: paymentMethod === 'cod' ? 'verified' : 'pending',
       items: items.map(i => ({
         title: i.product.name,
         quantity: i.quantity,
@@ -208,9 +228,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       deliveryFee,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
       couponCode: appliedCoupon?.code,
-      grandTotal,
+      grandTotal: calculatedGrandTotal,
       advanceRequired: totalAdvanceRequired,
-      specialNotes: specialNotes || undefined,
+      specialNotes: specialNotes ? specialNotes.trim() : undefined,
       district,
       status: 'Pending',
     };
@@ -659,84 +679,125 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               </label>
 
               {/* bKash Option */}
-              <label 
-                onClick={() => setPaymentMethod('bkash')}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                  paymentMethod === 'bkash'
-                    ? 'apple-glass-card border-[#E2136E] bg-white/90 shadow-sm'
-                    : 'border-[#EAE0D5] hover:border-[#E2136E]/50 bg-white/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'bkash' ? 'border-[#E2136E] bg-[#E2136E]' : 'border-[#A89E90]'
-                  }`}>
-                    {paymentMethod === 'bkash' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+              {(() => {
+                const isBkashConfigured = Boolean(storeSettings.bkashNumber && storeSettings.bkashNumber.trim() && !storeSettings.bkashNumber.includes('000000'));
+                return (
+                  <div
+                    onClick={() => {
+                      if (isBkashConfigured) setPaymentMethod('bkash');
+                    }}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                      !isBkashConfigured 
+                        ? 'opacity-60 bg-white/30 border-[#EAE0D5] cursor-not-allowed'
+                        : paymentMethod === 'bkash'
+                        ? 'apple-glass-card border-[#E2136E] bg-white/90 shadow-sm cursor-pointer'
+                        : 'border-[#EAE0D5] hover:border-[#E2136E]/50 bg-white/50 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        paymentMethod === 'bkash' ? 'border-[#E2136E] bg-[#E2136E]' : 'border-[#A89E90]'
+                      }`}>
+                        {paymentMethod === 'bkash' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-[#24211D] block">bKash Mobile Payment</span>
+                        <span className="text-[11px] text-[#7A6F62] block">
+                          {isBkashConfigured ? 'Manual Send Money / Personal' : 'Payment number not set yet — please contact the store'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#E2136E] shrink-0">
+                      bKash
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-xs font-semibold text-[#24211D] block">bKash Mobile Payment</span>
-                    <span className="text-[11px] text-[#7A6F62]">Send Money / Personal Wallet</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#E2136E]">
-                  bKash
-                </span>
-              </label>
+                );
+              })()}
 
               {/* Nagad Option */}
-              <label 
-                onClick={() => setPaymentMethod('nagad')}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                  paymentMethod === 'nagad'
-                    ? 'apple-glass-card border-[#F7941D] bg-white/90 shadow-sm'
-                    : 'border-[#EAE0D5] hover:border-[#F7941D]/50 bg-white/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'nagad' ? 'border-[#F7941D] bg-[#F7941D]' : 'border-[#A89E90]'
-                  }`}>
-                    {paymentMethod === 'nagad' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+              {(() => {
+                const isNagadConfigured = Boolean(storeSettings.nagadNumber && storeSettings.nagadNumber.trim() && !storeSettings.nagadNumber.includes('000000'));
+                return (
+                  <div
+                    onClick={() => {
+                      if (isNagadConfigured) setPaymentMethod('nagad');
+                    }}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                      !isNagadConfigured 
+                        ? 'opacity-60 bg-white/30 border-[#EAE0D5] cursor-not-allowed'
+                        : paymentMethod === 'nagad'
+                        ? 'apple-glass-card border-[#F7941D] bg-white/90 shadow-sm cursor-pointer'
+                        : 'border-[#EAE0D5] hover:border-[#F7941D]/50 bg-white/50 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        paymentMethod === 'nagad' ? 'border-[#F7941D] bg-[#F7941D]' : 'border-[#A89E90]'
+                      }`}>
+                        {paymentMethod === 'nagad' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-[#24211D] block">Nagad Mobile Payment</span>
+                        <span className="text-[11px] text-[#7A6F62] block">
+                          {isNagadConfigured ? 'Manual Send Money / Personal' : 'Payment number not set yet — please contact the store'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#F7941D] shrink-0">
+                      Nagad
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-xs font-semibold text-[#24211D] block">Nagad Mobile Payment</span>
-                    <span className="text-[11px] text-[#7A6F62]">Send Money / Personal Wallet</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#F7941D]">
-                  Nagad
-                </span>
-              </label>
+                );
+              })()}
 
-              {/* Conditional Instructions for bKash / Nagad */}
+              {/* Manual 3-Step Instructions for bKash / Nagad */}
               {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
-                <div className="p-4 bg-white/80 rounded-2xl border border-[#EAE0D5] space-y-3 text-xs animate-fade-in">
-                  <div className="space-y-1">
-                    <p className="font-semibold text-[#24211D]">
-                      {paymentMethod === 'bkash' ? 'bKash Personal' : 'Nagad Personal'} Number:
-                    </p>
-                    <p className="font-mono text-base font-bold text-[#8C5E35]">
-                      {paymentMethod === 'bkash' 
-                        ? (storeSettings.bkashNumber || '01700000000') 
-                        : (storeSettings.nagadNumber || storeSettings.bkashNumber || '01700000000')}
-                    </p>
-                    <p className="text-[11px] text-[#7A6F62]">
-                      Please Send Money (৳{grandTotal}) to this number and provide the Transaction ID below:
-                    </p>
+                <div className="p-4 bg-white/95 rounded-2xl border border-[#EAE0D5] space-y-3.5 text-xs animate-fade-in shadow-xs">
+                  <div className="space-y-2 border-b border-[#EAE0D5] pb-3">
+                    <span className="font-serif text-sm font-semibold text-[#24211D] block">
+                      3-Step Manual {paymentMethod.toUpperCase()} Payment
+                    </span>
+                    <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-[#5A5248] leading-relaxed">
+                      <li>
+                        Send the <strong>EXACT order total (৳{grandTotal})</strong> via <strong>Send Money</strong> to the number below:
+                      </li>
+                      <li className="pl-4 font-mono font-bold text-sm text-[#8C5E35] select-all">
+                        {paymentMethod === 'bkash' ? storeSettings.bkashNumber : storeSettings.nagadNumber}
+                      </li>
+                      <li>Copy the <strong>Transaction ID (TrxID)</strong> from the {paymentMethod.toUpperCase()} confirmation SMS.</li>
+                      <li>Paste the <strong>Sender Number</strong> and <strong>TrxID</strong> below for instant atelier verification.</li>
+                    </ol>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="font-medium text-[#24211D] block">
-                      Transaction ID (TrxID) *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      placeholder="e.g. 9K28XA89B"
-                      className="w-full px-3.5 py-2 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-mono uppercase"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-medium text-[#24211D] block text-[11px]">
+                        Sender Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        required
+                        value={senderPhone}
+                        onChange={(e) => setSenderPhone(e.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        className="w-full px-3 py-2 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-medium text-[#24211D] block text-[11px]">
+                        Transaction ID (TrxID) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
+                        placeholder="e.g. 9K28XA89B"
+                        className="w-full px-3 py-2 apple-glass-input rounded-xl focus:border-[#8C5E35] text-xs font-mono uppercase"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

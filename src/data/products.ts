@@ -48,6 +48,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     description: 'Museum-inspired neoclassical torso sculpture. Crafted as both a functional aromatic candle and an architectural mantelpiece art object for contemporary interiors.',
     isNewArrival: true,
     inStock: true,
+    stockQuantity: 25,
+    lowStockThreshold: 5,
+    status: 'published',
+    sku: 'HL-SCU-01',
   },
   {
     id: 'luxe-festive-hamper',
@@ -64,6 +68,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     description: 'A curated gift box containing 1 Signature Bubble Candle, 2 Floating Floral Candles, 1 Botanical Wax Sachet, luxury glass match bottle with black striker, and a custom inscription card.',
     isBestseller: true,
     inStock: true,
+    stockQuantity: 15,
+    lowStockThreshold: 5,
+    status: 'published',
+    sku: 'HL-HMP-01',
   },
   {
     id: 'fluted-pillar-duo',
@@ -79,14 +87,18 @@ export const INITIAL_PRODUCTS: Product[] = [
     waxType: '100% Soy Wax (Cotton Braided Wick)',
     description: 'Minimalist Scandinavian fluted column pillars. Elegant vertical fluting that casts warm architectural shadows across dining tables and consoles.',
     inStock: true,
+    stockQuantity: 20,
+    lowStockThreshold: 5,
+    status: 'published',
+    sku: 'HL-PIL-02',
   },
   {
     id: 'botanical-aroma-sachets',
     name: 'Handcrafted Botanical Wax Tablet (Pack of 2)',
-    category: 'jar',
+    category: 'tablets',
     price: 380,
     originalPrice: 420,
-    image: '/images/bubble_soy_candle_1790333573183.jpg',
+    image: '/images/botanical_wax_tablet.jpg',
     scentFamily: 'Woody & Warm',
     scentNotes: ['Lavender Woods', 'Eucalyptus', 'French Rosemary'],
     dimensions: '9cm x 5cm x 1cm with velvet hanging ribbon',
@@ -95,12 +107,18 @@ export const INITIAL_PRODUCTS: Product[] = [
     description: 'Flameless scented wax tablets embedded with delicate botanicals. Hang in wardrobes, closets, drawers, or vehicles to keep textiles smelling like a boutique sanctuary.',
     isNewArrival: true,
     inStock: true,
+    stockQuantity: 30,
+    lowStockThreshold: 5,
+    status: 'published',
+    sku: 'HL-TAB-01',
   }
 ];
 
 export const PRODUCTS = INITIAL_PRODUCTS;
 
 export const DEFAULT_STORE_POLICIES: StorePolicies = {
+  lastUpdated: '2026-09-28',
+  version: '1.2',
   terms: `Welcome to House of Líora. By accessing our boutique and placing an order, you agree to the following terms:
 
 1. Handcrafted Character
@@ -151,7 +169,10 @@ export const DEFAULT_COUPONS: CouponItem[] = [
     discount: 10,
     type: 'percent',
     active: true,
+    minOrder: 0,
     description: 'Welcome 10% discount on entire cart',
+    usageLimit: 100,
+    usageCount: 12,
   },
   {
     id: 'coupon-2',
@@ -159,7 +180,10 @@ export const DEFAULT_COUPONS: CouponItem[] = [
     discount: 20,
     type: 'percent',
     active: true,
+    minOrder: 800,
     description: 'Special 20% seasonal celebration offer',
+    usageLimit: 50,
+    usageCount: 7,
   },
   {
     id: 'coupon-3',
@@ -167,7 +191,10 @@ export const DEFAULT_COUPONS: CouponItem[] = [
     discount: 30,
     type: 'percent',
     active: true,
+    minOrder: 1500,
     description: 'VIP Patron 30% discount',
+    usageLimit: 25,
+    usageCount: 3,
   }
 ];
 
@@ -178,9 +205,10 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   minimumOrder: 200,
   deliveryFeeDhaka: 70,
   deliveryFeeOutside: 130,
-  bkashNumber: '01700-000000',
-  nagadNumber: '01800-000000',
-  supportPhone: '+880 1700-000000',
+  paymentMode: 'manual',
+  bkashNumber: '',
+  nagadNumber: '',
+  supportPhone: '',
   supportEmail: 'info.houseofliora@gmail.com',
   facebookUrl: 'https://www.facebook.com/houseofliorabd',
   instagramUrl: 'https://www.instagram.com/_liora.bd_',
@@ -196,7 +224,9 @@ export const INITIAL_SAMPLE_ORDERS = [
     customerPhone: '01711223344',
     customerAddress: 'House 42, Road 11, Banani, Dhaka',
     deliveryArea: 'dhaka' as const,
+    district: 'Dhaka',
     paymentMethod: 'cod' as const,
+    paymentStatus: 'verified' as const,
     items: [
       { title: 'Artisanal Bubble Soy Candle', quantity: 2, price: 320, scent: 'French Vanilla' },
       { title: 'Floating Botanical Bloom Candles (Set of 4)', quantity: 1, price: 450, scent: 'Wild Peony' },
@@ -214,8 +244,11 @@ export const INITIAL_SAMPLE_ORDERS = [
     customerPhone: '01819556677',
     customerAddress: 'Apartment 5B, Khulshi Hill, Chittagong',
     deliveryArea: 'outside' as const,
+    district: 'Chattogram',
     paymentMethod: 'bkash' as const,
     transactionId: 'BK79182LA',
+    senderPhone: '01819556677',
+    paymentStatus: 'verified' as const,
     items: [
       { title: 'The Líora Luxe Signature Gift Hamper', quantity: 1, price: 1450, scent: 'English Pear & Freesia' },
     ],

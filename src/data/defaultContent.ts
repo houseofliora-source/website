@@ -68,7 +68,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       { id: 'floating', label: 'Floating Blooms' },
       { id: 'sculpted', label: 'Sculpted Columns' },
       { id: 'hampers', label: 'Gift Hampers' },
-      { id: 'jar', label: 'Aroma Tablets' },
+      { id: 'tablets', label: 'Aroma Tablets' },
     ],
   },
   productPage: DEFAULT_PRODUCT_PAGE_CONTENT,
