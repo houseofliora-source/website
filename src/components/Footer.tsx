@@ -93,11 +93,6 @@ export const Footer: React.FC<FooterProps> = ({
                 </a>
               </li>
               <li>
-                <a href="#candle-care" className="hover:text-white transition-colors">
-                  Candle Care Ritual
-                </a>
-              </li>
-              <li>
                 <button
                   onClick={onOpenAuth}
                   className="hover:text-white transition-colors text-left cursor-pointer inline-flex items-center gap-1.5 text-[#EAE0D5]"

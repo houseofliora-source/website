@@ -7,6 +7,7 @@ import {
   doc, 
   setDoc, 
   deleteDoc,
+  deleteField,
   onSnapshot,
   serverTimestamp,
   query,
@@ -451,7 +452,6 @@ export async function fetchSiteContent(): Promise<SiteContent> {
         hero: { ...DEFAULT_SITE_CONTENT.hero, ...(data.hero || {}) },
         catalog: { ...DEFAULT_SITE_CONTENT.catalog, ...(data.catalog || {}) },
         favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
-        care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
         reviews: {
           badge: data.reviews?.badge !== undefined ? data.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,
           title: data.reviews?.title !== undefined ? data.reviews.title : DEFAULT_SITE_CONTENT.reviews.title,
@@ -489,8 +489,9 @@ export async function updateSiteContentInFirestore(content: SiteContent): Promis
   if (!db) return false;
   try {
     const cleanContent = JSON.parse(JSON.stringify(content));
+    delete cleanContent.care;
     const contentRef = doc(db, 'settings', 'content');
-    await setDoc(contentRef, cleanContent, { merge: true });
+    await setDoc(contentRef, { ...cleanContent, care: deleteField() }, { merge: true });
     try {
       localStorage.setItem('liora_site_content', JSON.stringify(cleanContent));
     } catch {}
@@ -519,7 +520,6 @@ export function subscribeToSiteContent(callback: (content: SiteContent) => void)
           hero: { ...DEFAULT_SITE_CONTENT.hero, ...(data.hero || {}) },
           catalog: { ...DEFAULT_SITE_CONTENT.catalog, ...(data.catalog || {}) },
           favors: { ...DEFAULT_SITE_CONTENT.favors, ...(data.favors || {}) },
-          care: { ...DEFAULT_SITE_CONTENT.care, ...(data.care || {}) },
           reviews: {
             badge: data.reviews?.badge !== undefined ? data.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,
             title: data.reviews?.title !== undefined ? data.reviews.title : DEFAULT_SITE_CONTENT.reviews.title,

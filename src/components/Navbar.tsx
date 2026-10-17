@@ -67,12 +67,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Custom Favors & Events
           </a>
-          <a 
-            href="#candle-care" 
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-[#24211D] transition-all"
-          >
-            Candle Care
-          </a>
         </nav>
 
         {/* Zone 3: Actions (Customer Account & Shopping Bag as Apple Liquid Glass Buttons) */}

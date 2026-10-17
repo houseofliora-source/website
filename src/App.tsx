@@ -12,7 +12,6 @@ import { CustomerAccountPage } from './components/CustomerAccountPage';
 import { CustomerUser } from './types';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutPage } from './components/CheckoutPage';
-import { CandleCareGuide } from './components/CandleCareGuide';
 import { ReviewsAndFaq } from './components/ReviewsAndFaq';
 import { Footer } from './components/Footer';
 import { PolicyModal, PolicyType } from './components/PolicyModal';
@@ -506,9 +505,6 @@ export default function App() {
               products={products}
               onSelectProduct={navigateToProduct}
             />
-
-            {/* Candle Care Rituals Guide */}
-            <CandleCareGuide content={siteContent.care} />
 
             {/* Social Proof & FAQs */}
             <ReviewsAndFaq 

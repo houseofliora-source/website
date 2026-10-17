@@ -256,19 +256,6 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     cardBoxBadge: 'Live Estimate & Terms',
     cardBoxTitle: 'Order Quotation',
   },
-  care: {
-    badge: 'Artisan Soy Wisdom',
-    title: 'The Líora Candle Care Ritual',
-    subtitle: 'Pure botanical soy wax is alive with natural plant characteristics. Follow these simple rituals for a clean, prolonged, and soot-free burn.',
-    step1Title: '1. The First Burn Memory',
-    step1Desc: 'Allow wax to melt completely across the top on your initial burn (1-2 hours) to avoid tunneling and preserve candle life.',
-    step2Title: '2. Trim Cotton Wick (1/4")',
-    step2Desc: 'Trim cotton wick to 1/4 inch before every burn. This prevents high flickering, black smoke, and ensures pure scent throw.',
-    step3Title: '3. Soy Frosting is Natural',
-    step3Desc: 'Slight white crystalline film (frosting) on your candle is a natural hallmark of 100% pure botanical soy wax with zero toxic additives.',
-    step4Title: '4. Use a Heat-Safe Dish',
-    step4Desc: 'Always place free-standing sculptural or pillar candles on a heat-safe ceramic plate or marble tray before lighting.',
-  },
   reviews: {
     badge: 'Customer Experiences',
     title: 'Voices from Líora Patrons',
@@ -373,10 +360,6 @@ export function sanitizeSiteContent(raw: any): SiteContent {
       categoryFlows: Array.isArray(raw.favors?.categoryFlows) && raw.favors.categoryFlows.length > 0
         ? raw.favors.categoryFlows
         : (DEFAULT_SITE_CONTENT.favors.categoryFlows || []),
-    },
-    care: {
-      ...DEFAULT_SITE_CONTENT.care,
-      ...(raw.care && typeof raw.care === 'object' ? raw.care : {}),
     },
     reviews: {
       badge: raw.reviews?.badge !== undefined ? raw.reviews.badge : DEFAULT_SITE_CONTENT.reviews.badge,

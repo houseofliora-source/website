@@ -99,7 +99,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
     if (JSON.stringify(content.hero) !== JSON.stringify(initialContent.hero)) list.push('Hero Section & Taglines');
     if (JSON.stringify(content.catalog) !== JSON.stringify(initialContent.catalog)) list.push('Catalog Categories & Section Header');
     if (JSON.stringify(content.favors) !== JSON.stringify(initialContent.favors)) list.push('Bespoke & Custom Orders Section');
-    if (JSON.stringify(content.care) !== JSON.stringify(initialContent.care)) list.push('Candle Care Ritual Rules');
     if (JSON.stringify(content.reviews) !== JSON.stringify(initialContent.reviews)) list.push('Customer Reviews & Ratings');
     if (JSON.stringify(content.faq) !== JSON.stringify(initialContent.faq)) list.push('Frequently Asked Questions');
     if (JSON.stringify(content.footer) !== JSON.stringify(initialContent.footer)) list.push('Footer Brand & Policy Links');
@@ -757,7 +756,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
             <div className="text-xs text-[#5A5248] hidden sm:flex items-center gap-4">
               <span>Collections</span>
               <span>Bespoke Favors</span>
-              <span>Candle Care</span>
               <span>Reviews</span>
             </div>
           </header>
@@ -1152,55 +1150,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
               setActivePageView('product');
             }}
           />
-
-          {/* 4. Candle Care Ritual with Pencil */}
-          <section className="p-6 sm:p-12 bg-[#FAF8F5] border-b border-[#EAE0D5] space-y-6">
-            <div className="relative group border-2 border-dashed border-amber-600/30 hover:border-amber-600 p-6 rounded-lg bg-white/40 transition-all">
-              {isEditMode && (
-                <button
-                  onClick={() => setActiveModal('care')}
-                  className="absolute -top-3 right-4 z-20 px-3 py-1 bg-[#8C5E35] hover:bg-[#24211D] text-white text-xs rounded-full flex items-center gap-1.5 shadow-md cursor-pointer border border-white/40"
-                >
-                  <Edit3 className="w-3 h-3" />
-                  <span>Edit 4 Care Rules</span>
-                </button>
-              )}
-
-              <div className="text-center space-y-1 mb-8">
-                <span className="text-xs font-semibold uppercase tracking-widest text-[#8C5E35]">
-                  {content.care.badge}
-                </span>
-                <h2 
-                  className="text-2xl sm:text-3xl text-[#24211D]"
-                  style={{ fontFamily: `'${content.theme.headingFont || 'Cormorant Garamond'}', serif` }}
-                >
-                  {content.care.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-[#5A5248] max-w-md mx-auto">
-                  {content.care.subtitle}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 bg-white rounded border border-[#EAE0D5] space-y-1">
-                  <h4 className="font-semibold text-xs text-[#24211D]">{content.care.step1Title}</h4>
-                  <p className="text-[11px] text-[#5A5248] leading-relaxed">{content.care.step1Desc}</p>
-                </div>
-                <div className="p-4 bg-white rounded border border-[#EAE0D5] space-y-1">
-                  <h4 className="font-semibold text-xs text-[#24211D]">{content.care.step2Title}</h4>
-                  <p className="text-[11px] text-[#5A5248] leading-relaxed">{content.care.step2Desc}</p>
-                </div>
-                <div className="p-4 bg-white rounded border border-[#EAE0D5] space-y-1">
-                  <h4 className="font-semibold text-xs text-[#24211D]">{content.care.step3Title}</h4>
-                  <p className="text-[11px] text-[#5A5248] leading-relaxed">{content.care.step3Desc}</p>
-                </div>
-                <div className="p-4 bg-white rounded border border-[#EAE0D5] space-y-1">
-                  <h4 className="font-semibold text-xs text-[#24211D]">{content.care.step4Title}</h4>
-                  <p className="text-[11px] text-[#5A5248] leading-relaxed">{content.care.step4Desc}</p>
-                </div>
-              </div>
-            </div>
-          </section>
 
           {/* 5. Customer Reviews with Pencil */}
           <section className="p-6 sm:p-12 bg-[#F5F1EB] border-b border-[#EAE0D5] space-y-6">
@@ -1955,167 +1904,6 @@ export const VisualSiteEditor: React.FC<VisualSiteEditorProps> = ({
         </div>
       )}
       
-      {/* MODAL 4: Candle Care Ritual Editor */}
-      {activeModal === 'care' && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF8F5] text-[#24211D] rounded-xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-[#D8CEBE]">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EAE0D5]">
-              <h3 className="font-serif text-lg font-semibold flex items-center gap-2">
-                <Edit3 className="w-4 h-4 text-[#8C5E35]" />
-                <span>Edit 4 Candle Care Ritual Steps</span>
-              </h3>
-              <button onClick={() => setActiveModal(null)} className="p-1 hover:bg-[#EAE0D5] rounded cursor-pointer">
-                <X className="w-5 h-5 text-[#5A5248]" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="font-medium text-[#5A5248] block mb-1">Care Section Title:</label>
-                  <input
-                    type="text"
-                    value={content.care.title}
-                    onChange={e => setContent({
-                      ...content,
-                      care: { ...content.care, title: e.target.value }
-                    })}
-                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="font-medium text-[#5A5248] block mb-1">Badge:</label>
-                  <input
-                    type="text"
-                    value={content.care.badge}
-                    onChange={e => setContent({
-                      ...content,
-                      care: { ...content.care, badge: e.target.value }
-                    })}
-                    className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-medium text-[#5A5248] block mb-1">Care Section Subtitle / বিবরণ:</label>
-                <textarea
-                  rows={2}
-                  value={content.care.subtitle || ''}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, subtitle: e.target.value }
-                  })}
-                  className="w-full p-2.5 bg-white border border-[#D8CEBE] rounded text-xs"
-                  placeholder="Pure botanical soy wax is alive with natural plant characteristics. Follow these simple rituals for a clean, prolonged, and soot-free burn."
-                />
-              </div>
-
-              {/* Step 1 */}
-              <div className="p-3 bg-white rounded border border-[#EAE0D5] space-y-2">
-                <label className="font-semibold text-[#8C5E35] block">Rule 1:</label>
-                <input
-                  type="text"
-                  value={content.care.step1Title}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step1Title: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-                <textarea
-                  rows={2}
-                  value={content.care.step1Desc}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step1Desc: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-              </div>
-
-              {/* Step 2 */}
-              <div className="p-3 bg-white rounded border border-[#EAE0D5] space-y-2">
-                <label className="font-semibold text-[#8C5E35] block">Rule 2:</label>
-                <input
-                  type="text"
-                  value={content.care.step2Title}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step2Title: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-                <textarea
-                  rows={2}
-                  value={content.care.step2Desc}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step2Desc: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-              </div>
-
-              {/* Step 3 */}
-              <div className="p-3 bg-white rounded border border-[#EAE0D5] space-y-2">
-                <label className="font-semibold text-[#8C5E35] block">Rule 3:</label>
-                <input
-                  type="text"
-                  value={content.care.step3Title}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step3Title: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-                <textarea
-                  rows={2}
-                  value={content.care.step3Desc}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step3Desc: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-              </div>
-
-              {/* Step 4 */}
-              <div className="p-3 bg-white rounded border border-[#EAE0D5] space-y-2">
-                <label className="font-semibold text-[#8C5E35] block">Rule 4:</label>
-                <input
-                  type="text"
-                  value={content.care.step4Title}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step4Title: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-                <textarea
-                  rows={2}
-                  value={content.care.step4Desc}
-                  onChange={e => setContent({
-                    ...content,
-                    care: { ...content.care, step4Desc: e.target.value }
-                  })}
-                  className="w-full p-2 bg-[#FAF8F5] border border-[#D8CEBE] rounded text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#EAE0D5]">
-              <button
-                onClick={() => setActiveModal(null)}
-                className="px-4 py-2 bg-[#24211D] text-white text-xs rounded hover:bg-[#3D3730] cursor-pointer"
-              >
-                Apply to Preview
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL 5: Customer Reviews Editor */}
       {activeModal === 'reviews' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">

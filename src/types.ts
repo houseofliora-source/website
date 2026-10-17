@@ -354,7 +354,7 @@ export interface SiteContent {
   scentQuiz?: ScentQuizContent;
   productPage?: ProductPageContent;
   favors: FavorContent;
-  care: {
+  care?: {
     badge: string;
     title: string;
     subtitle: string;
