@@ -746,10 +746,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       image: finalImage!,
       gallery: productForm.gallery || [],
       scentFamily: productForm.scentFamily as Product['scentFamily'] || 'Floral',
-      scentNotes: [], // Global pool manages fragrances (Part 1A)
-      dimensions: productForm.dimensions || '6cm x 6cm x 6cm',
-      burnTime: productForm.burnTime || '20 Hours',
-      waxType: productForm.waxType || '100% Pure Botanical Soy Wax',
+      scentNotes: editingProduct?.scentNotes || [],
+      dimensions: productForm.dimensions || editingProduct?.dimensions || '',
+      burnTime: productForm.burnTime || editingProduct?.burnTime || '',
+      waxType: productForm.waxType || editingProduct?.waxType || '100% Pure Botanical Soy Wax',
       description: productForm.description || '',
       inStock: qty > 0 ? (productForm.inStock ?? true) : false,
       stockQuantity: qty,
@@ -2919,41 +2919,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Dimensions & Burn Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-semibold text-[#24211D]">Dimensions / Net Weight</label>
-                  <input
-                    type="text"
-                    value={productForm.dimensions || ''}
-                    onChange={(e) => setProductForm({ ...productForm, dimensions: e.target.value })}
-                    placeholder="e.g. 6cm x 6cm (150g)"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-[#24211D]">Burn Time</label>
-                  <input
-                    type="text"
-                    value={productForm.burnTime || ''}
-                    onChange={(e) => setProductForm({ ...productForm, burnTime: e.target.value })}
-                    placeholder="e.g. 20-25 Hours"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
+              {/* Product Details & Description (Single source of truth for Product Details) */}
               <div className="space-y-1">
-                <label className="font-semibold text-[#24211D]">Description &amp; Sensory Notes</label>
+                <label className="font-semibold text-[#24211D]">Product Details &amp; Description</label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={productForm.description || ''}
                   onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                  placeholder="Describe the fragrance notes, wax pouring technique, and aesthetic..."
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg leading-relaxed"
+                  placeholder="Candle story, sensory details, and notes (supports multiple paragraphs and Bangla/English text)..."
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#EAE0D5] rounded-lg leading-relaxed text-sm font-sans"
                 />
+                <p className="text-[11px] text-[#7A6F62]">
+                  This is the plain description displayed under Product Details on the candle page. Preserves line breaks and supports both Bangla and English.
+                </p>
               </div>
 
               {/* Badges & Flags */}

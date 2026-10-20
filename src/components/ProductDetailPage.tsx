@@ -12,6 +12,7 @@ import {
   Edit3,
   AlertTriangle
 } from 'lucide-react';
+import { FragranceDropdown } from './FragranceDropdown';
 
 
 
@@ -249,51 +250,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {product.description}
           </p>
 
-          {/* Global Fragrance Pool Selection (Part 1C - One pool for all candles) */}
-          <div className="space-y-2.5 pt-2">
-            <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
-              <label className="font-semibold text-[#24211D] uppercase tracking-wider block">
-                Select Fragrance / Aroma Profile: <span className="text-rose-600">*</span>
-              </label>
-              {selectedFragrance && (
-                <span className="text-[11px] text-[#7A6F62]">
-                  Chosen: <strong className="text-[#8C5E35]">{selectedFragrance}</strong>
-                </span>
-              )}
-            </div>
-
-            {hasNoActiveFragrances ? (
-              <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-2xl text-xs text-amber-900 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>No fragrance available right now — please contact the store</span>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2.5">
-                {activeFragrances.map((f) => {
-                  const isSelected = selectedFragrance === f.name;
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setSelectedFragrance(f.name)}
-                      className={`min-h-[44px] px-4 py-2 rounded-2xl transition-all cursor-pointer font-medium text-xs border text-left flex flex-col justify-center ${
-                        isSelected
-                          ? 'apple-glass-dark text-white border-[#24211D] shadow-md scale-[1.02]'
-                          : 'apple-glass-pill text-[#5A5248] border-[#EAE0D5] hover:text-[#24211D] hover:bg-white hover:border-[#8C5E35]/50'
-                      }`}
-                      title={f.description || f.name}
-                    >
-                      <span className="font-semibold break-words leading-tight">{f.name}</span>
-                      {f.description && (
-                        <span className={`text-[10px] line-clamp-1 max-w-[200px] ${isSelected ? 'text-white/80' : 'text-[#7A6F62]'}`}>
-                          {f.description}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          {/* Global Fragrance Selection (Part 1 - Clean Dropdown) */}
+          <div className="pt-2">
+            <FragranceDropdown
+              fragrances={activeFragrances}
+              selectedFragrance={selectedFragrance}
+              onSelect={(fragName) => setSelectedFragrance(fragName)}
+              disabled={hasNoActiveFragrances}
+            />
           </div>
 
           {/* Quantity Counter & Action Buttons */}
@@ -386,38 +350,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           )}
         </div>
 
-        <div className="apple-glass-card rounded-3xl p-6 sm:p-8 space-y-6 text-[#5A5248]">
-          {/* Main Description */}
-          {product.description && (
-            <div className="space-y-2 max-w-3xl">
-              <h3 className="font-serif text-xl sm:text-2xl text-[#24211D]">
-                {product.name}
-              </h3>
-              <p className="text-sm sm:text-base leading-relaxed text-[#5A5248]">
-                {product.description}
-              </p>
+        <div className="apple-glass-card rounded-3xl p-6 sm:p-8 space-y-4 text-[#5A5248]">
+          <h3 className="font-serif text-xl sm:text-2xl text-[#24211D] break-words">
+            {product.name}
+          </h3>
+          {product.description?.trim() ? (
+            <div className="text-sm sm:text-base leading-relaxed text-[#5A5248] whitespace-pre-line break-words font-sans">
+              {product.description}
             </div>
-          )}
-
-          {/* Clean Key Specifications */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#EAE0D5]/80 text-xs sm:text-sm">
-            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Wax Formulation</span>
-              <p className="font-medium text-[#24211D]">{product.waxType || '100% Pure Botanical Soy Wax'}</p>
-            </div>
-            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Burn Time</span>
-              <p className="font-medium text-[#24211D]">{product.burnTime || '20-25 Hours'}</p>
-            </div>
-            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Dimensions</span>
-              <p className="font-medium text-[#24211D]">{product.dimensions || 'Handcrafted Small Batch'}</p>
-            </div>
-            <div className="p-4 bg-white/70 rounded-2xl border border-[#EAE0D5] space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-[#8C5E35] tracking-widest block">Fragrance Notes</span>
-              <p className="font-medium text-[#24211D]">{product.scentNotes && product.scentNotes.length > 0 ? product.scentNotes.join(' · ') : 'Pure Botanical Essential Oils'}</p>
-            </div>
-          </div>
+          ) : null}
         </div>
       </div>
 

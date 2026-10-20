@@ -2,6 +2,7 @@ import React from 'react';
 import { CartItem, CustomFavorItem, StoreSettings, FragranceItem } from '../types';
 import { CustomerUser } from './CustomerAuthModal';
 import { X, Trash2, ArrowRight, AlertTriangle, Sparkles } from 'lucide-react';
+import { FragranceDropdown } from './FragranceDropdown';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -130,29 +131,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </h4>
 
                       {/* Fragrance Display / Selector */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11px] text-[#8C5E35] font-medium">Fragrance:</span>
+                      <div className="pt-0.5 pb-0.5">
                         {onChangeItemFragrance && activeFragrances.length > 0 ? (
-                          <select
-                            value={currentFragrance}
-                            onChange={(e) => onChangeItemFragrance(lineKey, e.target.value)}
-                            className="bg-white/90 border border-[#D5C7B7] rounded-lg px-2 py-0.5 text-xs text-[#24211D] focus:outline-none focus:ring-1 focus:ring-[#8C5E35] cursor-pointer"
-                          >
-                            {!isFragranceActive && (
-                              <option value={currentFragrance} disabled>
-                                {currentFragrance ? `${currentFragrance} (Unavailable)` : 'None selected'}
-                              </option>
-                            )}
-                            {activeFragrances.map(f => (
-                              <option key={f.id} value={f.name}>
-                                {f.name}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="space-y-1">
+                            <span className="text-[11px] text-[#8C5E35] font-medium block">Fragrance:</span>
+                            <FragranceDropdown
+                              variant="compact"
+                              label="Fragrance"
+                              showDescription={false}
+                              showChosenConfirmation={false}
+                              fragrances={activeFragrances}
+                              selectedFragrance={!isFragranceActive && currentFragrance ? `${currentFragrance} (Unavailable)` : currentFragrance}
+                              onSelect={(newFrag) => onChangeItemFragrance(lineKey, newFrag)}
+                            />
+                          </div>
                         ) : (
-                          <span className="text-xs text-[#24211D] font-medium">
+                          <p className="text-xs text-[#24211D] font-medium">
+                            <span className="text-[11px] text-[#8C5E35]">Fragrance: </span>
                             {currentFragrance || 'None selected'}
-                          </span>
+                          </p>
                         )}
                       </div>
 

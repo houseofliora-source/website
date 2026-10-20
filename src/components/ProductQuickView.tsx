@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product, FragranceItem } from '../types';
-import { X, Check, Flame, Clock, Sparkles, Shield, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { X, Check, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { FragranceDropdown } from './FragranceDropdown';
 
 interface ProductQuickViewProps {
   product: Product | null;
@@ -112,54 +113,14 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
               {product.description}
             </p>
 
-            {/* Global Fragrance Selection */}
-            <div className="space-y-2 pt-1">
-              <label className="text-xs font-semibold text-[#24211D] uppercase tracking-wider block">
-                Select Fragrance / Aroma Profile: <span className="text-rose-600">*</span>
-              </label>
-              {hasNoActiveFragrances ? (
-                <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>No fragrance active right now</span>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {activeFragrances.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setSelectedFragrance(f.name)}
-                      className={`min-h-[40px] px-3.5 py-1.5 text-xs rounded-xl transition-all cursor-pointer font-medium border text-left ${
-                        selectedFragrance === f.name
-                          ? 'apple-glass-dark text-white border-[#24211D]'
-                          : 'apple-glass-pill text-[#5A5248] border-[#EAE0D5] hover:text-[#24211D]'
-                      }`}
-                    >
-                      <span>{f.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Specifications Grid in Liquid Pods */}
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#EAE0D5]/70 text-xs text-[#5A5248]">
-              <div className="apple-glass-card rounded-xl p-2 flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-[#8C5E35]" />
-                <span className="truncate">{product.burnTime}</span>
-              </div>
-              <div className="apple-glass-card rounded-xl p-2 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#8C5E35]" />
-                <span className="truncate">{product.dimensions}</span>
-              </div>
-              <div className="apple-glass-card rounded-xl p-2 flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-[#8C5E35]" />
-                <span className="truncate">Pure Cotton Wick</span>
-              </div>
-              <div className="apple-glass-card rounded-xl p-2 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#8C5E35]" />
-                <span className="truncate">Phthalate-Free Oils</span>
-              </div>
+            {/* Global Fragrance Selection (Clean Dropdown) */}
+            <div className="pt-1">
+              <FragranceDropdown
+                fragrances={activeFragrances}
+                selectedFragrance={selectedFragrance}
+                onSelect={(fragName) => setSelectedFragrance(fragName)}
+                disabled={hasNoActiveFragrances}
+              />
             </div>
           </div>
 
